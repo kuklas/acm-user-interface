@@ -73,21 +73,23 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         </MastheadToggle>
         <MastheadBrand>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg height="40px" width="40px" viewBox="0 0 192 145">
+            <svg height="40px" width="50px" viewBox="0 0 100 80">
               <defs>
-                <linearGradient id="logo-gradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#EE0000" />
                   <stop offset="100%" stopColor="#CC0000" />
                 </linearGradient>
               </defs>
+              {/* Red Hat Fedora */}
               <g fill="url(#logo-gradient)">
-                <path d="M70,17.7c3.4-3.4,7.8-5.2,13.5-5.2h51.9v11.3h-51.9c-2.4,0-4.4,0.8-6.1,2.5c-1.7,1.7-2.5,3.7-2.5,6.1v22.5h60.5v11.3H74.9v22.5c0,2.4,0.8,4.4,2.5,6.1c1.7,1.7,3.7,2.5,6.1,2.5h51.9v11.3H83.5c-5.7,0-10.1-1.7-13.5-5.2c-3.4-3.4-5.2-7.8-5.2-13.5V30.9C64.8,25.5,66.6,21.1,70,17.7z"/>
-                <path d="M0,17.5C3.4,14.1,7.8,12.5,13.5,12.5H55v11.3H13.5c-2.4,0-4.4,0.8-6.1,2.5C5.8,27.9,5,30,5,32.3v22.5h49.5v11.3H5v22.5c0,2.4,0.8,4.4,2.5,6.1c1.7,1.7,3.7,2.5,6.1,2.5H55v11.3H13.5c-5.7,0-10.1-1.7-13.5-5.2C0,100,0,95.6,0,89.9V30.7C0,25.3,1.7,20.9,5.1,17.5z"/>
+                <path d="M15,25 C15,15 25,10 35,10 C45,10 55,15 55,25 C55,30 50,35 45,35 L40,35 L40,45 C40,50 35,55 30,55 L25,55 C20,55 15,50 15,45 L15,25 Z" />
+                <path d="M35,10 C35,5 40,0 45,0 C50,0 55,5 55,10" fill="none" stroke="url(#logo-gradient)" strokeWidth="2"/>
+                <path d="M25,35 L30,35 C32,35 34,37 34,39 L34,45 C34,47 32,49 30,49 L25,49 C23,49 21,47 21,45 L21,39 C21,37 23,35 25,35 Z" fill="#000000"/>
               </g>
             </svg>
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
-              <span style={{ fontSize: '14px', fontWeight: 600, color: '#f0f0f0' }}>Red Hat</span>
-              <span style={{ fontSize: '12px', color: '#f0f0f0' }}>OpenShift Container Platform</span>
+              <span style={{ fontSize: '16px', fontWeight: 700, color: '#f0f0f0' }}>Red Hat</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#f0f0f0' }}>OpenShift</span>
             </div>
           </div>
         </MastheadBrand>
