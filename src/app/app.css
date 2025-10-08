@@ -5,7 +5,129 @@ body,
 }
 
 .pf-v6-c-content {
-  --pf-v6-c-content--small--Color: var(--pf-t--global--color--status--danger--default); /* changes all <small> color to the semantic token for danger */
-  --pf-v6-c-content--blockquote--BorderLeftColor: var(--pf-t--global--color--nonstatus--purple--default); /* changes all <blockquote> left border color to the semantic token for non-status (purple) */
-  --pf-v6-c-content--hr--BackgroundColor: var(--pf-t--global--color--nonstatus--yellow--default); /* changes a <hr> color to the semantic token for non-status (yellow) */
+  --pf-v6-c-content--small--Color: var(--pf-t--global--color--status--danger--default);
+  --pf-v6-c-content--blockquote--BorderLeftColor: var(--pf-t--global--color--nonstatus--purple--default);
+  --pf-v6-c-content--hr--BackgroundColor: var(--pf-t--global--color--nonstatus--yellow--default);
+}
+
+/* Light mode - PatternFly default theme */
+/* All dark theme styles removed - using PatternFly v6 default light theme */
+
+/* Perspective selector */
+.perspective-selector {
+  padding: var(--pf-t--global--spacer--md);
+  border-bottom: 1px solid var(--pf-t--global--border--color--default);
+}
+
+.perspective-selector .pf-v6-c-menu-toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Wizard modal custom styling */
+.pf-v6-c-modal-box.pf-m-lg {
+  max-width: 1200px;
+  max-height: 90vh;
+  height: 700px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal body flex layout */
+.pf-v6-c-modal-box > .pf-v6-c-modal-box__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Global page layout pattern */
+.pf-v6-c-page__main .pf-v6-c-page__main-section {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+}
+
+/* Header section - white background with title and tabs */
+.page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+/* Add spacing between title and tabs */
+.page-header-section .pf-v6-c-tabs {
+  margin-top: 16px !important;
+}
+
+/* Content area - grey background */
+.page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 24px !important;
+  min-height: calc(100vh - 200px) !important;
+}
+
+/* Table content card - sits on grey background */
+.table-content-card {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+/* Style toolbar within the card */
+.table-content-card .pf-v6-c-toolbar {
+  padding: 24px !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+/* Style table within the card - no margins, fits perfectly */
+.table-content-card .pf-v6-c-table {
+  margin: 0 !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+}
+
+/* Style table headers with white background */
+.pf-v6-c-table thead tr {
+  background-color: #ffffff !important;
+}
+
+.pf-v6-c-table thead th {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  font-weight: 600 !important;
+  padding: 16px !important;
+}
+
+/* Style table rows */
+.pf-v6-c-table tbody tr {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.pf-v6-c-table tbody tr:hover {
+  background-color: #f8f9fa !important;
+}
+
+.pf-v6-c-table tbody td {
+  padding: 16px !important;
+}
+
+/* Style pagination within the card */
+.table-content-card .pf-v6-c-toolbar:last-child {
+  padding: 16px 24px !important;
+  background-color: #ffffff !important;
+  border-top: 1px solid #e0e0e0 !important;
+}
+
+/* Ensure table doesn't overflow the card */
+.table-content-card .pf-v6-c-table-container {
+  overflow-x: auto !important;
+  max-width: 100% !important;
 }

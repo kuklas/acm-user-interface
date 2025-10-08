@@ -4,6 +4,12 @@ import { Dashboard } from '@app/Dashboard/Dashboard';
 import { Support } from '@app/Support/Support';
 import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
+import { Identities } from '@app/Identities/Identities';
+import { IdentityDetail } from '@app/Identities/IdentityDetail';
+import { Roles } from '@app/Roles/Roles';
+import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
+import { Clusters } from '@app/Clusters/Clusters';
+import { ClusterDetail } from '@app/Clusters/ClusterDetail';
 import { NotFound } from '@app/NotFound/NotFound';
 
 export interface IAppRoute {
@@ -13,46 +19,131 @@ export interface IAppRoute {
   path: string;
   title: string;
   routes?: undefined;
+  disabled?: boolean;
 }
 
 export interface IAppRouteGroup {
   label: string;
   routes: IAppRoute[];
+  disabled?: boolean;
 }
 
 export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 
 const routes: AppRouteConfig[] = [
   {
-    element: <Dashboard />,
-    exact: true,
-    label: 'Dashboard',
-    path: '/',
-    title: 'PatternFly Seed | Main Dashboard',
-  },
-  {
-    element: <Support />,
-    exact: true,
-    label: 'Support',
-    path: '/support',
-    title: 'PatternFly Seed | Support Page',
-  },
-  {
-    label: 'Settings',
+    label: 'Home',
+    disabled: true,
     routes: [
       {
-        element: <GeneralSettings />,
-        exact: true,
-        label: 'General',
-        path: '/settings/general',
-        title: 'PatternFly Seed | General Settings',
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/',
+        title: 'ACM | Home',
+      },
+    ],
+  },
+  {
+    label: 'Infrastructure',
+    routes: [
+      {
+        element: <Clusters />,
+        label: 'Clusters',
+        path: '/infrastructure/clusters',
+        title: 'ACM | Clusters',
       },
       {
-        element: <ProfileSettings />,
-        exact: true,
-        label: 'Profile',
-        path: '/settings/profile',
-        title: 'PatternFly Seed | Profile Settings',
+        element: <ClusterDetail />,
+        path: '/infrastructure/clusters/:clusterName',
+        title: 'ACM | Cluster Detail',
+      },
+    ],
+  },
+  {
+    label: 'Applications',
+    disabled: true,
+    routes: [
+      {
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/applications/overview',
+        title: 'ACM | Applications',
+      },
+    ],
+  },
+  {
+    label: 'Governance',
+    disabled: true,
+    routes: [
+      {
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/governance/overview',
+        title: 'ACM | Governance',
+      },
+    ],
+  },
+  {
+    label: 'Credentials',
+    disabled: true,
+    routes: [
+      {
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/credentials/overview',
+        title: 'ACM | Credentials',
+      },
+    ],
+  },
+  {
+    label: 'Observe',
+    disabled: true,
+    routes: [
+      {
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/observe/overview',
+        title: 'ACM | Observe',
+      },
+    ],
+  },
+  {
+    label: 'Edge management',
+    disabled: true,
+    routes: [
+      {
+        element: <Dashboard />,
+        label: 'Overview',
+        path: '/edge-management/overview',
+        title: 'ACM | Edge Management',
+      },
+    ],
+  },
+  {
+    label: 'User management',
+    routes: [
+      {
+        element: <Identities />,
+        label: 'Identities',
+        path: '/user-management/identities',
+        title: 'ACM | Identities',
+      },
+      {
+        element: <IdentityDetail />,
+        path: '/user-management/identities/:identityName',
+        title: 'ACM | Identity Detail',
+      },
+      {
+        element: <Roles />,
+        label: 'Roles',
+        path: '/user-management/roles',
+        title: 'ACM | Roles',
+      },
+      {
+        element: <IdentityProvider />,
+        label: 'Identity providers',
+        path: '/user-management/identity-providers',
+        title: 'ACM | Identity Providers',
       },
     ],
   },

@@ -1,117 +1,73 @@
-# Patternfly Seed
+# ACM User Interface
 
-Patternfly Seed is an open source build scaffolding utility for web apps. The primary purpose of this project is to give developers a jump start when creating new projects that will use patternfly. A secondary purpose of this project is to serve as a reference for how to configure various aspects of an application that uses patternfly, webpack, react, typescript, etc.
+Advanced Cluster Management User Interface built with PatternFly React components.
 
-Out of the box you'll get an app layout with chrome (header/sidebar), routing, build pipeline, test suite, and some code quality tools. Basically, all the essentials.
+## Features
 
-<img width="1058" alt="Out of box dashboard view of patternfly seed" src="https://github.com/user-attachments/assets/0227b366-67f1-4df8-8d92-e8e95d6e08b3" />
+- **Modern UI Design**: Clean, professional interface with PatternFly design system
+- **Responsive Layout**: Works on desktop, tablet, and mobile devices
+- **Cluster Management**: View and manage clusters, cluster sets, and cluster pools
+- **Identity Management**: Manage users, groups, and service accounts
+- **Role-Based Access Control**: Assign roles and permissions
+- **Identity Providers**: Configure authentication providers
 
-## Quick-start
+## Design Pattern
 
+The application follows a consistent design pattern:
+
+- **White Header Section**: Contains page title, breadcrumbs, and navigation tabs
+- **Grey Content Area**: Background for all page content
+- **Card-Based Layout**: All content is contained within white cards with proper spacing
+- **Sticky Navigation**: Header stays visible while scrolling
+
+## Pages
+
+### Infrastructure
+- **Clusters**: Manage clusters with detailed views and role assignments
+- **Cluster Detail**: Individual cluster information and management
+
+### User Management
+- **Identities**: Manage users, groups, and service accounts
+- **Identity Detail**: Individual identity information and management
+- **Roles**: View and create custom roles
+- **Identity Providers**: Configure authentication providers
+
+## Technology Stack
+
+- **React 18**: Modern React with hooks
+- **PatternFly 6**: Red Hat's design system
+- **TypeScript**: Type-safe development
+- **Webpack 5**: Modern build system
+- **React Router**: Client-side routing
+
+## Development
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Setup
 ```bash
-git clone https://github.com/patternfly/patternfly-react-seed
-cd patternfly-react-seed
-npm install && npm run start:dev
-```
-## Development scripts
-```sh
-# Install development/build dependencies
 npm install
+npm start
+```
 
-# Start the development server
-npm run start:dev
-
-# Run a production build (outputs to "dist" dir)
+### Build
+```bash
 npm run build
-
-# Run the test suite
-npm run test
-
-# Run the test suite with coverage
-npm run test:coverage
-
-# Run the linter
-npm run lint
-
-# Run the code formatter
-npm run format
-
-# Launch a tool to inspect the bundle size
-npm run bundle-profile:analyze
-
-# Start the express server (run a production build first)
-npm run start
 ```
 
-## Configurations
-* [TypeScript Config](./tsconfig.json)
-* [Webpack Config](./webpack.common.js)
-* [Jest Config](./jest.config.js)
-* [Editor Config](./.editorconfig)
-
-## Raster image support
-
-To use an image asset that's shipped with PatternFly core, you'll prefix the paths with "@assets". `@assets` is an alias for the PatternFly assets directory in node_modules.
-
-For example:
-```js
-import imgSrc from '@assets/images/g_sizing.png';
-<img src={imgSrc} alt="Some image" />
+### Deploy to GitHub Pages
+```bash
+npm run deploy
 ```
 
-You can use a similar technique to import assets from your local app, just prefix the paths with "@app". `@app` is an alias for the main src/app directory.
+## Deployment
 
-```js
-import loader from '@app/assets/images/loader.gif';
-<img src={loader} alt="Content loading" />
-```
+This application is automatically deployed to GitHub Pages when changes are pushed to the main branch.
 
-## Vector image support
-Inlining SVG in the app's markup is also possible.
+**Live Demo**: [https://skukla.github.io/acm-user-interface](https://skukla.github.io/acm-user-interface)
 
-```js
-import logo from '@app/assets/images/logo.svg';
-<span dangerouslySetInnerHTML={{__html: logo}} />
-```
+## License
 
-You can also use SVG when applying background images with CSS. To do this, your SVG's must live under a `bgimages` directory (this directory name is configurable in [webpack.common.js](./webpack.common.js#L5)). This is necessary because you may need to use SVG's in several other context (inline images, fonts, icons, etc.) and so we need to be able to differentiate between these usages so the appropriate loader is invoked.
-```css
-body {
-  background: url(./assets/bgimages/img_avatar.svg);
-}
-```
-
-## Adding custom CSS
-When importing CSS from a third-party package for the first time, you may encounter the error `Module parse failed: Unexpected token... You may need an appropriate loader to handle this file typ...`. You need to register the path to the stylesheet directory in [stylePaths.js](./stylePaths.js). We specify these explicitly for performance reasons to avoid webpack needing to crawl through the entire node_modules directory when parsing CSS modules.
-
-## Code quality tools
-* For accessibility compliance, we use [react-axe](https://github.com/dequelabs/react-axe)
-* To keep our bundle size in check, we use [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer)
-* To keep our code formatting in check, we use [prettier](https://github.com/prettier/prettier)
-* To keep our code logic and test coverage in check, we use [jest](https://github.com/facebook/jest)
-* To ensure code styles remain consistent, we use [eslint](https://eslint.org/)
-
-## AI Documentation & Development Rules
-
-This project includes an [`ai-documentation`](./ai-documentation/README.md) directory designed primarily for use by AI agents in AI-enabled IDEs (such as Cursor, Claude, and others). These files provide essential rules, guidelines, and best practices for building web applications with PatternFly React, enabling AI coding assistants to:
-
-- Offer context-aware suggestions and enforce consistent component architecture and styling standards
-- Guide developers to use PatternFly v6 components and utility classes
-- Promote accessibility and state management best practices
-- Reference troubleshooting tips and specialized rules (charts, chatbot, etc.)
-
-**How to use:**
-If you are using an AI-enabled IDE, the AI agent will automatically leverage the [AI Documentation & Rules](./ai-documentation/README.md) to assist you as you develop.
-
-By following these rules—either directly or via your AI assistant—you'll ensure your app is maintainable, accessible, and consistent with PatternFly best practices.
-
-## Multi environment configuration
-This project uses [dotenv-webpack](https://www.npmjs.com/package/dotenv-webpack) for exposing environment variables to your code. Either export them at the system level like `export MY_ENV_VAR=http://dev.myendpoint.com && npm run start:dev` or simply drop a `.env` file in the root that contains your key-value pairs like below:
-
-```sh
-ENV_1=http://1.myendpoint.com
-ENV_2=http://2.myendpoint.com
-```
-
-
-With that in place, you can use the values in your code like `console.log(process.env.ENV_1);`
+MIT License

@@ -1,9 +1,9 @@
 {
-  "name": "patternfly-seed",
-  "version": "0.0.2",
-  "description": "An open source build scaffolding utility for web apps.",
-  "repository": "https://github.com/patternfly/patternfly-react-seed.git",
-  "homepage": "https://patternfly-react-seed.surge.sh",
+  "name": "acm-user-interface",
+  "version": "1.0.0",
+  "description": "Advanced Cluster Management User Interface with PatternFly",
+  "repository": "https://github.com/skukla/acm-user-interface.git",
+  "homepage": "https://skukla.github.io/acm-user-interface",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -21,7 +21,8 @@
     "ci-checks": "npm run type-check && npm run lint && npm run test:coverage",
     "build:bundle-profile": "webpack --config webpack.prod.js --profile --json > stats.json",
     "bundle-profile:analyze": "npm run build:bundle-profile && webpack-bundle-analyzer ./stats.json",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -40,6 +41,7 @@
     "eslint-plugin-prettier": "^5.4.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "gh-pages": "^6.3.0",
     "html-webpack-plugin": "^5.6.3",
     "imagemin": "^9.0.1",
     "jest-environment-jsdom": "^30.0.0",
@@ -74,6 +76,7 @@
     "@patternfly/react-core": "^6.3.0",
     "@patternfly/react-icons": "^6.3.0",
     "@patternfly/react-styles": "^6.3.0",
+    "@patternfly/react-table": "^6.3.1",
     "react": "^18",
     "react-dom": "^18",
     "sirv-cli": "^3.0.1"
