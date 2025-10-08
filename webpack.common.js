@@ -6,7 +6,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import Dotenv from 'dotenv-webpack';
 const BG_IMAGES_DIRNAME = 'bgimages';
-const ASSET_PATH = process.env.ASSET_PATH || '/acm-user-interface/';
+const ASSET_PATH = process.env.ASSET_PATH || (process.env.NODE_ENV === 'development' ? '/' : '/acm-user-interface/');
 
 export default (env) => {
   return {
@@ -105,7 +105,7 @@ export default (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         template: path.resolve('./src', 'index.html'),
-        base: '/acm-user-interface/',
+        base: process.env.NODE_ENV === 'development' ? '/' : '/acm-user-interface/',
       }),
       new Dotenv({
         systemvars: true,
