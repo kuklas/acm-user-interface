@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  PageSection,
   Title,
   Tabs,
   Tab,
@@ -575,7 +574,8 @@ const Clusters: React.FunctionComponent = () => {
         </CardBody>
       </Card>
 
-      <div className="table-content-card">
+      <div style={{ marginTop: '16px' }}>
+        <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
             <ToolbarItem>
@@ -741,6 +741,7 @@ const Clusters: React.FunctionComponent = () => {
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
+        </div>
       </div>
     </div>
   );
@@ -770,35 +771,26 @@ const Clusters: React.FunctionComponent = () => {
   );
 
   return (
-    <PageSection>
+    <>
       <div className="page-header-section">
         <Title headingLevel="h1" size="lg">
           Clusters
         </Title>
         <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Cluster tabs">
-          <Tab eventKey={0} title={<TabTitleText>Cluster list</TabTitleText>} aria-label="Cluster list tab">
-            <div className="page-content-section">
-              <ClusterListTab />
-            </div>
-          </Tab>
-          <Tab eventKey={1} title={<TabTitleText>Cluster sets</TabTitleText>} aria-label="Cluster sets tab">
-            <div className="page-content-section">
-              <ClusterSetsTab />
-            </div>
-          </Tab>
-          <Tab eventKey={2} title={<TabTitleText>Cluster pools</TabTitleText>} aria-label="Cluster pools tab">
-            <div className="page-content-section">
-              <ClusterPoolsTab />
-            </div>
-          </Tab>
-          <Tab eventKey={3} title={<TabTitleText>Discovered clusters</TabTitleText>} aria-label="Discovered clusters tab">
-            <div className="page-content-section">
-              <DiscoveredClustersTab />
-            </div>
-          </Tab>
+          <Tab eventKey={0} title={<TabTitleText>Cluster list</TabTitleText>} aria-label="Cluster list tab" />
+          <Tab eventKey={1} title={<TabTitleText>Cluster sets</TabTitleText>} aria-label="Cluster sets tab" />
+          <Tab eventKey={2} title={<TabTitleText>Cluster pools</TabTitleText>} aria-label="Cluster pools tab" />
+          <Tab eventKey={3} title={<TabTitleText>Discovered clusters</TabTitleText>} aria-label="Discovered clusters tab" />
         </Tabs>
       </div>
-    </PageSection>
+      
+      <div className="page-content-section">
+        {activeTabKey === 0 && <ClusterListTab />}
+        {activeTabKey === 1 && <ClusterSetsTab />}
+        {activeTabKey === 2 && <ClusterPoolsTab />}
+        {activeTabKey === 3 && <DiscoveredClustersTab />}
+      </div>
+    </>
   );
 };
 

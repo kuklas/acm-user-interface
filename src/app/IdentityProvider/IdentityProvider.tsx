@@ -1,7 +1,5 @@
 import * as React from 'react';
 import {
-  PageSection,
-  Title,
   Button,
   Toolbar,
   ToolbarContent,
@@ -64,58 +62,49 @@ const IdentityProvider: React.FunctionComponent = () => {
 
   return (
     <>
-      <PageSection>
-        <div className="page-header-section">
-          <Title headingLevel="h1" size="lg">
-            Identity Providers
-          </Title>
-        </div>
-        <div className="page-content-section">
-          <div className="table-content-card">
-            <Toolbar>
-              <ToolbarContent>
-                <ToolbarItem>
-                  <SearchInput
-                    placeholder="Search identity providers"
-                    value={searchValue}
-                    onChange={(_event, value) => setSearchValue(value)}
-                    onClear={() => setSearchValue('')}
-                  />
-                </ToolbarItem>
-                <ToolbarItem>
-                  <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateProvider}>
-                    Add Identity Provider
-                  </Button>
-                </ToolbarItem>
-              </ToolbarContent>
-            </Toolbar>
-            <Table aria-label="Identity providers table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th>Name</Th>
-                      <Th>Type</Th>
-                      <Th>Status</Th>
-                      <Th>Connected Users</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {mockIdentityProviders.map((provider) => (
-                      <Tr key={provider.id}>
-                        <Td dataLabel="Name">{provider.name}</Td>
-                        <Td dataLabel="Type">
-                          <Label color="blue">{provider.type}</Label>
-                        </Td>
-                        <Td dataLabel="Status">
-                          <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
-                        </Td>
-                        <Td dataLabel="Connected Users">{provider.users}</Td>
-                      </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-          </div>
-        </div>
-      </PageSection>
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search identity providers"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateProvider}>
+                Add Identity Provider
+              </Button>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        <Table aria-label="Identity providers table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th>Name</Th>
+              <Th>Type</Th>
+              <Th>Status</Th>
+              <Th>Connected Users</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {mockIdentityProviders.map((provider) => (
+              <Tr key={provider.id}>
+                <Td dataLabel="Name">{provider.name}</Td>
+                <Td dataLabel="Type">
+                  <Label color="blue">{provider.type}</Label>
+                </Td>
+                <Td dataLabel="Status">
+                  <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
+                </Td>
+                <Td dataLabel="Connected Users">{provider.users}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
 
       <Modal
         variant={ModalVariant.medium}

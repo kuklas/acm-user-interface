@@ -1,7 +1,5 @@
 import * as React from 'react';
 import {
-  PageSection,
-  Title,
   Button,
   Toolbar,
   ToolbarContent,
@@ -88,69 +86,60 @@ const Roles: React.FunctionComponent = () => {
 
   return (
     <>
-      <PageSection>
-        <div className="page-header-section">
-          <Title headingLevel="h1" size="lg">
-            Roles
-          </Title>
-        </div>
-        <div className="page-content-section">
-          <div className="table-content-card">
-            <Toolbar>
-              <ToolbarContent>
-                <ToolbarItem>
-                  <SearchInput
-                    placeholder="Search roles"
-                    value={searchValue}
-                    onChange={(_event, value) => setSearchValue(value)}
-                    onClear={() => setSearchValue('')}
-                  />
-                </ToolbarItem>
-                <ToolbarItem>
-                  <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateRole}>
-                    Create Custom Role
-                  </Button>
-                </ToolbarItem>
-              </ToolbarContent>
-            </Toolbar>
-            <Table aria-label="Roles table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th>Role Name</Th>
-                      <Th>Type</Th>
-                      <Th>Resources</Th>
-                      <Th>Permissions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {mockRoles.map((role) => (
-                      <Tr key={role.id}>
-                        <Td dataLabel="Role Name">{role.name}</Td>
-                        <Td dataLabel="Type">
-                          <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
-                        </Td>
-                        <Td dataLabel="Resources">{role.resources.join(', ')}</Td>
-                        <Td dataLabel="Permissions">
-                          <Split hasGutter>
-                            {role.permissions.slice(0, 3).map((perm) => (
-                              <SplitItem key={perm}>
-                                <Label isCompact>{perm}</Label>
-                              </SplitItem>
-                            ))}
-                            {role.permissions.length > 3 && (
-                              <SplitItem>
-                                <Label isCompact>+{role.permissions.length - 3} more</Label>
-                              </SplitItem>
-                            )}
-                          </Split>
-                        </Td>
-                      </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-          </div>
-        </div>
-      </PageSection>
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search roles"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateRole}>
+                Create Custom Role
+              </Button>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        <Table aria-label="Roles table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th>Role Name</Th>
+              <Th>Type</Th>
+              <Th>Resources</Th>
+              <Th>Permissions</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {mockRoles.map((role) => (
+              <Tr key={role.id}>
+                <Td dataLabel="Role Name">{role.name}</Td>
+                <Td dataLabel="Type">
+                  <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
+                </Td>
+                <Td dataLabel="Resources">{role.resources.join(', ')}</Td>
+                <Td dataLabel="Permissions">
+                  <Split hasGutter>
+                    {role.permissions.slice(0, 3).map((perm) => (
+                      <SplitItem key={perm}>
+                        <Label isCompact>{perm}</Label>
+                      </SplitItem>
+                    ))}
+                    {role.permissions.length > 3 && (
+                      <SplitItem>
+                        <Label isCompact>+{role.permissions.length - 3} more</Label>
+                      </SplitItem>
+                    )}
+                  </Split>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
 
       <Modal
         variant={ModalVariant.medium}

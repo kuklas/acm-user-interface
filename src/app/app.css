@@ -2,6 +2,47 @@ html,
 body,
 #root {
   height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Universal reset to ensure no padding/margin constraints */
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure no global padding/margin from PatternFly or browser defaults */
+.pf-v6-c-page,
+.pf-v6-c-page__main,
+.pf-v6-c-page__main-section,
+.pf-v6-c-page__main-section > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Override PatternFly Page component constraints */
+.pf-v6-c-page {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Ensure the main container takes full width without overflow */
+.pf-v6-c-page__main {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  overflow-x: hidden !important;
 }
 
 .pf-v6-c-content {
@@ -45,6 +86,25 @@ body,
 .pf-v6-c-page__main .pf-v6-c-page__main-section {
   background-color: #f5f5f5 !important;
   padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100vh - 200px) !important;
+}
+
+/* Ensure the main page container has no constraints */
+.pf-v6-c-page {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pf-v6-c-page__main {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Header section - white background with title and tabs */
@@ -55,6 +115,9 @@ body,
   position: sticky !important;
   top: 0 !important;
   z-index: 10 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* Add spacing between title and tabs */
@@ -65,8 +128,236 @@ body,
 /* Content area - grey background */
 .page-content-section {
   background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Clusters page container - grey background with padding */
+.clusters-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Header section within clusters page */
+.clusters-page-container .page-header-section {
+  background-color: #ffffff !important;
   padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Add spacing between title and tabs */
+.clusters-page-container .page-header-section .pf-v6-c-tabs {
+  margin-top: 16px !important;
+}
+
+/* Content area within clusters page */
+.clusters-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Identities page container - same layout as clusters */
+.identities-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.identities-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.identities-page-container .page-header-section .pf-v6-c-tabs {
+  margin-top: 16px !important;
+}
+
+.identities-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Roles page container - same layout as clusters */
+.roles-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.roles-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.roles-page-container .page-header-section .pf-v6-c-tabs {
+  margin-top: 16px !important;
+}
+
+.roles-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Identity Providers page container - same layout as clusters */
+.identity-providers-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.identity-providers-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.identity-providers-page-container .page-header-section .pf-v6-c-tabs {
+  margin-top: 16px !important;
+}
+
+.identity-providers-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Clusters page - no padding, no card, completely flat, full width */
+.clusters-page-content {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   min-height: calc(100vh - 200px) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Remove any card styling from Clusters page */
+.clusters-page-content .pf-v6-c-card {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove card body padding */
+.clusters-page-content .pf-v6-c-card__body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Ensure full width for all PatternFly containers in clusters page */
+.clusters-page-content .pf-v6-c-page__main-section,
+.clusters-page-content .pf-v6-c-page__main,
+.clusters-page-content .pf-v6-c-page {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Override any PatternFly container constraints */
+.pf-v6-c-page__main .pf-v6-c-page__main-section .pf-v6-c-page__main-section {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure no container constraints anywhere */
+.pf-v6-c-page__main * {
+  max-width: none !important;
+}
+
+/* Comprehensive reset for any potential global constraints */
+.pf-v6-c-page__main,
+.pf-v6-c-page__main > *,
+.pf-v6-c-page__main > * > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure content fits within viewport without horizontal scroll */
+.clusters-page-content {
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Ensure all parent containers allow full width without overflow */
+.pf-v6-c-page__main-section,
+.pf-v6-c-page__main-section > *,
+.pf-v6-c-page__main-section > * > * {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+/* Exception: Header section should have padding, content area should not */
+.pf-v6-c-page__main-section .page-header-section {
+  padding: 24px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure content area has no padding */
+.pf-v6-c-page__main-section .page-content-section,
+.pf-v6-c-page__main-section .clusters-page-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* Table content card - sits on grey background */
@@ -130,4 +421,18 @@ body,
 .table-content-card .pf-v6-c-table-container {
   overflow-x: auto !important;
   max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure table content fits within viewport */
+.clusters-page-content .pf-v6-c-table-container {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.clusters-page-content .pf-v6-c-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
 }

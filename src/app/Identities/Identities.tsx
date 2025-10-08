@@ -1,19 +1,11 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  PageSection,
-  Title,
-  Tabs,
-  Tab,
-  TabTitleText,
   Button,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
   SearchInput,
   Content,
-  Breadcrumb,
-  BreadcrumbItem,
   MenuToggle,
   MenuToggleElement,
   Dropdown,
@@ -49,21 +41,12 @@ const mockGroups = [
 
 const Identities: React.FunctionComponent = () => {
   useDocumentTitle('ACM | Identities');
-  const navigate = useNavigate();
-  const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('Service account');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
 
-  const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
-    setActiveTabKey(tabIndex);
-  };
-
   const UsersTable = () => (
     <>
-      <Content component="p" className="pf-v6-u-mb-md">
-        Manage all identities including users, groups, and service accounts in one place. Assign access individually or by group, where users automatically inherit their group's permissions.
-      </Content>
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
@@ -116,7 +99,7 @@ const Identities: React.FunctionComponent = () => {
                   <Button
                     variant="link"
                     isInline
-                    onClick={() => navigate(`/user-management/identities/${user.username}`)}
+                    onClick={() => console.log(`Navigate to user: ${user.username}`)}
                   >
                     {user.name}
                   </Button>
@@ -162,7 +145,7 @@ const Identities: React.FunctionComponent = () => {
                   <Button
                     variant="link"
                     isInline
-                    onClick={() => navigate(`/user-management/identities/${group.name}`)}
+                    onClick={() => console.log(`Navigate to group: ${group.name}`)}
                   >
                     {group.name}
                   </Button>
@@ -234,7 +217,7 @@ const Identities: React.FunctionComponent = () => {
                   <Button
                     variant="link"
                     isInline
-                    onClick={() => navigate(`/user-management/identities/${sa.name}`)}
+                    onClick={() => console.log(`Navigate to service account: ${sa.name}`)}
                   >
                     {sa.name}
                   </Button>
@@ -249,40 +232,7 @@ const Identities: React.FunctionComponent = () => {
     </>
   );
 
-  return (
-    <PageSection>
-      <div className="page-header-section">
-        <Breadcrumb className="pf-v6-u-mb-md">
-          <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management'); }}>
-            User management
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Identities</BreadcrumbItem>
-        </Breadcrumb>
-
-        <Title headingLevel="h1" size="lg">
-          Identities
-        </Title>
-        
-        <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity tabs">
-          <Tab eventKey={0} title={<TabTitleText>Users</TabTitleText>} aria-label="Users tab">
-            <div className="page-content-section">
-              <UsersTable />
-            </div>
-          </Tab>
-          <Tab eventKey={1} title={<TabTitleText>Groups</TabTitleText>} aria-label="Groups tab">
-            <div className="page-content-section">
-              <GroupsTable />
-            </div>
-          </Tab>
-          <Tab eventKey={2} title={<TabTitleText>Service Accounts</TabTitleText>} aria-label="Service accounts tab">
-            <div className="page-content-section">
-              <ServiceAccountsTable />
-            </div>
-          </Tab>
-        </Tabs>
-      </div>
-    </PageSection>
-  );
+  return <UsersTable />;
 };
 
 export { Identities };

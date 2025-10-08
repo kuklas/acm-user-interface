@@ -72,25 +72,9 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           />
         </MastheadToggle>
         <MastheadBrand>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg height="40px" width="50px" viewBox="0 0 100 80">
-              <defs>
-                <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#EE0000" />
-                  <stop offset="100%" stopColor="#CC0000" />
-                </linearGradient>
-              </defs>
-              {/* Red Hat Fedora */}
-              <g fill="url(#logo-gradient)">
-                <path d="M15,25 C15,15 25,10 35,10 C45,10 55,15 55,25 C55,30 50,35 45,35 L40,35 L40,45 C40,50 35,55 30,55 L25,55 C20,55 15,50 15,45 L15,25 Z" />
-                <path d="M35,10 C35,5 40,0 45,0 C50,0 55,5 55,10" fill="none" stroke="url(#logo-gradient)" strokeWidth="2"/>
-                <path d="M25,35 L30,35 C32,35 34,37 34,39 L34,45 C34,47 32,49 30,49 L25,49 C23,49 21,47 21,45 L21,39 C21,37 23,35 25,35 Z" fill="#000000"/>
-              </g>
-            </svg>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: '#f0f0f0' }}>Red Hat</span>
-              <span style={{ fontSize: '14px', fontWeight: 600, color: '#f0f0f0' }}>OpenShift</span>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1' }}>
+            <span style={{ fontSize: '18px', fontWeight: 700, color: '#151515', letterSpacing: '-0.02em' }}>Red Hat</span>
+            <span style={{ fontSize: '16px', fontWeight: 600, color: '#151515', letterSpacing: '-0.01em' }}>OpenShift</span>
           </div>
         </MastheadBrand>
       </MastheadMain>
@@ -121,7 +105,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               </ToolbarItem>
               <ToolbarItem>
                 <Button variant="plain" aria-label="User menu">
-                  <span style={{ color: '#f0f0f0' }}>Walter Joseph Kovacs</span>
+                  <span style={{ color: '#000000' }}>Walter Joseph Kovacs</span>
                   <Icon>
                     <CaretDownIcon />
                   </Icon>

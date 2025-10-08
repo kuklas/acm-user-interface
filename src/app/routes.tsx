@@ -4,13 +4,15 @@ import { Dashboard } from '@app/Dashboard/Dashboard';
 import { Support } from '@app/Support/Support';
 import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
-import { Identities } from '@app/Identities/Identities';
 import { IdentityDetail } from '@app/Identities/IdentityDetail';
-import { Roles } from '@app/Roles/Roles';
-import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
-import { Clusters } from '@app/Clusters/Clusters';
-import { ClusterDetail } from '@app/Clusters/ClusterDetail';
 import { NotFound } from '@app/NotFound/NotFound';
+import {
+  ClustersPage,
+  ClusterDetailPage,
+  IdentitiesPage,
+  RolesPage,
+  IdentityProvidersPage
+} from '@app/navigation';
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
@@ -47,13 +49,13 @@ const routes: AppRouteConfig[] = [
     label: 'Infrastructure',
     routes: [
       {
-        element: <Clusters />,
+        element: <ClustersPage />,
         label: 'Clusters',
         path: '/infrastructure/clusters',
         title: 'ACM | Clusters',
       },
       {
-        element: <ClusterDetail />,
+        element: <ClusterDetailPage />,
         path: '/infrastructure/clusters/:clusterName',
         title: 'ACM | Cluster Detail',
       },
@@ -123,7 +125,7 @@ const routes: AppRouteConfig[] = [
     label: 'User management',
     routes: [
       {
-        element: <Identities />,
+        element: <IdentitiesPage />,
         label: 'Identities',
         path: '/user-management/identities',
         title: 'ACM | Identities',
@@ -134,13 +136,13 @@ const routes: AppRouteConfig[] = [
         title: 'ACM | Identity Detail',
       },
       {
-        element: <Roles />,
+        element: <RolesPage />,
         label: 'Roles',
         path: '/user-management/roles',
         title: 'ACM | Roles',
       },
       {
-        element: <IdentityProvider />,
+        element: <IdentityProvidersPage />,
         label: 'Identity providers',
         path: '/user-management/identity-providers',
         title: 'ACM | Identity Providers',
