@@ -75,6 +75,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1' }}>
             <span style={{ fontSize: '18px', fontWeight: 700, color: '#151515', letterSpacing: '-0.02em' }}>Red Hat</span>
             <span style={{ fontSize: '16px', fontWeight: 600, color: '#151515', letterSpacing: '-0.01em' }}>OpenShift</span>
+            <span style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>v2.0 - Updated</span>
           </div>
         </MastheadBrand>
       </MastheadMain>
