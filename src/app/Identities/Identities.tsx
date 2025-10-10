@@ -155,7 +155,7 @@ const Identities: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                 />
               </Th>
-              <Th>Name - CHECKBOX TEST</Th>
+              <Th>Name - UPDATED LIVE SITE</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
             </Tr>
