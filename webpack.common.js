@@ -105,7 +105,7 @@ export default (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         template: path.resolve('./src', 'index.html'),
-        base: '/acm-user-interface/',
+        base: env === 'production' ? '/acm-user-interface/' : '/',
       }),
       new Dotenv({
         systemvars: true,
