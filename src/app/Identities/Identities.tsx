@@ -42,7 +42,7 @@ const mockGroups = [
 ];
 
 const Identities: React.FunctionComponent = () => {
-  useDocumentTitle('ACM | Identities - UPDATED 2024');
+  useDocumentTitle('ACM | Identities - FINAL TEST 2024');
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('User');
@@ -155,7 +155,7 @@ const Identities: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                 />
               </Th>
-              <Th>Name - DEPLOYMENT TEST 2024</Th>
+              <Th>Name - FINAL TEST 2024</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
             </Tr>
