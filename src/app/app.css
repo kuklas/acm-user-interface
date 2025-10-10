@@ -500,17 +500,37 @@ input[type="checkbox"] {
   line-height: 1.2 !important;
 }
 
-/* Reduce spacing between checkbox column and Name column */
+/* Reduce spacing between checkbox column and Name column to exactly 16px */
 .pf-v6-c-table th:first-child,
 .pf-v6-c-table td:first-child {
   padding-right: 16px !important;
   width: auto !important;
-  min-width: 40px !important;
-  max-width: 60px !important;
+  min-width: 30px !important;
+  max-width: 50px !important;
 }
 
 .pf-v6-c-table th:nth-child(2),
 .pf-v6-c-table td:nth-child(2) {
   padding-left: 0 !important;
   padding-right: 16px !important;
+}
+
+/* Additional spacing control for PatternFly table cells */
+.pf-v6-c-table th:first-child,
+.pf-v6-c-table td:first-child {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure the checkbox column is as narrow as possible */
+.pf-v6-c-table th:first-child {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+
+.pf-v6-c-table td:first-child {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
 }
