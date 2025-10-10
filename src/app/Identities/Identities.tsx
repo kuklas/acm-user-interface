@@ -14,6 +14,7 @@ import {
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for service accounts matching the screenshot
 const mockServiceAccounts = [
@@ -41,9 +42,61 @@ const mockGroups = [
 
 const Identities: React.FunctionComponent = () => {
   useDocumentTitle('ACM | Identities');
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
-  const [filterType, setFilterType] = React.useState('Service account');
+  const [filterType, setFilterType] = React.useState('User');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [selectedUsers, setSelectedUsers] = React.useState<number[]>([]);
+  const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
+  const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
+
+  const handleUserSelect = (userId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedUsers([...selectedUsers, userId]);
+    } else {
+      setSelectedUsers(selectedUsers.filter(id => id !== userId));
+    }
+  };
+
+  const handleSelectAllUsers = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedUsers(mockUsers.map(user => user.id));
+    } else {
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleGroupSelect = (groupId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedGroups([...selectedGroups, groupId]);
+    } else {
+      setSelectedGroups(selectedGroups.filter(id => id !== groupId));
+    }
+  };
+
+  const handleSelectAllGroups = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedGroups(mockGroups.map(group => group.id));
+    } else {
+      setSelectedGroups([]);
+    }
+  };
+
+  const handleServiceAccountSelect = (saId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedServiceAccounts([...selectedServiceAccounts, saId]);
+    } else {
+      setSelectedServiceAccounts(selectedServiceAccounts.filter(id => id !== saId));
+    }
+  };
+
+  const handleSelectAllServiceAccounts = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedServiceAccounts(mockServiceAccounts.map(sa => sa.id));
+    } else {
+      setSelectedServiceAccounts([]);
+    }
+  };
 
   const UsersTable = () => (
     <>
@@ -56,7 +109,12 @@ const Identities: React.FunctionComponent = () => {
                 onSelect={() => setIsFilterOpen(false)}
                 onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle ref={toggleRef} onClick={() => setIsFilterOpen(!isFilterOpen)} isExpanded={isFilterOpen}>
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                    isExpanded={isFilterOpen}
+                    variant="default"
+                  >
                     {filterType}
                   </MenuToggle>
                 )}
@@ -87,7 +145,16 @@ const Identities: React.FunctionComponent = () => {
         <Table aria-label="Users table" variant="compact">
           <Thead>
             <Tr>
-              <Th>Name</Th>
+              <Th>
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.length === mockUsers.length && mockUsers.length > 0}
+                  onChange={(e) => handleSelectAllUsers(e.target.checked)}
+                  aria-label="Select all users"
+                  style={{ transform: 'scale(2)', margin: '10px' }}
+                />
+              </Th>
+              <Th>Name - BULK SELECTOR TEST</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
             </Tr>
@@ -95,11 +162,20 @@ const Identities: React.FunctionComponent = () => {
           <Tbody>
             {mockUsers.map((user) => (
               <Tr key={user.id}>
+                <Td>
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={(e) => handleUserSelect(user.id, e.target.checked)}
+                    aria-label={`Select ${user.name}`}
+                    style={{ transform: 'scale(2)', margin: '10px' }}
+                  />
+                </Td>
                 <Td dataLabel="Name">
                   <Button
                     variant="link"
                     isInline
-                    onClick={() => console.log(`Navigate to user: ${user.username}`)}
+                    onClick={() => navigate(`/user-management/identities/${user.name}`)}
                   >
                     {user.name}
                   </Button>
@@ -145,7 +221,7 @@ const Identities: React.FunctionComponent = () => {
                   <Button
                     variant="link"
                     isInline
-                    onClick={() => console.log(`Navigate to group: ${group.name}`)}
+                    onClick={() => navigate(`/user-management/groups/${group.name}`)}
                   >
                     {group.name}
                   </Button>

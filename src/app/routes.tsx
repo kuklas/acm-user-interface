@@ -5,6 +5,7 @@ import { Support } from '@app/Support/Support';
 import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
 import { IdentityDetail } from '@app/Identities/IdentityDetail';
+import { GroupDetail } from '@app/Identities/GroupDetail';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -35,7 +36,6 @@ export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 const routes: AppRouteConfig[] = [
   {
     label: 'Home',
-    disabled: true,
     routes: [
       {
         element: <Dashboard />,
@@ -129,6 +129,11 @@ const routes: AppRouteConfig[] = [
         label: 'Identities',
         path: '/user-management/identities',
         title: 'ACM | Identities',
+      },
+      {
+        element: <GroupDetail />,
+        path: '/user-management/groups/:groupName',
+        title: 'ACM | Group Detail',
       },
       {
         element: <IdentityDetail />,

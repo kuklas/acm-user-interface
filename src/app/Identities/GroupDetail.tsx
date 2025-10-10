@@ -33,15 +33,17 @@ import {
   FlexItem,
   Icon,
   Tooltip,
+  Label,
 } from '@patternfly/react-core';
 import { CubesIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
 
-const IdentityDetail: React.FunctionComponent = () => {
-  const { identityName } = useParams<{ identityName: string }>();
+const GroupDetail: React.FunctionComponent = () => {
+  const { groupName } = useParams<{ groupName: string }>();
   const navigate = useNavigate();
+  
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   const [isWizardOpen, setIsWizardOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
@@ -49,7 +51,7 @@ const IdentityDetail: React.FunctionComponent = () => {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   
-  useDocumentTitle(`ACM | ${identityName}`);
+  useDocumentTitle(`ACM | ${groupName}`);
 
   const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
     setActiveTabKey(tabIndex);
@@ -75,16 +77,8 @@ const IdentityDetail: React.FunctionComponent = () => {
         </Title>
         <DescriptionList isHorizontal>
           <DescriptionListGroup>
-            <DescriptionListTerm>Full name</DescriptionListTerm>
-            <DescriptionListDescription>{identityName}</DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Username</DescriptionListTerm>
-            <DescriptionListDescription>{identityName?.toLowerCase().replace(/\s+/g, '')}</DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Identity provider</DescriptionListTerm>
-            <DescriptionListDescription>LDAP</DescriptionListDescription>
+            <DescriptionListTerm>Group name</DescriptionListTerm>
+            <DescriptionListDescription>{groupName}</DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>
       </CardBody>
@@ -106,24 +100,26 @@ const IdentityDetail: React.FunctionComponent = () => {
           maxHeight: '400px'
         }}>
           <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-{`kind: User
+{`kind: Group
 apiVersion: user.openshift.io/v1
 metadata:
-  name: ${identityName?.toLowerCase().replace(/\s+/g, '')}
-  uid: b502a610-33cf-4f31-b404-e0b4fe7c29a5
-  resourceVersion: '8608445'
-  creationTimestamp: '2025-07-23T06:12:36Z'
+  name: ${groupName?.toLowerCase().replace(/\s+/g, '-')}
+  uid: 78d9f67c-e1da-431c-947a-b053adb39001
+  resourceVersion: '9570553'
+  creationTimestamp: '2025-07-24T02:08:30Z'
+  labels:
+    app: frontend
 managedFields:
   - manager: htpasswd
     operation: Update
     apiVersion: user.openshift.io/v1
-    time: '2025-07-23T06:12:36Z'
+    time: '2025-07-24T02:08:30Z'
     fieldsType: FieldsV1
     fieldsV1:
-      f:identities: {}
-identities:
-  - 'htpasswd:${identityName?.toLowerCase().replace(/\s+/g, '')}'
-groups: null`}
+      f:users: {}
+users:
+  - user1
+  - user2`}
           </pre>
         </div>
       </CardBody>
@@ -131,39 +127,44 @@ groups: null`}
   );
 
   const RoleAssignmentsTab = () => (
-    <div className="table-content-card">
-      <EmptyState>
-        <CubesIcon />
-        <Title headingLevel="h2" size="lg">
-          No role assignment created yet
-        </Title>
-        <EmptyStateBody>
-          Description text that allows users to easily understand what this is for and how does it help them achieve their needs.
-        </EmptyStateBody>
-        <EmptyStateActions>
-          <Button variant="primary" onClick={handleCreateRoleAssignment}>
-            Create role assignment
-          </Button>
-        </EmptyStateActions>
-        <EmptyStateBody>
-          <Button component="a" href="#" variant="link">
-            Link to documentation
-          </Button>
-        </EmptyStateBody>
-      </EmptyState>
-    </div>
+    <Card>
+      <CardBody>
+        <EmptyState>
+          <CubesIcon />
+          <Title headingLevel="h2" size="lg">
+            No role assignment created yet
+          </Title>
+          <EmptyStateBody>
+            Description text that allows users to easily understand what this is for and how does it help them achieve their needs.
+          </EmptyStateBody>
+          <EmptyStateActions>
+            <Button variant="primary" onClick={handleCreateRoleAssignment}>
+              Create role assignment
+            </Button>
+          </EmptyStateActions>
+          <EmptyStateBody>
+            <Button component="a" href="#" variant="link">
+              Link to documentation
+            </Button>
+          </EmptyStateBody>
+        </EmptyState>
+      </CardBody>
+    </Card>
   );
 
-  const GroupsTab = () => {
-    const mockGroups = [
-      { id: 1, name: 'Security team', created: '1/9/2025, 3:15:28 PM' },
+  const UsersTab = () => {
+    const mockUsers = [
+      { id: 1, name: 'Joydeep Banerjee', username: 'jbanerje', identityProvider: 'LDAP', created: '5 minutes ago' },
+      { id: 2, name: 'Anna Walker', username: 'awalker', identityProvider: 'LDAP', created: '1 month ago' },
+      { id: 3, name: 'Joshua Packer', username: 'jpacker', identityProvider: 'LDAP', created: '1 month ago' },
     ];
 
-    const filteredGroups = mockGroups.filter(group =>
-      group.name.toLowerCase().includes(searchValue.toLowerCase())
+    const filteredUsers = mockUsers.filter(user =>
+      user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchValue.toLowerCase())
     );
 
-    const paginatedGroups = filteredGroups.slice(
+    const paginatedUsers = filteredUsers.slice(
       (page - 1) * perPage,
       page * perPage
     );
@@ -185,39 +186,31 @@ groups: null`}
                       onClick={() => setIsFilterOpen(!isFilterOpen)}
                       isExpanded={isFilterOpen}
                     >
-                      <FilterIcon /> Filter
+                      <FilterIcon /> User
                     </MenuToggle>
                   )}
                 >
                   <DropdownList>
-                    <DropdownItem key="all">All groups</DropdownItem>
+                    <DropdownItem key="all">All users</DropdownItem>
+                    <DropdownItem key="ldap">LDAP</DropdownItem>
+                    <DropdownItem key="local">Local</DropdownItem>
                   </DropdownList>
                 </Dropdown>
               </ToolbarItem>
               <ToolbarItem>
                 <SearchInput
-                  placeholder="Search for role assignment"
+                  placeholder="Search for a user"
                   value={searchValue}
                   onChange={(_event, value) => setSearchValue(value)}
                   onClear={() => setSearchValue('')}
                 />
               </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="primary" onClick={handleCreateRoleAssignment}>
-                  Create role assignment
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="plain" aria-label="Actions">
-                  Actions
-                </Button>
-              </ToolbarItem>
               <ToolbarItem align={{ default: 'alignEnd' }}>
-                <span>1-1 of 1</span>
+                <span>1-3 of 3</span>
               </ToolbarItem>
               <ToolbarItem>
                 <Pagination
-                  itemCount={filteredGroups.length}
+                  itemCount={filteredUsers.length}
                   page={page}
                   perPage={perPage}
                   onSetPage={onSetPage}
@@ -228,20 +221,30 @@ groups: null`}
             </ToolbarContent>
           </Toolbar>
           
-          <Table aria-label="Groups table" variant="compact">
+          <Table aria-label="Users table" variant="compact">
             <Thead>
               <Tr>
                 <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Name</FlexItem>
                     <FlexItem>
-                      <Tooltip content="Information about group names">
+                      <Tooltip content="Information about user names">
                         <InfoCircleIcon />
                       </Tooltip>
                     </FlexItem>
                   </Flex>
                 </Th>
                 <Th sort={{ columnIndex: 1, sortBy: { index: 1, direction: 'asc' } }}>
+                  <Flex spaceItems={{ default: 'spaceItemsXs' }}>
+                    <FlexItem>Identity provider</FlexItem>
+                    <FlexItem>
+                      <Tooltip content="Information about identity providers">
+                        <InfoCircleIcon />
+                      </Tooltip>
+                    </FlexItem>
+                  </Flex>
+                </Th>
+                <Th sort={{ columnIndex: 2, sortBy: { index: 2, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Created</FlexItem>
                     <FlexItem>
@@ -251,17 +254,47 @@ groups: null`}
                     </FlexItem>
                   </Flex>
                 </Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {paginatedGroups.map((group) => (
-                <Tr key={group.id}>
+              {paginatedUsers.map((user) => (
+                <Tr key={user.id}>
                   <Td dataLabel="Name">
-                    <Button variant="link" isInline>
-                      {group.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '50%', 
+                        backgroundColor: '#f0ab00', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '14px'
+                      }}>
+                        {user.name.charAt(0)}
+                      </div>
+                      <div>
+                        <Button variant="link" isInline>
+                          {user.name}
+                        </Button>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                          {user.username}
+                        </div>
+                      </div>
+                    </div>
+                  </Td>
+                  <Td dataLabel="Identity provider">
+                    <Label color="blue">{user.identityProvider}</Label>
+                  </Td>
+                  <Td dataLabel="Created">{user.created}</Td>
+                  <Td dataLabel="Actions">
+                    <Button variant="plain" aria-label="Actions">
+                      <Icon><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></Icon>
                     </Button>
                   </Td>
-                  <Td dataLabel="Created">{group.created}</Td>
                 </Tr>
               ))}
             </Tbody>
@@ -271,7 +304,7 @@ groups: null`}
             <ToolbarContent>
               <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Pagination
-                  itemCount={filteredGroups.length}
+                  itemCount={filteredUsers.length}
                   page={page}
                   perPage={perPage}
                   onSetPage={onSetPage}
@@ -285,18 +318,6 @@ groups: null`}
       </Card>
     );
   };
-
-  const UsersTab = () => (
-    <div className="table-content-card">
-      <Card>
-        <CardBody>
-          <Content component="p">
-            Users for {identityName}
-          </Content>
-        </CardBody>
-      </Card>
-    </div>
-  );
 
   return (
     <>
@@ -319,19 +340,16 @@ groups: null`}
                 navigate('/user-management/identities');
               }}
             >
-              Users, Groups and Service accounts
+              Identities
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>{identityName}</BreadcrumbItem>
+            <BreadcrumbItem isActive>{groupName}</BreadcrumbItem>
           </Breadcrumb>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
             <div>
               <Title headingLevel="h1" size="lg">
-                {identityName}
+                {groupName}
               </Title>
-              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                {identityName?.toLowerCase().replace(/\s+/g, '')}
-              </div>
             </div>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <Button variant="plain" isInline>
@@ -340,11 +358,11 @@ groups: null`}
             </div>
           </div>
 
-          <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity detail tabs">
+          <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Group detail tabs">
             <Tab eventKey={0} title={<TabTitleText>Details</TabTitleText>} aria-label="Details tab" />
             <Tab eventKey={1} title={<TabTitleText>YAML</TabTitleText>} aria-label="YAML tab" />
             <Tab eventKey={2} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments tab" />
-            <Tab eventKey={3} title={<TabTitleText>Groups</TabTitleText>} aria-label="Groups tab" />
+            <Tab eventKey={3} title={<TabTitleText>Users</TabTitleText>} aria-label="Users tab" />
           </Tabs>
         </div>
 
@@ -352,7 +370,7 @@ groups: null`}
           {activeTabKey === 0 && <DetailsTab />}
           {activeTabKey === 1 && <YAMLTab />}
           {activeTabKey === 2 && <RoleAssignmentsTab />}
-          {activeTabKey === 3 && <GroupsTab />}
+          {activeTabKey === 3 && <UsersTab />}
         </div>
       </div>
 
@@ -361,14 +379,13 @@ groups: null`}
         onClose={() => setIsWizardOpen(false)}
         context="identities"
         preselectedIdentity={{
-          type: 'user',
+          type: 'group',
           id: 1,
-          name: identityName || 'Unknown'
+          name: groupName || 'Unknown'
         }}
       />
     </>
   );
 };
 
-export { IdentityDetail };
-
+export { GroupDetail };

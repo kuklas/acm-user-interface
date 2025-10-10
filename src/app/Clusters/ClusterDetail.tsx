@@ -493,7 +493,12 @@ const ClusterDetail: React.FunctionComponent = () => {
         </div>
       </div>
 
-      <RoleAssignmentWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} clusterName={clusterName} />
+          <RoleAssignmentWizard 
+            isOpen={isWizardOpen} 
+            onClose={() => setIsWizardOpen(false)} 
+            clusterName={clusterName}
+            context="clusters"
+          />
     </>
   );
 };

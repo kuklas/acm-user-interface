@@ -26,6 +26,23 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('Service account');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
+
+  const handleServiceAccountSelect = (saId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedServiceAccounts([...selectedServiceAccounts, saId]);
+    } else {
+      setSelectedServiceAccounts(selectedServiceAccounts.filter(id => id !== saId));
+    }
+  };
+
+  const handleSelectAllServiceAccounts = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedServiceAccounts(mockServiceAccounts.map(sa => sa.id));
+    } else {
+      setSelectedServiceAccounts([]);
+    }
+  };
 
   return (
     <div className="table-content-card">
@@ -37,17 +54,22 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
               onSelect={() => setIsFilterOpen(false)}
               onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
               toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle ref={toggleRef} onClick={() => setIsFilterOpen(!isFilterOpen)} isExpanded={isFilterOpen}>
+                <MenuToggle 
+                  ref={toggleRef} 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                  isExpanded={isFilterOpen}
+                  variant="default"
+                >
                   {filterType}
                 </MenuToggle>
               )}
             >
               <DropdownList>
-                <DropdownItem value="User" onClick={() => setFilterType('User')}>
-                  User
-                </DropdownItem>
                 <DropdownItem value="Service account" onClick={() => setFilterType('Service account')}>
                   Service account
+                </DropdownItem>
+                <DropdownItem value="User" onClick={() => setFilterType('User')}>
+                  User
                 </DropdownItem>
                 <DropdownItem value="Group" onClick={() => setFilterType('Group')}>
                   Group
@@ -63,12 +85,24 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
               onClear={() => setSearchValue('')}
             />
           </ToolbarItem>
+          <ToolbarItem>
+            <Button variant="primary">Create service account</Button>
+          </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
       <Table aria-label="Service accounts table" variant="compact">
         <Thead>
           <Tr>
-            <Th>Name</Th>
+            <Th>
+              <input
+                type="checkbox"
+                checked={selectedServiceAccounts.length === mockServiceAccounts.length && mockServiceAccounts.length > 0}
+                onChange={(e) => handleSelectAllServiceAccounts(e.target.checked)}
+                aria-label="Select all service accounts"
+                style={{ transform: 'scale(2)', margin: '10px' }}
+              />
+            </Th>
+            <Th>Name - BULK SELECTOR TEST</Th>
             <Th>Users</Th>
             <Th>Created</Th>
           </Tr>
@@ -76,6 +110,15 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
         <Tbody>
           {mockServiceAccounts.map((sa) => (
             <Tr key={sa.id}>
+              <Td>
+                <input
+                  type="checkbox"
+                  checked={selectedServiceAccounts.includes(sa.id)}
+                  onChange={(e) => handleServiceAccountSelect(sa.id, e.target.checked)}
+                  aria-label={`Select ${sa.name}`}
+                  style={{ transform: 'scale(2)', margin: '10px' }}
+                />
+              </Td>
               <Td dataLabel="Name">
                 <Button
                   variant="link"

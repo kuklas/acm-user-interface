@@ -13,6 +13,8 @@ import {
   MenuToggleElement,
   Modal,
   ModalVariant,
+  Pagination,
+  PaginationVariant,
   Radio,
   SearchInput,
   Tabs,
@@ -21,14 +23,28 @@ import {
   Title,
   ToggleGroup,
   ToggleGroupItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from '@patternfly/react-core';
-import { CaretDownIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, FilterIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 
 interface RoleAssignmentWizardProps {
   isOpen: boolean;
   onClose: () => void;
   clusterName?: string;
+  context?: 'clusters' | 'identities' | 'roles';
+  preselectedIdentity?: {
+    type: 'user' | 'group';
+    id: number;
+    name: string;
+  };
+  preselectedRole?: {
+    id: number;
+    name: string;
+    type: string;
+  };
 }
 
 // Mock data
@@ -67,14 +83,34 @@ const mockRoles = [
   { id: 3, name: 'Virtualization editor', type: 'kubevirt.io/edit', description: 'Modify resources: Create, edit, and delete most Virtualization resources; cannot manage access' },
 ];
 
-const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> = ({ isOpen, onClose, clusterName }) => {
-  const [currentStep, setCurrentStep] = React.useState(1);
+const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> = ({ 
+  isOpen, 
+  onClose, 
+  clusterName, 
+  context = 'clusters',
+  preselectedIdentity,
+  preselectedRole 
+}) => {
+  // Determine initial step based on context
+  const getInitialStep = () => {
+    if (context === 'identities') return 2; // Skip user/group selection
+    if (context === 'roles') return 1; // Start with user/group selection
+    return 1; // Default for clusters
+  };
+
+  const [currentStep, setCurrentStep] = React.useState(getInitialStep());
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(1);
   
   // Step 1: Select user or group
-  const [selectedIdentityType, setSelectedIdentityType] = React.useState<'user' | 'group'>('group');
-  const [selectedUser, setSelectedUser] = React.useState<number | null>(null);
-  const [selectedGroup, setSelectedGroup] = React.useState<number | null>(3); // dev-team-alpha
+  const [selectedIdentityType, setSelectedIdentityType] = React.useState<'user' | 'group'>(
+    preselectedIdentity?.type || 'group'
+  );
+  const [selectedUser, setSelectedUser] = React.useState<number | null>(
+    preselectedIdentity?.type === 'user' ? preselectedIdentity.id : null
+  );
+  const [selectedGroup, setSelectedGroup] = React.useState<number | null>(
+    preselectedIdentity?.type === 'group' ? preselectedIdentity.id : 3
+  );
   const [userSearchValue, setUserSearchValue] = React.useState('');
   const [isUserFilterOpen, setIsUserFilterOpen] = React.useState(false);
   const [userFilterType, setUserFilterType] = React.useState('User');
@@ -100,7 +136,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [hasVisitedSpecifyProjects, setHasVisitedSpecifyProjects] = React.useState(false);
   
   // Step 3: Select role
-  const [selectedRole, setSelectedRole] = React.useState<number | null>(1); // Virtualization admin
+  const [selectedRole, setSelectedRole] = React.useState<number | null>(
+    preselectedRole?.id || 1
+  );
   const [roleSearchValue, setRoleSearchValue] = React.useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
 
@@ -149,18 +187,29 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           return;
         }
         
-        // If "Full access" (cluster scope) → skip "Specify common projects", go to step 3
+        // If "Full access" (cluster scope) → skip "Specify common projects", go to next step
         // Fall through to move to next step
       }
       
-      // From "Specify common projects" substep → go to step 3
+      // From "Specify common projects" substep → go to next step
       if (showSpecifyProjects) {
         setShowSpecifyProjects(false);
         // Fall through to move to next step
       }
     }
     
-    setCurrentStep(currentStep + 1);
+    // Determine next step based on context
+    let nextStep = currentStep + 1;
+    
+    if (context === 'identities') {
+      // Skip step 1 (user/group selection), step 3 (role selection)
+      if (currentStep === 2) nextStep = 4; // Go from resources to review
+    } else if (context === 'roles') {
+      // Skip step 3 (role selection)
+      if (currentStep === 2) nextStep = 4; // Go from resources to review
+    }
+    
+    setCurrentStep(nextStep);
   };
 
   const handleBack = () => {
@@ -179,13 +228,24 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         return;
       }
       
-      // From "Specify clusters" substep → go back to step 1
+      // From "Specify clusters" substep → go back to previous step
       if (showSpecifyClusters) {
         // Fall through to go to previous step
       }
     }
     
-    setCurrentStep(currentStep - 1);
+    // Determine previous step based on context
+    let prevStep = currentStep - 1;
+    
+    if (context === 'identities') {
+      // Skip step 1 (user/group selection), step 3 (role selection)
+      if (currentStep === 4) prevStep = 2; // Go from review to resources
+    } else if (context === 'roles') {
+      // Skip step 3 (role selection)
+      if (currentStep === 4) prevStep = 2; // Go from review to resources
+    }
+    
+    setCurrentStep(prevStep);
   };
 
   const handleFinish = () => {
@@ -269,35 +329,54 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity type tabs">
         <Tab eventKey={0} title={<TabTitleText>Users</TabTitleText>}>
           <div className="pf-v6-u-mt-md">
-            <Flex>
-              <FlexItem>
-                <Dropdown
-                  isOpen={isUserFilterOpen}
-                  onSelect={() => setIsUserFilterOpen(false)}
-                  onOpenChange={(isOpen: boolean) => setIsUserFilterOpen(isOpen)}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle ref={toggleRef} onClick={() => setIsUserFilterOpen(!isUserFilterOpen)} isExpanded={isUserFilterOpen}>
-                      {userFilterType}
-                    </MenuToggle>
-                  )}
-                >
-                  <DropdownList>
-                    <DropdownItem value="User" onClick={() => setUserFilterType('User')}>
-                      User
-                    </DropdownItem>
-                  </DropdownList>
-                </Dropdown>
-              </FlexItem>
-              <FlexItem>
-                <SearchInput
-                  placeholder="Search for a user"
-                  value={userSearchValue}
-                  onChange={(_event, value) => setUserSearchValue(value)}
-                  onClear={() => setUserSearchValue('')}
-                />
-              </FlexItem>
-            </Flex>
-            <Table aria-label="Users table" variant="compact" className="pf-v6-u-mt-md">
+            <Toolbar>
+              <ToolbarContent>
+                <ToolbarItem>
+                  <Dropdown
+                    isOpen={isUserFilterOpen}
+                    onSelect={() => setIsUserFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsUserFilterOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        variant="plain"
+                        onClick={() => setIsUserFilterOpen(!isUserFilterOpen)}
+                        isExpanded={isUserFilterOpen}
+                      >
+                        <FilterIcon /> Filters
+                      </MenuToggle>
+                    )}
+                  >
+                    <DropdownList>
+                      <DropdownItem key="all">All users</DropdownItem>
+                      <DropdownItem key="ldap">LDAP</DropdownItem>
+                      <DropdownItem key="local">Local</DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </ToolbarItem>
+                <ToolbarItem>
+                  <SearchInput
+                    placeholder="Search"
+                    value={userSearchValue}
+                    onChange={(_event, value) => setUserSearchValue(value)}
+                    onClear={() => setUserSearchValue('')}
+                  />
+                </ToolbarItem>
+                <ToolbarItem align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={mockUsers.length}
+                    perPage={10}
+                    page={1}
+                    onSetPage={() => {}}
+                    widgetId="users-pagination"
+                    onPerPageSelect={() => {}}
+                    variant={PaginationVariant.top}
+                  />
+                </ToolbarItem>
+              </ToolbarContent>
+            </Toolbar>
+
+            <Table aria-label="Users table" variant="compact">
               <Thead>
                 <Tr>
                   <Th />
@@ -306,28 +385,94 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </Tr>
               </Thead>
               <Tbody>
-                {mockUsers.map((user) => (
-                  <Tr key={user.id}>
-                    <Td
-                      select={{
-                        rowIndex: user.id,
-                        onSelect: () => setSelectedUser(user.id),
-                        isSelected: selectedUser === user.id,
-                      }}
-                    />
-                    <Td dataLabel="Name">
-                      <div>{user.name}</div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>{user.username}</div>
-                    </Td>
-                    <Td dataLabel="Identity provider">{user.provider}</Td>
-                  </Tr>
-                ))}
+                {mockUsers
+                  .filter((user) => user.name.toLowerCase().includes(userSearchValue.toLowerCase()))
+                  .map((user) => (
+                    <Tr key={user.id}>
+                      <Td>
+                        <Radio
+                          isChecked={selectedUser === user.id}
+                          name="selected-user"
+                          onChange={() => setSelectedUser(user.id)}
+                          id={`user-${user.id}`}
+                        />
+                      </Td>
+                      <Td dataLabel="Name">
+                        <div>{user.name}</div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>{user.username}</div>
+                      </Td>
+                      <Td dataLabel="Identity provider">{user.provider}</Td>
+                    </Tr>
+                  ))}
               </Tbody>
             </Table>
+
+            <Toolbar>
+              <ToolbarContent>
+                <ToolbarItem align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={mockUsers.length}
+                    perPage={10}
+                    page={1}
+                    onSetPage={() => {}}
+                    widgetId="users-bottom-pagination"
+                    onPerPageSelect={() => {}}
+                    variant={PaginationVariant.bottom}
+                  />
+                </ToolbarItem>
+              </ToolbarContent>
+            </Toolbar>
           </div>
         </Tab>
         <Tab eventKey={1} title={<TabTitleText>Groups</TabTitleText>}>
           <div className="pf-v6-u-mt-md">
+            <Toolbar>
+              <ToolbarContent>
+                <ToolbarItem>
+                  <Dropdown
+                    isOpen={isUserFilterOpen}
+                    onSelect={() => setIsUserFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsUserFilterOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        variant="plain"
+                        onClick={() => setIsUserFilterOpen(!isUserFilterOpen)}
+                        isExpanded={isUserFilterOpen}
+                      >
+                        <FilterIcon /> Filters
+                      </MenuToggle>
+                    )}
+                  >
+                    <DropdownList>
+                      <DropdownItem key="all">All groups</DropdownItem>
+                      <DropdownItem key="ldap">LDAP</DropdownItem>
+                      <DropdownItem key="local">Local</DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </ToolbarItem>
+                <ToolbarItem>
+                  <SearchInput
+                    placeholder="Search"
+                    value={userSearchValue}
+                    onChange={(_event, value) => setUserSearchValue(value)}
+                    onClear={() => setUserSearchValue('')}
+                  />
+                </ToolbarItem>
+                <ToolbarItem align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={mockGroups.length}
+                    perPage={10}
+                    page={1}
+                    onSetPage={() => {}}
+                    widgetId="groups-pagination"
+                    onPerPageSelect={() => {}}
+                    variant={PaginationVariant.top}
+                  />
+                </ToolbarItem>
+              </ToolbarContent>
+            </Toolbar>
+
             <Table aria-label="Groups table" variant="compact">
               <Thead>
                 <Tr>
@@ -337,21 +482,40 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </Tr>
               </Thead>
               <Tbody>
-                {mockGroups.map((group) => (
-                  <Tr key={group.id}>
-                    <Td
-                      select={{
-                        rowIndex: group.id,
-                        onSelect: () => setSelectedGroup(group.id),
-                        isSelected: selectedGroup === group.id,
-                      }}
-                    />
-                    <Td dataLabel="Name">{group.name}</Td>
-                    <Td dataLabel="Users">{group.users}</Td>
-                  </Tr>
-                ))}
+                {mockGroups
+                  .filter((group) => group.name.toLowerCase().includes(userSearchValue.toLowerCase()))
+                  .map((group) => (
+                    <Tr key={group.id}>
+                      <Td>
+                        <Radio
+                          isChecked={selectedGroup === group.id}
+                          name="selected-group"
+                          onChange={() => setSelectedGroup(group.id)}
+                          id={`group-${group.id}`}
+                        />
+                      </Td>
+                      <Td dataLabel="Name">{group.name}</Td>
+                      <Td dataLabel="Users">{group.users}</Td>
+                    </Tr>
+                  ))}
               </Tbody>
             </Table>
+
+            <Toolbar>
+              <ToolbarContent>
+                <ToolbarItem align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={mockGroups.length}
+                    perPage={10}
+                    page={1}
+                    onSetPage={() => {}}
+                    widgetId="groups-bottom-pagination"
+                    onPerPageSelect={() => {}}
+                    variant={PaginationVariant.bottom}
+                  />
+                </ToolbarItem>
+              </ToolbarContent>
+            </Toolbar>
           </div>
         </Tab>
       </Tabs>
@@ -581,32 +745,54 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         </Button>
       </Content>
 
-      <Flex className="pf-v6-u-mb-md">
-        <FlexItem>
-          <Dropdown
-            isOpen={isRoleFilterOpen}
-            onSelect={() => setIsRoleFilterOpen(false)}
-            onOpenChange={(isOpen: boolean) => setIsRoleFilterOpen(isOpen)}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle ref={toggleRef} onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)} isExpanded={isRoleFilterOpen}>
-                Role
-              </MenuToggle>
-            )}
-          >
-            <DropdownList>
-              <DropdownItem>All roles</DropdownItem>
-            </DropdownList>
-          </Dropdown>
-        </FlexItem>
-        <FlexItem>
-          <SearchInput
-            placeholder="Search for a role"
-            value={roleSearchValue}
-            onChange={(_event, value) => setRoleSearchValue(value)}
-            onClear={() => setRoleSearchValue('')}
-          />
-        </FlexItem>
-      </Flex>
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isRoleFilterOpen}
+              onSelect={() => setIsRoleFilterOpen(false)}
+              onOpenChange={(isOpen: boolean) => setIsRoleFilterOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  variant="plain"
+                  onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)}
+                  isExpanded={isRoleFilterOpen}
+                >
+                  <FilterIcon /> Filters
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem key="all">All roles</DropdownItem>
+                <DropdownItem key="kubevirt">kubevirt.io</DropdownItem>
+                <DropdownItem key="admin">Admin roles</DropdownItem>
+                <DropdownItem key="viewer">Viewer roles</DropdownItem>
+                <DropdownItem key="editor">Editor roles</DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
+          <ToolbarItem>
+            <SearchInput
+              placeholder="Search"
+              value={roleSearchValue}
+              onChange={(_event, value) => setRoleSearchValue(value)}
+              onClear={() => setRoleSearchValue('')}
+            />
+          </ToolbarItem>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Pagination
+              itemCount={filteredRoles.length}
+              perPage={10}
+              page={1}
+              onSetPage={() => {}}
+              widgetId="roles-pagination"
+              onPerPageSelect={() => {}}
+              variant={PaginationVariant.top}
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
 
       <Table aria-label="Roles table" variant="compact">
         <Thead>
@@ -619,13 +805,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         <Tbody>
           {filteredRoles.map((role) => (
             <Tr key={role.id}>
-              <Td
-                select={{
-                  rowIndex: role.id,
-                  onSelect: () => setSelectedRole(role.id),
-                  isSelected: selectedRole === role.id,
-                }}
-              />
+              <Td>
+                <Radio
+                  isChecked={selectedRole === role.id}
+                  name="selected-role"
+                  onChange={() => setSelectedRole(role.id)}
+                  id={`role-${role.id}`}
+                />
+              </Td>
               <Td dataLabel="Role">
                 <div>{role.name}</div>
                 <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>{role.type}</div>
@@ -638,6 +825,22 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           ))}
         </Tbody>
       </Table>
+
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Pagination
+              itemCount={filteredRoles.length}
+              perPage={10}
+              page={1}
+              onSetPage={() => {}}
+              widgetId="roles-bottom-pagination"
+              onPerPageSelect={() => {}}
+              variant={PaginationVariant.bottom}
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
     </div>
   );
 
@@ -725,10 +928,19 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const getCurrentStepContent = () => {
     switch (currentStep) {
       case 1:
+        if (context === 'identities') {
+          return <Step2SelectResources />; // Skip user/group selection
+        }
         return <Step1SelectUserOrGroup />;
       case 2:
+        if (context === 'identities') {
+          return <Step4Review />; // Skip role selection, go to review
+        }
         return <Step2SelectResources />;
       case 3:
+        if (context === 'roles') {
+          return <Step4Review />; // Skip role selection
+        }
         return <Step3SelectRole />;
       case 4:
         return <Step4Review />;
@@ -744,6 +956,16 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       if (showSpecifyProjects) return 'Specify common projects';
       return 'Select resources';
     }
+    
+    // Adjust titles based on context
+    if (context === 'identities') {
+      const titles = ['', 'Select resources', 'Review'];
+      return titles[currentStep] || '';
+    } else if (context === 'roles') {
+      const titles = ['', 'Select user or group', 'Select resources', 'Review'];
+      return titles[currentStep] || '';
+    }
+    
     const titles = ['', 'Select user or group', 'Select resources', 'Select role', 'Review'];
     return titles[currentStep];
   };
@@ -884,13 +1106,37 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               flexDirection: 'column',
               flexShrink: 0
             }}>
-              {renderStepIndicator(1, 'Select user or group', false, true)}
-              {renderStepIndicator(2, 'Select resources', false, true)}
-              {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
-              {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
-              {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify common projects', true, false)}
-              {renderStepIndicator(3, 'Select role', false, true)}
-              {renderStepIndicator(4, 'Review', false, false)}
+              {context === 'identities' ? (
+                // Identities context: Skip user/group selection, skip role selection
+                <>
+                  {renderStepIndicator(1, 'Select resources', false, true)}
+                  {(hasVisitedSpecifyClusters || (currentStep === 1 && showSpecifyClusters)) && renderStepIndicator(1, 'Specify clusters', true, true)}
+                  {(hasVisitedIncludeProjects || (currentStep === 1 && showIncludeProjects)) && renderStepIndicator(1, 'Include projects', true, true)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, 'Specify common projects', true, false)}
+                  {renderStepIndicator(2, 'Review', false, false)}
+                </>
+              ) : context === 'roles' ? (
+                // Roles context: Skip role selection
+                <>
+                  {renderStepIndicator(1, 'Select user or group', false, true)}
+                  {renderStepIndicator(2, 'Select resources', false, true)}
+                  {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
+                  {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify common projects', true, false)}
+                  {renderStepIndicator(3, 'Review', false, false)}
+                </>
+              ) : (
+                // Default clusters context: Show all steps
+                <>
+                  {renderStepIndicator(1, 'Select user or group', false, true)}
+                  {renderStepIndicator(2, 'Select resources', false, true)}
+                  {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
+                  {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify common projects', true, false)}
+                  {renderStepIndicator(3, 'Select role', false, true)}
+                  {renderStepIndicator(4, 'Review', false, false)}
+                </>
+              )}
             </FlexItem>
             
             {/* Right Content Area with Footer */}
@@ -915,12 +1161,16 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 marginRight: '-1.5rem',
                 paddingRight: 'calc(1.5rem + 1.5rem)'
               }}>
-                {currentStep > 1 && (
+                {((context === 'identities' && currentStep > 1) || 
+                  (context === 'roles' && currentStep > 1) || 
+                  (context === 'clusters' && currentStep > 1)) && (
                   <Button variant="secondary" onClick={handleBack}>
                     Back
                   </Button>
                 )}{' '}
-                {currentStep < 4 ? (
+                {((context === 'identities' && currentStep < 2) || 
+                  (context === 'roles' && currentStep < 3) || 
+                  (context === 'clusters' && currentStep < 4)) ? (
                   <Button variant="primary" onClick={handleNext}>
                     Next
                   </Button>

@@ -18,6 +18,7 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
 
 // Mock data for Roles
 const mockRoles = [
@@ -57,11 +58,22 @@ const Roles: React.FunctionComponent = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newRoleName, setNewRoleName] = React.useState('');
   const [selectedPermissions, setSelectedPermissions] = React.useState<string[]>([]);
+  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
+  const [selectedRole, setSelectedRole] = React.useState<{
+    id: number;
+    name: string;
+    type: string;
+  } | null>(null);
 
   const availablePermissions = ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch'];
 
   const handleCreateRole = () => {
     setIsCreateModalOpen(true);
+  };
+
+  const handleCreateRoleAssignment = (role: { id: number; name: string; type: string }) => {
+    setSelectedRole(role);
+    setIsWizardOpen(true);
   };
 
   const handleModalClose = () => {
@@ -111,6 +123,7 @@ const Roles: React.FunctionComponent = () => {
               <Th>Type</Th>
               <Th>Resources</Th>
               <Th>Permissions</Th>
+              <Th>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -134,6 +147,15 @@ const Roles: React.FunctionComponent = () => {
                       </SplitItem>
                     )}
                   </Split>
+                </Td>
+                <Td dataLabel="Actions">
+                  <Button
+                    variant="link"
+                    isInline
+                    onClick={() => handleCreateRoleAssignment({ id: role.id, name: role.name, type: role.type })}
+                  >
+                    Create role assignment
+                  </Button>
                 </Td>
               </Tr>
             ))}
@@ -179,6 +201,16 @@ const Roles: React.FunctionComponent = () => {
           </Button>
         </div>
       </Modal>
+
+      <RoleAssignmentWizard
+        isOpen={isWizardOpen}
+        onClose={() => {
+          setIsWizardOpen(false);
+          setSelectedRole(null);
+        }}
+        context="roles"
+        preselectedRole={selectedRole || undefined}
+      />
     </>
   );
 };
