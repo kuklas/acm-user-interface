@@ -499,3 +499,18 @@ input[type="checkbox"] {
   font-size: 12px !important;
   line-height: 1.2 !important;
 }
+
+/* Reduce spacing between checkbox column and Name column */
+.pf-v6-c-table th:first-child,
+.pf-v6-c-table td:first-child {
+  padding-right: 16px !important;
+  width: auto !important;
+  min-width: 40px !important;
+  max-width: 60px !important;
+}
+
+.pf-v6-c-table th:nth-child(2),
+.pf-v6-c-table td:nth-child(2) {
+  padding-left: 0 !important;
+  padding-right: 16px !important;
+}
