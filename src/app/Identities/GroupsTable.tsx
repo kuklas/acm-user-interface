@@ -10,6 +10,7 @@ import {
   DropdownItem,
   MenuToggle,
   MenuToggleElement,
+  Checkbox,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNavigate } from 'react-router-dom';
@@ -95,15 +96,14 @@ export const GroupsTable: React.FunctionComponent = () => {
         <Thead>
           <Tr>
             <Th>
-              <input
-                type="checkbox"
-                checked={selectedGroups.length === mockGroups.length && mockGroups.length > 0}
-                onChange={(e) => handleSelectAllGroups(e.target.checked)}
+              <Checkbox
+                isChecked={selectedGroups.length === mockGroups.length && mockGroups.length > 0}
+                onChange={(checked) => handleSelectAllGroups(checked)}
                 aria-label="Select all groups"
-                style={{ transform: 'scale(2)', margin: '10px' }}
+                style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th>Group Name - BULK SELECTOR TEST</Th>
+            <Th>Group Name</Th>
             <Th>Members</Th>
             <Th>Created</Th>
           </Tr>
@@ -112,12 +112,11 @@ export const GroupsTable: React.FunctionComponent = () => {
           {mockGroups.map((group) => (
             <Tr key={group.id}>
               <Td>
-                <input
-                  type="checkbox"
-                  checked={selectedGroups.includes(group.id)}
-                  onChange={(e) => handleGroupSelect(group.id, e.target.checked)}
+                <Checkbox
+                  isChecked={selectedGroups.includes(group.id)}
+                  onChange={(checked) => handleGroupSelect(group.id, checked)}
                   aria-label={`Select ${group.name}`}
-                  style={{ transform: 'scale(2)', margin: '10px' }}
+                  style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
               <Td dataLabel="Group Name">

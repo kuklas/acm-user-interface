@@ -436,3 +436,66 @@ body,
   max-width: 100% !important;
   table-layout: auto !important;
 }
+
+/* Ensure checkboxes are normal size */
+input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Override any scaling that might be applied */
+.pf-v6-c-table input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  scale: 1 !important;
+}
+
+/* Force PatternFly Checkbox components to be smaller */
+.pf-v6-c-check {
+  --pf-v6-c-check--FontSize: 12px !important;
+  --pf-v6-c-check--LineHeight: 1.2 !important;
+}
+
+.pf-v6-c-check__input {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  transform: none !important;
+  scale: 1 !important;
+}
+
+.pf-v6-c-check__label {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+/* Override any PatternFly checkbox sizing */
+.pf-v6-c-table .pf-v6-c-check {
+  --pf-v6-c-check--FontSize: 12px !important;
+  --pf-v6-c-check--LineHeight: 1.2 !important;
+}
+
+.pf-v6-c-table .pf-v6-c-check__input {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  transform: none !important;
+  scale: 1 !important;
+}
+
+.pf-v6-c-table .pf-v6-c-check__label {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}

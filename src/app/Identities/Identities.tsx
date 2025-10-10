@@ -11,6 +11,7 @@ import {
   Dropdown,
   DropdownList,
   DropdownItem,
+  Checkbox,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
@@ -146,15 +147,14 @@ const Identities: React.FunctionComponent = () => {
           <Thead>
             <Tr>
               <Th>
-                <input
-                  type="checkbox"
-                  checked={selectedUsers.length === mockUsers.length && mockUsers.length > 0}
-                  onChange={(e) => handleSelectAllUsers(e.target.checked)}
+                <Checkbox
+                  isChecked={selectedUsers.length === mockUsers.length && mockUsers.length > 0}
+                  onChange={(checked) => handleSelectAllUsers(checked)}
                   aria-label="Select all users"
-                  style={{ transform: 'scale(2)', margin: '10px' }}
+                  style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                 />
               </Th>
-              <Th>Name - BULK SELECTOR TEST</Th>
+              <Th>Name - CHECKBOX TEST</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
             </Tr>
@@ -163,12 +163,11 @@ const Identities: React.FunctionComponent = () => {
             {mockUsers.map((user) => (
               <Tr key={user.id}>
                 <Td>
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(user.id)}
-                    onChange={(e) => handleUserSelect(user.id, e.target.checked)}
+                  <Checkbox
+                    isChecked={selectedUsers.includes(user.id)}
+                    onChange={(checked) => handleUserSelect(user.id, checked)}
                     aria-label={`Select ${user.name}`}
-                    style={{ transform: 'scale(2)', margin: '10px' }}
+                    style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                   />
                 </Td>
                 <Td dataLabel="Name">

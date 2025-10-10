@@ -10,6 +10,7 @@ import {
   Dropdown,
   DropdownList,
   DropdownItem,
+  Checkbox,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 
@@ -94,15 +95,14 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
         <Thead>
           <Tr>
             <Th>
-              <input
-                type="checkbox"
-                checked={selectedServiceAccounts.length === mockServiceAccounts.length && mockServiceAccounts.length > 0}
-                onChange={(e) => handleSelectAllServiceAccounts(e.target.checked)}
+              <Checkbox
+                isChecked={selectedServiceAccounts.length === mockServiceAccounts.length && mockServiceAccounts.length > 0}
+                onChange={(checked) => handleSelectAllServiceAccounts(checked)}
                 aria-label="Select all service accounts"
-                style={{ transform: 'scale(2)', margin: '10px' }}
+                style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th>Name - BULK SELECTOR TEST</Th>
+            <Th>Name</Th>
             <Th>Users</Th>
             <Th>Created</Th>
           </Tr>
@@ -111,12 +111,11 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
           {mockServiceAccounts.map((sa) => (
             <Tr key={sa.id}>
               <Td>
-                <input
-                  type="checkbox"
-                  checked={selectedServiceAccounts.includes(sa.id)}
-                  onChange={(e) => handleServiceAccountSelect(sa.id, e.target.checked)}
+                <Checkbox
+                  isChecked={selectedServiceAccounts.includes(sa.id)}
+                  onChange={(checked) => handleServiceAccountSelect(sa.id, checked)}
                   aria-label={`Select ${sa.name}`}
-                  style={{ transform: 'scale(2)', margin: '10px' }}
+                  style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
               <Td dataLabel="Name">
