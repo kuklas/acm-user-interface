@@ -148,8 +148,9 @@ const Identities: React.FunctionComponent = () => {
             <Tr>
               <Th>
                 <Checkbox
+                  id="select-all-users"
                   isChecked={selectedUsers.length === mockUsers.length && mockUsers.length > 0}
-                  onChange={(checked) => handleSelectAllUsers(checked)}
+                  onChange={(event, checked) => handleSelectAllUsers(checked)}
                   aria-label="Select all users"
                   style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                 />
@@ -164,8 +165,9 @@ const Identities: React.FunctionComponent = () => {
               <Tr key={user.id}>
                 <Td>
                   <Checkbox
+                    id={`select-user-${user.id}`}
                     isChecked={selectedUsers.includes(user.id)}
-                    onChange={(checked) => handleUserSelect(user.id, checked)}
+                    onChange={(event, checked) => handleUserSelect(user.id, checked)}
                     aria-label={`Select ${user.name}`}
                     style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                   />

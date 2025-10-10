@@ -97,8 +97,9 @@ export const GroupsTable: React.FunctionComponent = () => {
           <Tr>
             <Th>
               <Checkbox
+                id="select-all-groups"
                 isChecked={selectedGroups.length === mockGroups.length && mockGroups.length > 0}
-                onChange={(checked) => handleSelectAllGroups(checked)}
+                onChange={(event, checked) => handleSelectAllGroups(checked)}
                 aria-label="Select all groups"
                 style={{ transform: 'scale(0.7)' }}
               />
@@ -113,8 +114,9 @@ export const GroupsTable: React.FunctionComponent = () => {
             <Tr key={group.id}>
               <Td>
                 <Checkbox
+                  id={`select-group-${group.id}`}
                   isChecked={selectedGroups.includes(group.id)}
-                  onChange={(checked) => handleGroupSelect(group.id, checked)}
+                  onChange={(event, checked) => handleGroupSelect(group.id, checked)}
                   aria-label={`Select ${group.name}`}
                   style={{ transform: 'scale(0.7)' }}
                 />

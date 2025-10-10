@@ -96,8 +96,9 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
           <Tr>
             <Th>
               <Checkbox
+                id="select-all-service-accounts"
                 isChecked={selectedServiceAccounts.length === mockServiceAccounts.length && mockServiceAccounts.length > 0}
-                onChange={(checked) => handleSelectAllServiceAccounts(checked)}
+                onChange={(event, checked) => handleSelectAllServiceAccounts(checked)}
                 aria-label="Select all service accounts"
                 style={{ transform: 'scale(0.7)' }}
               />
@@ -112,8 +113,9 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
             <Tr key={sa.id}>
               <Td>
                 <Checkbox
+                  id={`select-service-account-${sa.id}`}
                   isChecked={selectedServiceAccounts.includes(sa.id)}
-                  onChange={(checked) => handleServiceAccountSelect(sa.id, checked)}
+                  onChange={(event, checked) => handleServiceAccountSelect(sa.id, checked)}
                   aria-label={`Select ${sa.name}`}
                   style={{ transform: 'scale(0.7)' }}
                 />
