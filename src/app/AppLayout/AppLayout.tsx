@@ -150,37 +150,50 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     );
   };
 
-  const PerspectiveSelector = () => (
-    <div className="perspective-selector">
-      <Dropdown
-        isOpen={perspectiveOpen}
-        onSelect={onPerspectiveSelect}
-        onOpenChange={(isOpen: boolean) => setPerspectiveOpen(isOpen)}
-        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-          <MenuToggle
-            ref={toggleRef}
-            onClick={() => setPerspectiveOpen(!perspectiveOpen)}
-            isExpanded={perspectiveOpen}
-            isFullWidth
-          >
-            {activePerspective}
-          </MenuToggle>
-        )}
-      >
-        <DropdownList>
-          {perspectives.map((perspective, index) => (
-            <DropdownItem
-              key={index}
-              value={perspective.name}
-              isDisabled={perspective.disabled}
+  const PerspectiveSelector = () => {
+    const handleToggleClick = () => {
+      console.log('Toggle clicked! Current state:', perspectiveOpen);
+      setPerspectiveOpen(!perspectiveOpen);
+    };
+
+    return (
+      <div className="perspective-selector">
+        <Dropdown
+          isOpen={perspectiveOpen}
+          onSelect={onPerspectiveSelect}
+          onOpenChange={(isOpen: boolean) => {
+            console.log('onOpenChange called with:', isOpen);
+            setPerspectiveOpen(isOpen);
+          }}
+          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+            <MenuToggle
+              ref={toggleRef}
+              onClick={handleToggleClick}
+              isExpanded={perspectiveOpen}
+              isFullWidth
             >
-              {perspective.name}
-            </DropdownItem>
-          ))}
-        </DropdownList>
-      </Dropdown>
-    </div>
-  );
+              {activePerspective}
+            </MenuToggle>
+          )}
+          popperProps={{
+            position: 'bottom-start',
+          }}
+        >
+          <DropdownList>
+            {perspectives.map((perspective, index) => (
+              <DropdownItem
+                key={index}
+                value={perspective.name}
+                isDisabled={perspective.disabled}
+              >
+                {perspective.name}
+              </DropdownItem>
+            ))}
+          </DropdownList>
+        </Dropdown>
+      </div>
+    );
+  };
 
   const Navigation = (
     <Nav id="nav-primary-simple">
