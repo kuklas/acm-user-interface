@@ -565,7 +565,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         }}
         aria-label="View task details"
       >
-        <InfoCircleIcon size="lg" />
+        <InfoCircleIcon />
       </Button>
 
       {/* Task Details Modal */}
@@ -574,11 +574,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         title="Current Task"
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
-        actions={[
-          <Button key="close" variant="primary" onClick={() => setIsTaskModalOpen(false)}>
-            Close
-          </Button>,
-        ]}
       >
         <div style={{ lineHeight: '1.8' }}>
           <div style={{ marginBottom: '16px' }}>
@@ -661,6 +656,12 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
             }}>
               "project-starlight-dev"
             </span>
+          </div>
+
+          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+            <Button variant="primary" onClick={() => setIsTaskModalOpen(false)}>
+              Close
+            </Button>
           </div>
         </div>
       </Modal>
