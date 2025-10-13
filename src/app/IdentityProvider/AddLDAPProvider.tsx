@@ -15,7 +15,9 @@ import {
   Switch,
   Flex,
   FlexItem,
+  SearchInput,
 } from '@patternfly/react-core';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 
@@ -34,6 +36,41 @@ const AddLDAPProvider: React.FunctionComponent = () => {
   const [emailAttributes, setEmailAttributes] = React.useState(['']);
   const [caFile, setCaFile] = React.useState('');
   const [isYAMLView, setIsYAMLView] = React.useState(false);
+  const [selectedClusters, setSelectedClusters] = React.useState<Set<number>>(new Set());
+  const [clusterSearchValue, setClusterSearchValue] = React.useState('');
+
+  // Mock clusters data
+  const mockClusters = [
+    { id: 1, name: 'local-cluster', status: 'Ready', provider: 'AWS' },
+    { id: 2, name: 'dev-linux-a', status: 'Ready', provider: 'AWS' },
+    { id: 3, name: 'dev-win-a', status: 'Ready', provider: 'Azure' },
+    { id: 4, name: 'prod-cluster-1', status: 'Ready', provider: 'GCP' },
+    { id: 5, name: 'prod-cluster-2', status: 'Ready', provider: 'AWS' },
+  ];
+
+  const filteredClusters = mockClusters.filter(cluster =>
+    cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase())
+  );
+
+  const isAllClustersSelected = selectedClusters.size === filteredClusters.length && filteredClusters.length > 0;
+
+  const handleSelectAllClusters = (isSelecting: boolean) => {
+    if (isSelecting) {
+      setSelectedClusters(new Set(filteredClusters.map(c => c.id)));
+    } else {
+      setSelectedClusters(new Set());
+    }
+  };
+
+  const handleSelectCluster = (clusterId: number, isSelecting: boolean) => {
+    const newSelected = new Set(selectedClusters);
+    if (isSelecting) {
+      newSelected.add(clusterId);
+    } else {
+      newSelected.delete(clusterId);
+    }
+    setSelectedClusters(newSelected);
+  };
 
   const handleCancel = () => {
     navigate('/user-management/identity-providers');
@@ -50,6 +87,7 @@ const AddLDAPProvider: React.FunctionComponent = () => {
       nameAttributes,
       emailAttributes,
       caFile,
+      selectedClusters: Array.from(selectedClusters),
     });
     navigate('/user-management/identity-providers');
   };
@@ -301,6 +339,59 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
                 </Flex>
                 <Content component="small" className="pf-v6-u-color-200 pf-v6-u-display-block pf-v6-u-mt-sm">
                   Optional. Reference to an OpenShift Container Platform ConfigMap object containing the PEM-encoded certificate authority bundle to use in validating server certificates for the configured URL. Only used when insecure is false.
+                </Content>
+              </FormGroup>
+
+              <Title headingLevel="h3" size="md" className="pf-v6-u-mt-lg pf-v6-u-mb-md">
+                Apply to clusters
+              </Title>
+              <Content component="p" className="pf-v6-u-mb-md pf-v6-u-color-200">
+                Select which clusters this LDAP identity provider will be applied to.
+              </Content>
+
+              <FormGroup fieldId="cluster-picker">
+                <SearchInput
+                  placeholder="Search clusters"
+                  value={clusterSearchValue}
+                  onChange={(_event, value) => setClusterSearchValue(value)}
+                  onClear={() => setClusterSearchValue('')}
+                  className="pf-v6-u-mb-md"
+                />
+                <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--pf-t--global--border--color--default)', borderRadius: 'var(--pf-t--global--border--radius--small)' }}>
+                  <Table aria-label="Cluster selection table" variant="compact">
+                    <Thead>
+                      <Tr>
+                        <Th
+                          select={{
+                            onSelect: (_event, isSelecting) => handleSelectAllClusters(isSelecting),
+                            isSelected: isAllClustersSelected,
+                          }}
+                        />
+                        <Th>Cluster name</Th>
+                        <Th>Status</Th>
+                        <Th>Provider</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {filteredClusters.map((cluster) => (
+                        <Tr key={cluster.id}>
+                          <Td
+                            select={{
+                              rowIndex: cluster.id,
+                              onSelect: (_event, isSelecting) => handleSelectCluster(cluster.id, isSelecting),
+                              isSelected: selectedClusters.has(cluster.id),
+                            }}
+                          />
+                          <Td dataLabel="Cluster name">{cluster.name}</Td>
+                          <Td dataLabel="Status">{cluster.status}</Td>
+                          <Td dataLabel="Provider">{cluster.provider}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </div>
+                <Content component="small" className="pf-v6-u-color-200 pf-v6-u-display-block pf-v6-u-mt-sm">
+                  {selectedClusters.size} cluster{selectedClusters.size !== 1 ? 's' : ''} selected
                 </Content>
               </FormGroup>
 
