@@ -973,7 +973,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             Include projects
           </Title>
           <Content component="p" className="pf-v6-u-mb-md">
-            Define project scope on selected clusters
+            Define project scope on selected {selectedClusters.length === 1 ? 'cluster' : 'clusters'}
           </Content>
 
           <Form>
@@ -982,16 +982,20 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 isChecked={projectScope === 'cluster'}
                 name="project-scope"
                 onChange={() => setProjectScope('cluster')}
-                label="Apply to all projects on these clusters"
-                description="This also includes any new projects created in the future."
+                label={selectedClusters.length === 1 ? "Apply to cluster / Full cluster scope" : "Apply to all projects on these clusters"}
+                description={selectedClusters.length === 1 
+                  ? "Role binds a cluster role to the cluster. It includes all existing and new projects." 
+                  : "This also includes any new projects created in the future."}
                 id="radio-all-projects"
               />
               <Radio
                 isChecked={projectScope === 'project'}
                 name="project-scope"
                 onChange={() => setProjectScope('project')}
-                label="Apply to specific projects"
-                description="Scope with projects by name to bind a role by."
+                label={selectedClusters.length === 1 ? "Apply to project(s) / Partial / Project-specific access" : "Apply to common projects"}
+                description={selectedClusters.length === 1 
+                  ? "Scope with projects by name to bind a role by." 
+                  : "Find a project name and apply this role to all instances of it on your selected clusters."}
                 id="radio-specific-projects"
                 className="pf-v6-u-mt-md"
               />
