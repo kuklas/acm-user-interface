@@ -429,6 +429,181 @@ const ClusterDetail: React.FunctionComponent = () => {
     </div>
   );
 
+  // New tabs for Cluster Set
+  const SubmarinerAddOnsTab = () => (
+    <div className="table-content-card">
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem>
+            <SearchInput
+              placeholder="Search for a Submariner add-on"
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+      <Table aria-label="Submariner add-ons table" variant="compact">
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Status</Th>
+            <Th>Version</Th>
+            <Th>Updated</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          <Tr>
+            <Td dataLabel="Name">submariner-addon</Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Available
+              </Label>
+            </Td>
+            <Td dataLabel="Version">0.14.0</Td>
+            <Td dataLabel="Updated">2 hours ago</Td>
+          </Tr>
+          <Tr>
+            <Td dataLabel="Name">submariner-gateway</Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Available
+              </Label>
+            </Td>
+            <Td dataLabel="Version">0.14.0</Td>
+            <Td dataLabel="Updated">2 hours ago</Td>
+          </Tr>
+        </Tbody>
+      </Table>
+    </div>
+  );
+
+  const ClusterListTab = () => (
+    <div className="table-content-card">
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem>
+            <SearchInput
+              placeholder="Search for a cluster"
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+      <Table aria-label="Clusters in set table" variant="compact">
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Status</Th>
+            <Th>Provider</Th>
+            <Th>Region</Th>
+            <Th>Nodes</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          <Tr>
+            <Td dataLabel="Name">
+              <Button 
+                variant="link" 
+                isInline 
+                onClick={() => navigate('/infrastructure/clusters/cluster-a')}
+                style={{ paddingLeft: 0 }}
+              >
+                cluster-a
+              </Button>
+            </Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Ready
+              </Label>
+            </Td>
+            <Td dataLabel="Provider">AWS</Td>
+            <Td dataLabel="Region">us-east-1</Td>
+            <Td dataLabel="Nodes">5</Td>
+          </Tr>
+          <Tr>
+            <Td dataLabel="Name">
+              <Button 
+                variant="link" 
+                isInline 
+                onClick={() => navigate('/infrastructure/clusters/cluster-b')}
+                style={{ paddingLeft: 0 }}
+              >
+                cluster-b
+              </Button>
+            </Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Ready
+              </Label>
+            </Td>
+            <Td dataLabel="Provider">Azure</Td>
+            <Td dataLabel="Region">eastus</Td>
+            <Td dataLabel="Nodes">3</Td>
+          </Tr>
+        </Tbody>
+      </Table>
+    </div>
+  );
+
+  const ClusterPoolsTab = () => (
+    <div className="table-content-card">
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem>
+            <SearchInput
+              placeholder="Search for a cluster pool"
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button variant="primary">Create cluster pool</Button>
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+      <Table aria-label="Cluster pools table" variant="compact">
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Status</Th>
+            <Th>Size</Th>
+            <Th>Available</Th>
+            <Th>Provider</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          <Tr>
+            <Td dataLabel="Name">production-pool</Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Ready
+              </Label>
+            </Td>
+            <Td dataLabel="Size">10</Td>
+            <Td dataLabel="Available">7</Td>
+            <Td dataLabel="Provider">AWS</Td>
+          </Tr>
+          <Tr>
+            <Td dataLabel="Name">dev-pool</Td>
+            <Td dataLabel="Status">
+              <Label color="green" icon={<CheckIcon />}>
+                Ready
+              </Label>
+            </Td>
+            <Td dataLabel="Size">5</Td>
+            <Td dataLabel="Available">4</Td>
+            <Td dataLabel="Provider">Azure</Td>
+          </Tr>
+        </Tbody>
+      </Table>
+    </div>
+  );
+
   return (
     <>
       <div className="clusters-page-container">
@@ -462,17 +637,39 @@ const ClusterDetail: React.FunctionComponent = () => {
           
           <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Cluster detail tabs">
             <Tab eventKey={0} title={<TabTitleText>Overview</TabTitleText>} aria-label="Overview tab" />
-            <Tab eventKey={1} title={<TabTitleText>Nodes</TabTitleText>} aria-label="Nodes tab" />
-            <Tab eventKey={2} title={<TabTitleText>Add-ons</TabTitleText>} aria-label="Add-ons tab" />
-            <Tab eventKey={3} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments tab" />
+            {isClusterSet ? (
+              <>
+                <Tab eventKey={1} title={<TabTitleText>Submariner add-ons</TabTitleText>} aria-label="Submariner add-ons tab" />
+                <Tab eventKey={2} title={<TabTitleText>Cluster list</TabTitleText>} aria-label="Cluster list tab" />
+                <Tab eventKey={3} title={<TabTitleText>Cluster pools</TabTitleText>} aria-label="Cluster pools tab" />
+                <Tab eventKey={4} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments tab" />
+              </>
+            ) : (
+              <>
+                <Tab eventKey={1} title={<TabTitleText>Nodes</TabTitleText>} aria-label="Nodes tab" />
+                <Tab eventKey={2} title={<TabTitleText>Add-ons</TabTitleText>} aria-label="Add-ons tab" />
+                <Tab eventKey={3} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments tab" />
+              </>
+            )}
           </Tabs>
         </div>
 
         <div className="page-content-section">
           {activeTabKey === 0 && <OverviewTab />}
-          {activeTabKey === 1 && <NodesTab />}
-          {activeTabKey === 2 && <AddOnsTab />}
-          {activeTabKey === 3 && <RoleAssignmentsTab />}
+          {isClusterSet ? (
+            <>
+              {activeTabKey === 1 && <SubmarinerAddOnsTab />}
+              {activeTabKey === 2 && <ClusterListTab />}
+              {activeTabKey === 3 && <ClusterPoolsTab />}
+              {activeTabKey === 4 && <RoleAssignmentsTab />}
+            </>
+          ) : (
+            <>
+              {activeTabKey === 1 && <NodesTab />}
+              {activeTabKey === 2 && <AddOnsTab />}
+              {activeTabKey === 3 && <RoleAssignmentsTab />}
+            </>
+          )}
         </div>
       </div>
 
