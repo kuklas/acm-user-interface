@@ -103,7 +103,7 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
   return (
     <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <div style={{ backgroundColor: '#ffffff', padding: '24px' }}>
-        <Breadcrumb style={{ marginBottom: '16px' }}>
+        <Breadcrumb style={{ marginBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/identity-providers'); }}>
             Identity providers
           </BreadcrumbItem>
