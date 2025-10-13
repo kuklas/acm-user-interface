@@ -47,9 +47,120 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
 
   const perspectives = [
-    { name: 'Core platforms', disabled: true },
+    { name: 'Core platforms', disabled: false },
     { name: 'Fleet management', disabled: false },
     { name: 'Fleet virtualization', disabled: false },
+  ];
+
+  // Core platforms navigation routes
+  const corePlatformsRoutes: IAppRouteGroup[] = [
+    {
+      label: '',
+      routes: [
+        {
+          element: <></>,
+          label: 'Home',
+          path: '/core/home',
+          title: 'Home',
+        },
+        {
+          element: <></>,
+          label: 'Favorites',
+          path: '/core/favorites',
+          title: 'Favorites',
+        },
+        {
+          element: <></>,
+          label: 'Operators',
+          path: '/core/operators',
+          title: 'Operators',
+        },
+        {
+          element: <></>,
+          label: 'Helm',
+          path: '/core/helm',
+          title: 'Helm',
+        },
+        {
+          element: <></>,
+          label: 'Workloads',
+          path: '/core/workloads',
+          title: 'Workloads',
+        },
+        {
+          element: <></>,
+          label: 'Virtualization',
+          path: '/core/virtualization',
+          title: 'Virtualization',
+        },
+        {
+          element: <></>,
+          label: 'Migration',
+          path: '/core/migration',
+          title: 'Migration',
+        },
+        {
+          element: <></>,
+          label: 'GitOps',
+          path: '/core/gitops',
+          title: 'GitOps',
+        },
+        {
+          element: <></>,
+          label: 'Serverless',
+          path: '/core/serverless',
+          title: 'Serverless',
+        },
+        {
+          element: <></>,
+          label: 'Networking',
+          path: '/core/networking',
+          title: 'Networking',
+        },
+        {
+          element: <></>,
+          label: 'Storage',
+          path: '/core/storage',
+          title: 'Storage',
+        },
+        {
+          element: <></>,
+          label: 'Builds',
+          path: '/core/builds',
+          title: 'Builds',
+        },
+        {
+          element: <></>,
+          label: 'Pipelines',
+          path: '/core/pipelines',
+          title: 'Pipelines',
+        },
+        {
+          element: <></>,
+          label: 'Observe',
+          path: '/core/observe',
+          title: 'Observe',
+        },
+        {
+          element: <></>,
+          label: 'Compute',
+          path: '/core/compute',
+          title: 'Compute',
+        },
+        {
+          element: <></>,
+          label: 'User Management',
+          path: '/core/user-management',
+          title: 'User Management',
+        },
+        {
+          element: <></>,
+          label: 'Administration',
+          path: '/core/administration',
+          title: 'Administration',
+        },
+      ],
+    },
   ];
 
   // Fleet virtualization navigation routes
@@ -305,7 +416,10 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   };
 
   // Select routes based on active perspective
-  const activeRoutes = activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : routes;
+  const activeRoutes = 
+    activePerspective === 'Core platforms' ? corePlatformsRoutes :
+    activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : 
+    routes;
 
   const Navigation = (
     <Nav id="nav-primary-simple">
