@@ -22,6 +22,7 @@ import {
 } from '@patternfly/react-core';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
 
 const RoleDetail: React.FunctionComponent = () => {
   const { roleName } = useParams<{ roleName: string }>();
@@ -29,6 +30,7 @@ const RoleDetail: React.FunctionComponent = () => {
   useDocumentTitle(`ACM RBAC | ${roleName}`);
 
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
+  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
 
   // Mock data for the role
   const roleData = {
@@ -213,9 +215,18 @@ rules:
         {activeTabKey === 3 && (
           <Card>
             <CardBody>
-              <Title headingLevel="h2" size="lg" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-                Role Assignments
-              </Title>
+              <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                <SplitItem isFilled>
+                  <Title headingLevel="h2" size="lg">
+                    Role Assignments
+                  </Title>
+                </SplitItem>
+                <SplitItem>
+                  <Button variant="primary" onClick={() => setIsWizardOpen(true)}>
+                    Create role assignment
+                  </Button>
+                </SplitItem>
+              </Split>
               <Content component="p" className="pf-v6-u-color-200">
                 No role assignments found for this role.
               </Content>
@@ -223,6 +234,14 @@ rules:
           </Card>
         )}
       </div>
+      
+      {/* Role Assignment Wizard */}
+      <RoleAssignmentWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        context="roles"
+        preselectedRole={{ id: 1, name: roleData.name }}
+      />
     </div>
   );
 };
