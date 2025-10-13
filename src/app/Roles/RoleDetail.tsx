@@ -240,7 +240,7 @@ rules:
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
         context="roles"
-        preselectedRole={{ id: 1, name: roleData.name }}
+        preselectedRole={{ id: 1, name: roleData.name, type: 'Custom' }}
       />
     </div>
   );

@@ -563,11 +563,6 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // Determine previous step based on context
     let prevStep = currentStep - 1;
     
-    if (context === 'roles') {
-      // Skip step 3 (role selection)
-      if (currentStep === 4) prevStep = 2; // Go from review to resources
-    }
-    
     setCurrentStep(prevStep);
   };
 
@@ -1674,9 +1669,6 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       case 2:
         return <Step2SelectResources />;
       case 3:
-        if (context === 'roles') {
-          return <Step4Review />; // Skip role selection
-        }
         return <Step3SelectRole />;
       case 4:
         return <Step4Review />;
