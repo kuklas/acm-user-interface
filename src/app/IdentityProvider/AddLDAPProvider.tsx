@@ -101,9 +101,9 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ backgroundColor: '#ffffff', padding: '24px', marginBottom: '24px' }}>
-        <Breadcrumb className="pf-v6-u-mb-md">
+    <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div style={{ backgroundColor: '#ffffff', padding: '24px' }}>
+        <Breadcrumb style={{ marginBottom: '16px' }}>
           <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/identity-providers'); }}>
             Identity providers
           </BreadcrumbItem>
@@ -131,7 +131,8 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
         </Content>
       </div>
 
-      <Grid hasGutter span={6}>
+      <div style={{ padding: '24px' }}>
+        <Grid hasGutter span={6}>
         <GridItem>
           <div style={{ backgroundColor: '#ffffff', padding: '24px', height: '100%' }}>
             <Title headingLevel="h2" size="lg" className="pf-v6-u-mb-md">
@@ -324,6 +325,7 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
           </div>
         </GridItem>
       </Grid>
+      </div>
     </div>
   );
 };
