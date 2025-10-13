@@ -47,6 +47,9 @@ const ClusterDetail: React.FunctionComponent = () => {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   
+  // Detect if this is a cluster set (contains 'petemobile' prefix) vs individual cluster
+  const isClusterSet = clusterName?.startsWith('petemobile') || false;
+  
   useDocumentTitle(`ACM | ${clusterName}`);
 
   const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
@@ -476,7 +479,7 @@ const ClusterDetail: React.FunctionComponent = () => {
           <RoleAssignmentWizard 
             isOpen={isWizardOpen} 
             onClose={() => setIsWizardOpen(false)} 
-            clusterName={clusterName}
+            clusterName={isClusterSet ? undefined : clusterName}
             context="clusters"
           />
     </>
