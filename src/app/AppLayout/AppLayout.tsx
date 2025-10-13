@@ -618,10 +618,12 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           position: 'fixed',
           bottom: '96px',
           right: '24px',
-          padding: '12px 24px',
+          padding: '16px 12px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           zIndex: 1000,
           fontWeight: 600,
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed',
         }}
         aria-label="Give feedback"
       >
