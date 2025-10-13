@@ -1642,7 +1642,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       
       if (context === 'identities' && currentStep === 1) {
         isSubStepActive = 
-          ((label === 'Specify cluster sets' || label === 'Specify cluster-sets') && showSpecifyClusterSets) ||
+          (label === 'Specify cluster sets' && showSpecifyClusterSets) ||
           (label === 'Include clusters' && showIncludeClusters) ||
           (label === 'Specify clusters' && showSpecifyClusters) ||
           (label === 'Include projects' && showIncludeProjects) ||
@@ -1884,7 +1884,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 // Identities context: New flow with cluster sets
                 <>
                   {renderStepIndicator(1, 'Select resources', false, true)}
-                  {(hasVisitedSpecifyClusterSets || (currentStep === 1 && showSpecifyClusterSets)) && renderStepIndicator(1, 'Specify cluster-sets', true, true)}
+                  {(hasVisitedSpecifyClusterSets || (currentStep === 1 && showSpecifyClusterSets)) && renderStepIndicator(1, 'Specify cluster sets', true, true)}
                   {(hasVisitedIncludeClusters || (currentStep === 1 && showIncludeClusters)) && renderStepIndicator(1, 'Include clusters', true, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 1 && showSpecifyClusters)) && renderStepIndicator(1, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 1 && showIncludeProjects)) && renderStepIndicator(1, 'Include projects', true, true)}
