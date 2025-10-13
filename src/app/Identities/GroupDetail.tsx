@@ -38,7 +38,7 @@ import {
   Divider,
   ButtonVariant,
 } from '@patternfly/react-core';
-import { CubesIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
+import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
@@ -147,6 +147,43 @@ users:
     ] : [];
 
     const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+    const [selectedAssignments, setSelectedAssignments] = React.useState<Set<number>>(new Set());
+    const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
+    const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
+
+    const isAllSelected = selectedAssignments.size === mockRoleAssignments.length && mockRoleAssignments.length > 0;
+
+    const handleSelectAll = (isSelecting: boolean) => {
+      if (isSelecting) {
+        setSelectedAssignments(new Set(mockRoleAssignments.map(a => a.id)));
+      } else {
+        setSelectedAssignments(new Set());
+      }
+    };
+
+    const handleSelectAssignment = (assignmentId: number, isSelecting: boolean) => {
+      const newSelected = new Set(selectedAssignments);
+      if (isSelecting) {
+        newSelected.add(assignmentId);
+      } else {
+        newSelected.delete(assignmentId);
+      }
+      setSelectedAssignments(newSelected);
+    };
+
+    const handleBulkDelete = () => {
+      console.log('Bulk delete assignments:', Array.from(selectedAssignments));
+      setIsBulkActionOpen(false);
+    };
+
+    const toggleRowMenu = (assignmentId: number) => {
+      setOpenRowMenuId(openRowMenuId === assignmentId ? null : assignmentId);
+    };
+
+    const handleDeleteAssignment = (assignmentId: number) => {
+      console.log('Delete assignment:', assignmentId);
+      setOpenRowMenuId(null);
+    };
 
     if (mockRoleAssignments.length === 0) {
       return (
@@ -180,6 +217,42 @@ users:
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
+            {selectedAssignments.size > 0 && (
+              <>
+                <ToolbarGroup>
+                  <ToolbarItem>
+                    <span style={{ fontWeight: 'bold', marginRight: '16px' }}>
+                      {selectedAssignments.size} selected
+                    </span>
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <Dropdown
+                      isOpen={isBulkActionOpen}
+                      onSelect={() => setIsBulkActionOpen(false)}
+                      onOpenChange={(isOpen: boolean) => setIsBulkActionOpen(isOpen)}
+                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                        <MenuToggle
+                          ref={toggleRef}
+                          onClick={() => setIsBulkActionOpen(!isBulkActionOpen)}
+                          isExpanded={isBulkActionOpen}
+                        >
+                          Actions
+                        </MenuToggle>
+                      )}
+                    >
+                      <DropdownList>
+                        <DropdownItem key="delete" onClick={handleBulkDelete}>
+                          Delete role assignment
+                        </DropdownItem>
+                      </DropdownList>
+                    </Dropdown>
+                  </ToolbarItem>
+                </ToolbarGroup>
+                <ToolbarItem>
+                  <Divider orientation={{ default: 'vertical' }} />
+                </ToolbarItem>
+              </>
+            )}
             <ToolbarItem>
               <Dropdown
                 isOpen={isFilterOpen}
@@ -239,10 +312,16 @@ users:
         <Table aria-label="Role assignments table" variant="compact">
           <Thead>
             <Tr>
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: isAllSelected,
+                }}
+              />
               <Th>
                 <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
                   <FlexItem style={{ fontWeight: 'bold' }}>Subject</FlexItem>
-                  <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Name</FlexItem>
+                  <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Name</FlexItem>
                 </Flex>
               </Th>
               <Th width={10}>Type</Th>
@@ -251,8 +330,8 @@ users:
                   <FlexItem style={{ fontWeight: 'bold' }}>Scope</FlexItem>
                   <FlexItem>
                     <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                      <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Clusters</FlexItem>
-                      <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Project</FlexItem>
+                      <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Clusters</FlexItem>
+                      <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Project</FlexItem>
                     </Flex>
                   </FlexItem>
                 </Flex>
@@ -262,11 +341,19 @@ users:
               <Th width={15}>Assigned date</Th>
               <Th width={10}>Assigned by</Th>
               <Th width={10}>Origin</Th>
+              <Th width={10}></Th>
             </Tr>
           </Thead>
           <Tbody>
             {mockRoleAssignments.map((assignment) => (
               <Tr key={assignment.id}>
+                <Td
+                  select={{
+                    rowIndex: assignment.id,
+                    onSelect: (_event, isSelecting) => handleSelectAssignment(assignment.id, isSelecting),
+                    isSelected: selectedAssignments.has(assignment.id),
+                  }}
+                />
                 <Td dataLabel="Name">
                   <Button variant="link" isInline style={{ paddingLeft: 0 }}>
                     {assignment.name}
@@ -305,6 +392,31 @@ users:
                 <Td dataLabel="Assigned date">{assignment.assignedDate}</Td>
                 <Td dataLabel="Assigned by">{assignment.assignedBy}</Td>
                 <Td dataLabel="Origin">{assignment.origin}</Td>
+                <Td dataLabel="Actions" width={10}>
+                  <Dropdown
+                    isOpen={openRowMenuId === assignment.id}
+                    onSelect={() => setOpenRowMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => {
+                      if (!isOpen) setOpenRowMenuId(null);
+                    }}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        variant="plain"
+                        onClick={() => toggleRowMenu(assignment.id)}
+                        isExpanded={openRowMenuId === assignment.id}
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                  >
+                    <DropdownList>
+                      <DropdownItem key="delete" onClick={() => handleDeleteAssignment(assignment.id)}>
+                        Delete role assignment
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </Td>
               </Tr>
             ))}
           </Tbody>
