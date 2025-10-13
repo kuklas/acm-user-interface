@@ -48,7 +48,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const perspectives = [
     { name: 'Core platforms', disabled: true },
     { name: 'Fleet management', disabled: false },
-    { name: 'Fleet virtualization', disabled: true },
+    { name: 'Fleet virtualization', disabled: false },
   ];
 
   const onPerspectiveSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
