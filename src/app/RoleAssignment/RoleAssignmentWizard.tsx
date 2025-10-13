@@ -99,17 +99,17 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const [currentStep, setCurrentStep] = React.useState(getInitialStep());
-  const [activeTabKey, setActiveTabKey] = React.useState<string | number>(1);
+  const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   
   // Step 1: Select user or group
   const [selectedIdentityType, setSelectedIdentityType] = React.useState<'user' | 'group'>(
-    preselectedIdentity?.type || 'group'
+    preselectedIdentity?.type || 'user'
   );
   const [selectedUser, setSelectedUser] = React.useState<number | null>(
     preselectedIdentity?.type === 'user' ? preselectedIdentity.id : null
   );
   const [selectedGroup, setSelectedGroup] = React.useState<number | null>(
-    preselectedIdentity?.type === 'group' ? preselectedIdentity.id : 3
+    preselectedIdentity?.type === 'group' ? preselectedIdentity.id : null
   );
   const [userSearchValue, setUserSearchValue] = React.useState('');
   const [isUserFilterOpen, setIsUserFilterOpen] = React.useState(false);
@@ -120,12 +120,13 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(true);
   const [showIncludeProjects, setShowIncludeProjects] = React.useState(false);
   const [showSpecifyProjects, setShowSpecifyProjects] = React.useState(false);
-  const [selectedClusters, setSelectedClusters] = React.useState<number[]>([3, 4]); // dev-team-a, dev-team-b
+  const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
   const [clusterSearchValue, setClusterSearchValue] = React.useState('');
   const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
   const [clusterViewMode, setClusterViewMode] = React.useState<'all' | 'selected'>('all');
-  const [projectScope, setProjectScope] = React.useState<'cluster' | 'project'>('project');
-  const [selectedProjects, setSelectedProjects] = React.useState<number[]>([1]); // project-starlight-dev
+  const [projectScope, setProjectScope] = React.useState<'cluster' | 'project'>('cluster');
+  const [selectedProjects, setSelectedProjects] = React.useState<number[]>([]);
+  const [selectedCommonProject, setSelectedCommonProject] = React.useState<number | null>(null);
   const [projectSearchValue, setProjectSearchValue] = React.useState('');
   const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
   const [projectViewMode, setProjectViewMode] = React.useState<'all' | 'selected'>('all');
@@ -151,7 +152,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const handleClose = () => {
     setCurrentStep(1);
-    setActiveTabKey(1);
+    setActiveTabKey(0);
     // Reset substep visibility
     setShowSpecifyClusters(true);
     setShowIncludeProjects(false);
@@ -170,29 +171,43 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const handleNext = () => {
     if (currentStep === 2 && resourceScope === 'specific') {
-      // From "Specify clusters" substep → go to "Include projects"
-      if (showSpecifyClusters && selectedClusters.length > 0) {
-        setShowSpecifyClusters(false);
-        setShowIncludeProjects(true);
-        return;
+      // From "Specify clusters" substep → go to "Include projects" if clusters selected
+      if (showSpecifyClusters) {
+        if (selectedClusters.length > 0) {
+          setShowSpecifyClusters(false);
+          setShowIncludeProjects(true);
+          return;
+        } else {
+          // No clusters selected, can't proceed
+          return;
+        }
       }
       
       // From "Include projects" substep
       if (showIncludeProjects) {
         setShowIncludeProjects(false);
         
-        // If "Partial access" (project scope) → show "Specify common projects"
-        if (projectScope === 'project') {
+        // If "Full access" (cluster scope) → skip project selection, go to next step
+        if (projectScope === 'cluster') {
+          // Fall through to move to next step
+        } else if (projectScope === 'project') {
+          // If "Partial access" (project scope) → show project selection
+          // Logic: 1 cluster = "Specify projects", >1 cluster = "Specify common projects"
           setShowSpecifyProjects(true);
           return;
         }
-        
-        // If "Full access" (cluster scope) → skip "Specify common projects", go to next step
-        // Fall through to move to next step
       }
       
-      // From "Specify common projects" substep → go to next step
+      // From "Specify projects" or "Specify common projects" substep → go to next step
       if (showSpecifyProjects) {
+        // Validate selection based on cluster count
+        if (selectedClusters.length === 1) {
+          // Multi-select projects - need at least one selected
+          if (selectedProjects.length === 0) return;
+        } else {
+          // Single-select common project - need one selected
+          if (selectedCommonProject === null) return;
+        }
         setShowSpecifyProjects(false);
         // Fall through to move to next step
       }
@@ -284,7 +299,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const filteredProjects = mockProjects
     .filter((project) => project.name.toLowerCase().includes(projectSearchValue.toLowerCase()))
-    .filter((project) => projectViewMode === 'all' || selectedProjects.includes(project.id));
+    .filter((project) => {
+      // For single cluster (multi-select), use projectViewMode
+      if (selectedClusters.length === 1) {
+        return projectViewMode === 'all' || selectedProjects.includes(project.id);
+      }
+      // For multiple clusters (single-select), always show all
+      return true;
+    });
 
   const filteredRoles = mockRoles.filter((role) =>
     role.name.toLowerCase().includes(roleSearchValue.toLowerCase())
@@ -305,7 +327,13 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const getSelectedProjectNames = () => {
-    return selectedProjects.map((id) => mockProjects.find((p) => p.id === id)?.name).join(', ');
+    if (selectedClusters.length === 1) {
+      // Single cluster - show multiple selected projects
+      return selectedProjects.map((id) => mockProjects.find((p) => p.id === id)?.name).join(', ');
+    } else {
+      // Multiple clusters - show single selected common project
+      return selectedCommonProject ? mockProjects.find((p) => p.id === selectedCommonProject)?.name : '';
+    }
   };
 
   const getSelectedRoleName = () => {
@@ -328,7 +356,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
       <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity type tabs">
         <Tab eventKey={0} title={<TabTitleText>Users</TabTitleText>}>
-          <div className="pf-v6-u-mt-md">
+          <div style={{ paddingTop: '24px' }}>
             <Toolbar>
               <ToolbarContent>
                 <ToolbarItem>
@@ -425,7 +453,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           </div>
         </Tab>
         <Tab eventKey={1} title={<TabTitleText>Groups</TabTitleText>}>
-          <div className="pf-v6-u-mt-md">
+          <div style={{ paddingTop: '24px' }}>
             <Toolbar>
               <ToolbarContent>
                 <ToolbarItem>
@@ -657,8 +685,13 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       {showSpecifyProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-md">
-            Specify common projects
+            {selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects'}
           </Title>
+          {selectedClusters.length > 1 && (
+            <Content component="p" className="pf-v6-u-mb-md">
+              Common projects are projects with the same name across selected clusters. Select one common project.
+            </Content>
+          )}
 
           <Flex className="pf-v6-u-mb-md">
             <FlexItem>
@@ -685,22 +718,24 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 onClear={() => setProjectSearchValue('')}
               />
             </FlexItem>
-            <FlexItem align={{ default: 'alignRight' }}>
-              <ToggleGroup aria-label="Project view toggle">
-                <ToggleGroupItem
-                  text="All"
-                  buttonId="project-view-all"
-                  isSelected={projectViewMode === 'all'}
-                  onChange={() => setProjectViewMode('all')}
-                />
-                <ToggleGroupItem
-                  text={`Selected ${selectedProjects.length}`}
-                  buttonId="project-view-selected"
-                  isSelected={projectViewMode === 'selected'}
-                  onChange={() => setProjectViewMode('selected')}
-                />
-              </ToggleGroup>
-            </FlexItem>
+            {selectedClusters.length === 1 && (
+              <FlexItem align={{ default: 'alignRight' }}>
+                <ToggleGroup aria-label="Project view toggle">
+                  <ToggleGroupItem
+                    text="All"
+                    buttonId="project-view-all"
+                    isSelected={projectViewMode === 'all'}
+                    onChange={() => setProjectViewMode('all')}
+                  />
+                  <ToggleGroupItem
+                    text={`Selected ${selectedProjects.length}`}
+                    buttonId="project-view-selected"
+                    isSelected={projectViewMode === 'selected'}
+                    onChange={() => setProjectViewMode('selected')}
+                  />
+                </ToggleGroup>
+              </FlexItem>
+            )}
           </Flex>
 
           <Table aria-label="Projects table" variant="compact" className="pf-v6-u-mt-md">
@@ -714,13 +749,26 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <Tbody>
               {filteredProjects.map((project) => (
                 <Tr key={project.id}>
-                  <Td
-                    select={{
-                      rowIndex: project.id,
-                      onSelect: () => toggleProjectSelection(project.id),
-                      isSelected: selectedProjects.includes(project.id),
-                    }}
-                  />
+                  {selectedClusters.length === 1 ? (
+                    // Multi-select with checkboxes for single cluster
+                    <Td
+                      select={{
+                        rowIndex: project.id,
+                        onSelect: () => toggleProjectSelection(project.id),
+                        isSelected: selectedProjects.includes(project.id),
+                      }}
+                    />
+                  ) : (
+                    // Single-select with radio buttons for multiple clusters
+                    <Td>
+                      <Radio
+                        isChecked={selectedCommonProject === project.id}
+                        name="selected-common-project"
+                        onChange={() => setSelectedCommonProject(project.id)}
+                        id={`common-project-${project.id}`}
+                      />
+                    </Td>
+                  )}
                   <Td dataLabel="Project">{project.name}</Td>
                   <Td dataLabel="Cluster">{project.clusters}</Td>
                 </Tr>
@@ -980,7 +1028,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       const isSubStepActive = currentStep === 2 && (
         (label === 'Specify clusters' && showSpecifyClusters) ||
         (label === 'Include projects' && showIncludeProjects) ||
-        (label === 'Specify common projects' && showSpecifyProjects)
+        ((label === 'Specify common projects' || label === 'Specify projects') && showSpecifyProjects)
       );
       
       return (
@@ -1065,12 +1113,62 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     );
   };
 
+  const isNextButtonDisabled = () => {
+    // Step 1: Select user or group
+    if (currentStep === 1) {
+      if (selectedIdentityType === 'user') {
+        return selectedUser === null;
+      } else {
+        return selectedGroup === null;
+      }
+    }
+    
+    // Step 2: Select resources
+    if (currentStep === 2) {
+      // If in "Specify clusters" substep
+      if (showSpecifyClusters) {
+        return selectedClusters.length === 0;
+      }
+      
+      // If in "Include projects" substep, can always proceed
+      if (showIncludeProjects) {
+        return false;
+      }
+      
+      // If in "Specify projects" substep
+      if (showSpecifyProjects) {
+        if (selectedClusters.length === 1) {
+          // Multi-select projects - need at least one
+          return selectedProjects.length === 0;
+        } else {
+          // Single-select common project - need one selected
+          return selectedCommonProject === null;
+        }
+      }
+      
+      return false;
+    }
+    
+    // Step 3: Select role
+    if (currentStep === 3) {
+      return selectedRole === null;
+    }
+    
+    return false;
+  };
+
     return (
       <Modal
         variant={ModalVariant.large}
         isOpen={isOpen}
         onClose={handleClose}
         aria-labelledby="role-assignment-wizard-title"
+        style={{ 
+          '--pf-v6-c-modal-box--m-body--PaddingTop': '0',
+          '--pf-v6-c-modal-box--m-body--PaddingRight': '0',
+          '--pf-v6-c-modal-box--m-body--PaddingBottom': '0',
+          '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
+        } as React.CSSProperties}
       >
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Header Section */}
@@ -1078,10 +1176,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             backgroundColor: '#f0f0f0', 
             padding: '1.5rem', 
             borderBottom: '1px solid #d2d2d2',
-            flexShrink: 0,
-            margin: '0 -1.5rem',
-            paddingLeft: 'calc(1.5rem + 1.5rem)',
-            paddingRight: 'calc(1.5rem + 1.5rem)'
+            flexShrink: 0
           }}>
             <Title headingLevel="h1" size="2xl" id="role-assignment-wizard-title">
               {`Create role assignment${clusterName ? ` for ${clusterName}` : ''}`}
@@ -1095,16 +1190,25 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           </div>
 
           {/* Body with Steps Navigation and Content */}
-          <Flex style={{ flex: 1, minHeight: 0, alignItems: 'stretch', overflow: 'hidden' }}>
+          <div style={{ 
+            display: 'flex', 
+            flex: 1, 
+            minHeight: 0, 
+            alignItems: 'stretch', 
+            overflow: 'hidden',
+            margin: 0,
+            padding: 0
+          }}>
             {/* Left Navigation Panel */}
-            <FlexItem style={{ 
+            <div style={{ 
               width: '300px', 
               padding: '1.5rem 1rem',
               borderRight: '1px solid #d2d2d2',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              flexShrink: 0
+              flexShrink: 0,
+              margin: 0
             }}>
               {context === 'identities' ? (
                 // Identities context: Skip user/group selection, skip role selection
@@ -1112,7 +1216,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {renderStepIndicator(1, 'Select resources', false, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 1 && showSpecifyClusters)) && renderStepIndicator(1, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 1 && showIncludeProjects)) && renderStepIndicator(1, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, 'Specify common projects', true, false)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
                   {renderStepIndicator(2, 'Review', false, false)}
                 </>
               ) : context === 'roles' ? (
@@ -1122,7 +1226,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {renderStepIndicator(2, 'Select resources', false, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify common projects', true, false)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
                   {renderStepIndicator(3, 'Review', false, false)}
                 </>
               ) : (
@@ -1132,15 +1236,23 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {renderStepIndicator(2, 'Select resources', false, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify common projects', true, false)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
                   {renderStepIndicator(3, 'Select role', false, true)}
                   {renderStepIndicator(4, 'Review', false, false)}
                 </>
               )}
-            </FlexItem>
+            </div>
             
             {/* Right Content Area with Footer */}
-            <FlexItem flex={{ default: 'flex_1' }} style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minHeight: 0, 
+              overflow: 'hidden',
+              margin: 0,
+              padding: 0
+            }}>
               {/* Content Area - scrollable */}
               <div style={{ 
                 flex: '1 1 0',
@@ -1157,9 +1269,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 borderTop: '1px solid #d2d2d2', 
                 padding: '1rem 1.5rem', 
                 backgroundColor: '#ffffff',
-                flexShrink: 0,
-                marginRight: '-1.5rem',
-                paddingRight: 'calc(1.5rem + 1.5rem)'
+                flexShrink: 0
               }}>
                 {((context === 'identities' && currentStep > 1) || 
                   (context === 'roles' && currentStep > 1) || 
@@ -1171,7 +1281,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 {((context === 'identities' && currentStep < 2) || 
                   (context === 'roles' && currentStep < 3) || 
                   (context === 'clusters' && currentStep < 4)) ? (
-                  <Button variant="primary" onClick={handleNext}>
+                  <Button variant="primary" onClick={handleNext} isDisabled={isNextButtonDisabled()}>
                     Next
                   </Button>
                 ) : (
@@ -1183,8 +1293,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   Cancel
                 </Button>
               </div>
-            </FlexItem>
-          </Flex>
+            </div>
+          </div>
         </div>
       </Modal>
   );
