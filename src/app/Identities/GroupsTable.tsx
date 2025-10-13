@@ -81,6 +81,11 @@ export const GroupsTable: React.FunctionComponent = () => {
     setOpenRowMenuId(openRowMenuId === groupId ? null : groupId);
   };
 
+  const handleImpersonateGroup = (groupName: string) => {
+    console.log('Impersonate group:', groupName);
+    setOpenRowMenuId(null);
+  };
+
   return (
     <div className="table-content-card">
       <Toolbar>
@@ -240,6 +245,12 @@ export const GroupsTable: React.FunctionComponent = () => {
                   shouldFocusToggleOnSelect
                 >
                   <DropdownList>
+                    <DropdownItem
+                      key="impersonate"
+                      onClick={() => handleImpersonateGroup(group.name)}
+                    >
+                      Impersonate
+                    </DropdownItem>
                     <DropdownItem
                       key="delete"
                       icon={<TrashIcon />}

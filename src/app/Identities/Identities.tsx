@@ -14,6 +14,7 @@ import {
   Checkbox,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 
@@ -48,6 +49,8 @@ const Identities: React.FunctionComponent = () => {
   const [filterType, setFilterType] = React.useState('User');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [selectedUsers, setSelectedUsers] = React.useState<number[]>([]);
+  const [openUserActionMenuId, setOpenUserActionMenuId] = React.useState<number | null>(null);
+  const [openGroupActionMenuId, setOpenGroupActionMenuId] = React.useState<number | null>(null);
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
 
@@ -65,6 +68,24 @@ const Identities: React.FunctionComponent = () => {
     } else {
       setSelectedUsers([]);
     }
+  };
+
+  const toggleUserActionMenu = (userId: number) => {
+    setOpenUserActionMenuId(openUserActionMenuId === userId ? null : userId);
+  };
+
+  const toggleGroupActionMenu = (groupId: number) => {
+    setOpenGroupActionMenuId(openGroupActionMenuId === groupId ? null : groupId);
+  };
+
+  const handleImpersonateUser = (userName: string) => {
+    console.log('Impersonate user:', userName);
+    setOpenUserActionMenuId(null);
+  };
+
+  const handleImpersonateGroup = (groupName: string) => {
+    console.log('Impersonate group:', groupName);
+    setOpenGroupActionMenuId(null);
   };
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
@@ -158,6 +179,7 @@ const Identities: React.FunctionComponent = () => {
               <Th>Name</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
+              <Th></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -184,6 +206,30 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Identity provider">{user.identityProvider}</Td>
                 <Td dataLabel="Created">{user.created}</Td>
+                <Td>
+                  <Dropdown
+                    isOpen={openUserActionMenuId === user.id}
+                    onSelect={() => setOpenUserActionMenuId(null)}
+                    onOpenChange={(isOpen) => !isOpen && setOpenUserActionMenuId(null)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={() => toggleUserActionMenu(user.id)}
+                        isExpanded={openUserActionMenuId === user.id}
+                        variant="plain"
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                    shouldFocusToggleOnSelect
+                  >
+                    <DropdownList>
+                      <DropdownItem value="impersonate" onClick={() => handleImpersonateUser(user.name)}>
+                        Impersonate
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </Td>
               </Tr>
             ))}
           </Tbody>
@@ -213,6 +259,7 @@ const Identities: React.FunctionComponent = () => {
               <Th>Group Name</Th>
               <Th>Members</Th>
               <Th>Created</Th>
+              <Th></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -229,6 +276,30 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Members">{group.members}</Td>
                 <Td dataLabel="Created">{group.created}</Td>
+                <Td>
+                  <Dropdown
+                    isOpen={openGroupActionMenuId === group.id}
+                    onSelect={() => setOpenGroupActionMenuId(null)}
+                    onOpenChange={(isOpen) => !isOpen && setOpenGroupActionMenuId(null)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={() => toggleGroupActionMenu(group.id)}
+                        isExpanded={openGroupActionMenuId === group.id}
+                        variant="plain"
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                    shouldFocusToggleOnSelect
+                  >
+                    <DropdownList>
+                      <DropdownItem value="impersonate" onClick={() => handleImpersonateGroup(group.name)}>
+                        Impersonate
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </Td>
               </Tr>
             ))}
           </Tbody>
