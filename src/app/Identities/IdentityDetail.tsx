@@ -22,19 +22,19 @@ import {
   ToolbarContent,
   ToolbarItem,
   SearchInput,
+  Flex,
+  FlexItem,
+  Icon,
   Dropdown,
   DropdownList,
   DropdownItem,
   MenuToggle,
   MenuToggleElement,
-  Pagination,
-  PaginationVariant,
-  Flex,
-  FlexItem,
-  Icon,
-  Tooltip,
+  ToolbarGroup,
+  Divider,
+  ButtonVariant,
 } from '@patternfly/react-core';
-import { CubesIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
+import { CubesIcon, FilterIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
@@ -45,9 +45,6 @@ const IdentityDetail: React.FunctionComponent = () => {
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   const [isWizardOpen, setIsWizardOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
-  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
-  const [page, setPage] = React.useState(1);
-  const [perPage, setPerPage] = React.useState(10);
   
   useDocumentTitle(`ACM | ${identityName}`);
 
@@ -57,14 +54,6 @@ const IdentityDetail: React.FunctionComponent = () => {
 
   const handleCreateRoleAssignment = () => {
     setIsWizardOpen(true);
-  };
-
-  const onSetPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const onPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
-    setPerPage(newPerPage);
   };
 
   const DetailsTab = () => (
@@ -95,13 +84,13 @@ const IdentityDetail: React.FunctionComponent = () => {
     <Card>
       <CardBody>
         <div style={{ 
-          backgroundColor: '#f8f8f8', 
-          border: '1px solid #d2d2d2', 
-          borderRadius: '4px',
-          padding: '1rem',
-          fontFamily: 'monospace',
-          fontSize: '0.875rem',
-          lineHeight: '1.5',
+          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)', 
+          border: '1px solid var(--pf-t--global--border--color--default)', 
+          borderRadius: 'var(--pf-t--global--border--radius--medium)',
+          padding: 'var(--pf-t--global--spacer--md)',
+          fontFamily: 'var(--pf-t--global--font--family--mono)',
+          fontSize: 'var(--pf-t--global--font--size--body--sm)',
+          lineHeight: 'var(--pf-t--global--font--line-height--body)',
           overflow: 'auto',
           maxHeight: '400px'
         }}>
@@ -155,24 +144,103 @@ groups: null`}
   );
 
   const GroupsTab = () => {
+    // Mock data showing groups that this user belongs to
     const mockGroups = [
-      { id: 1, name: 'Security team', created: '1/9/2025, 3:15:28 PM' },
+      { id: 1, name: 'Security team', members: 12, created: '2024-01-15' },
+      { id: 2, name: 'Engineering', members: 45, created: '2024-02-10' },
+      { id: 3, name: 'DevOps', members: 8, created: '2024-03-01' },
     ];
+
+    const [selectedGroups, setSelectedGroups] = React.useState<Set<number>>(new Set());
+    const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
+    const [isFilterOpen, setIsFilterOpen] = React.useState(false);
 
     const filteredGroups = mockGroups.filter(group =>
       group.name.toLowerCase().includes(searchValue.toLowerCase())
     );
 
-    const paginatedGroups = filteredGroups.slice(
-      (page - 1) * perPage,
-      page * perPage
-    );
+    const isAllSelected = selectedGroups.size === filteredGroups.length && filteredGroups.length > 0;
+    const isPartiallySelected = selectedGroups.size > 0 && selectedGroups.size < filteredGroups.length;
+
+    const handleSelectAll = (isSelecting: boolean) => {
+      if (isSelecting) {
+        setSelectedGroups(new Set(filteredGroups.map(group => group.id)));
+      } else {
+        setSelectedGroups(new Set());
+      }
+    };
+
+    const handleSelectGroup = (groupId: number, isSelecting: boolean) => {
+      const newSelected = new Set(selectedGroups);
+      if (isSelecting) {
+        newSelected.add(groupId);
+      } else {
+        newSelected.delete(groupId);
+      }
+      setSelectedGroups(newSelected);
+    };
+
+    const handleBulkAction = (action: string) => {
+      console.log(`Bulk action: ${action} for groups:`, Array.from(selectedGroups));
+      setIsBulkActionOpen(false);
+      // Here you would implement the actual bulk action logic
+    };
+
+    const handleRemoveFromGroup = () => {
+      console.log('Remove user from selected groups');
+      // Implement remove logic
+    };
+
+    const handleAddToGroup = () => {
+      console.log('Add user to a new group');
+      // Implement add logic
+    };
 
     return (
       <Card>
         <CardBody>
           <Toolbar>
             <ToolbarContent>
+              {selectedGroups.size > 0 && (
+                <>
+                  <ToolbarGroup>
+                    <ToolbarItem>
+                      <Content component="p" className="pf-v6-u-font-weight-bold">
+                        {selectedGroups.size} selected
+                      </Content>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                      <Dropdown
+                        isOpen={isBulkActionOpen}
+                        onSelect={() => setIsBulkActionOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsBulkActionOpen(isOpen)}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle
+                            ref={toggleRef}
+                            onClick={() => setIsBulkActionOpen(!isBulkActionOpen)}
+                            isExpanded={isBulkActionOpen}
+                            variant="primary"
+                          >
+                            Actions
+                          </MenuToggle>
+                        )}
+                      >
+                        <DropdownList>
+                          <DropdownItem key="remove" onClick={() => handleBulkAction('remove')}>
+                            Remove from groups
+                          </DropdownItem>
+                          <DropdownItem key="add" onClick={() => handleBulkAction('add')}>
+                            Add to another group
+                          </DropdownItem>
+                        </DropdownList>
+                      </Dropdown>
+                    </ToolbarItem>
+                  </ToolbarGroup>
+                  <ToolbarItem>
+                    <Divider orientation={{ default: 'vertical' }} />
+                  </ToolbarItem>
+                </>
+              )}
               <ToolbarItem>
                 <Dropdown
                   isOpen={isFilterOpen}
@@ -185,45 +253,34 @@ groups: null`}
                       onClick={() => setIsFilterOpen(!isFilterOpen)}
                       isExpanded={isFilterOpen}
                     >
-                      <FilterIcon /> Filter
+                      <FilterIcon /> Group
                     </MenuToggle>
                   )}
                 >
                   <DropdownList>
                     <DropdownItem key="all">All groups</DropdownItem>
+                    <DropdownItem key="system">System groups</DropdownItem>
+                    <DropdownItem key="custom">Custom groups</DropdownItem>
                   </DropdownList>
                 </Dropdown>
               </ToolbarItem>
               <ToolbarItem>
                 <SearchInput
-                  placeholder="Search for role assignment"
+                  placeholder="Search groups"
                   value={searchValue}
                   onChange={(_event, value) => setSearchValue(value)}
                   onClear={() => setSearchValue('')}
                 />
               </ToolbarItem>
               <ToolbarItem>
-                <Button variant="primary" onClick={handleCreateRoleAssignment}>
-                  Create role assignment
+                <Button variant={ButtonVariant.primary} onClick={handleRemoveFromGroup}>
+                  Remove from group
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
-                <Button variant="plain" aria-label="Actions">
-                  Actions
+                <Button variant={ButtonVariant.secondary} onClick={handleAddToGroup}>
+                  Add to group
                 </Button>
-              </ToolbarItem>
-              <ToolbarItem align={{ default: 'alignEnd' }}>
-                <span>1-1 of 1</span>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Pagination
-                  itemCount={filteredGroups.length}
-                  page={page}
-                  perPage={perPage}
-                  onSetPage={onSetPage}
-                  onPerPageSelect={onPerPageSelect}
-                  variant={PaginationVariant.top}
-                />
               </ToolbarItem>
             </ToolbarContent>
           </Toolbar>
@@ -231,56 +288,43 @@ groups: null`}
           <Table aria-label="Groups table" variant="compact">
             <Thead>
               <Tr>
-                <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
-                  <Flex spaceItems={{ default: 'spaceItemsXs' }}>
-                    <FlexItem>Name</FlexItem>
-                    <FlexItem>
-                      <Tooltip content="Information about group names">
-                        <InfoCircleIcon />
-                      </Tooltip>
-                    </FlexItem>
-                  </Flex>
-                </Th>
-                <Th sort={{ columnIndex: 1, sortBy: { index: 1, direction: 'asc' } }}>
-                  <Flex spaceItems={{ default: 'spaceItemsXs' }}>
-                    <FlexItem>Created</FlexItem>
-                    <FlexItem>
-                      <Tooltip content="Information about creation date">
-                        <InfoCircleIcon />
-                      </Tooltip>
-                    </FlexItem>
-                  </Flex>
-                </Th>
+                <Th
+                  select={{
+                    onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                    isSelected: isAllSelected,
+                    isPartiallySelected: isPartiallySelected,
+                  }}
+                />
+                <Th width={50}>Group Name</Th>
+                <Th width={25}>Members</Th>
+                <Th width={25}>Created</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {paginatedGroups.map((group) => (
+              {filteredGroups.map((group) => (
                 <Tr key={group.id}>
-                  <Td dataLabel="Name">
-                    <Button variant="link" isInline>
+                  <Td
+                    select={{
+                      rowIndex: group.id,
+                      onSelect: (_event, isSelecting) => handleSelectGroup(group.id, isSelecting),
+                      isSelected: selectedGroups.has(group.id),
+                    }}
+                  />
+                  <Td dataLabel="Group Name">
+                    <Button
+                      variant="link"
+                      isInline
+                      onClick={() => navigate(`/user-management/groups/${group.name}`)}
+                    >
                       {group.name}
                     </Button>
                   </Td>
+                  <Td dataLabel="Members">{group.members}</Td>
                   <Td dataLabel="Created">{group.created}</Td>
                 </Tr>
               ))}
             </Tbody>
           </Table>
-          
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem align={{ default: 'alignEnd' }}>
-                <Pagination
-                  itemCount={filteredGroups.length}
-                  page={page}
-                  perPage={perPage}
-                  onSetPage={onSetPage}
-                  onPerPageSelect={onPerPageSelect}
-                  variant={PaginationVariant.bottom}
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
         </CardBody>
       </Card>
     );
@@ -324,21 +368,21 @@ groups: null`}
             <BreadcrumbItem isActive>{identityName}</BreadcrumbItem>
           </Breadcrumb>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
-            <div>
+          <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsFlexEnd' }} className="pf-v6-u-mb-md">
+            <FlexItem>
               <Title headingLevel="h1" size="lg">
                 {identityName}
               </Title>
-              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+              <Content component="p" className="pf-v6-u-font-size-sm pf-v6-u-color-200">
                 {identityName?.toLowerCase().replace(/\s+/g, '')}
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              </Content>
+            </FlexItem>
+            <FlexItem>
               <Button variant="plain" isInline>
                 Actions <Icon><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></Icon>
               </Button>
-            </div>
-          </div>
+            </FlexItem>
+          </Flex>
 
           <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity detail tabs">
             <Tab eventKey={0} title={<TabTitleText>Details</TabTitleText>} aria-label="Details tab" />

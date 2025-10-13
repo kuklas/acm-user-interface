@@ -13,10 +13,16 @@ import {
   TextInput,
   FormSelect,
   FormSelectOption,
+  Dropdown,
+  DropdownList,
+  DropdownItem,
+  MenuToggle,
+  MenuToggleElement,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { PlusCircleIcon } from '@patternfly/react-icons';
+import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for Identity Providers
 const mockIdentityProviders = [
@@ -28,16 +34,27 @@ const mockIdentityProviders = [
 
 const IdentityProvider: React.FunctionComponent = () => {
   useDocumentTitle('ACM RBAC | Identity Provider');
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newProviderName, setNewProviderName] = React.useState('');
   const [newProviderType, setNewProviderType] = React.useState('OAuth');
   const [clientId, setClientId] = React.useState('');
   const [clientSecret, setClientSecret] = React.useState('');
+  const [selectedProviders, setSelectedProviders] = React.useState<Set<number>>(new Set());
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [isAddProviderOpen, setIsAddProviderOpen] = React.useState(false);
 
   const providerTypes = ['OAuth', 'OIDC', 'LDAP', 'SAML'];
 
   const handleCreateProvider = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleSelectProviderType = (providerType: string) => {
+    console.log('Selected provider type:', providerType);
+    setIsAddProviderOpen(false);
+    // Here you would navigate to the configuration page for the selected provider type
     setIsCreateModalOpen(true);
   };
 
@@ -60,11 +77,57 @@ const IdentityProvider: React.FunctionComponent = () => {
     handleModalClose();
   };
 
+  const isAllSelected = selectedProviders.size === mockIdentityProviders.length && mockIdentityProviders.length > 0;
+  const isPartiallySelected = selectedProviders.size > 0 && selectedProviders.size < mockIdentityProviders.length;
+
+  const handleSelectAll = (isSelecting: boolean) => {
+    if (isSelecting) {
+      setSelectedProviders(new Set(mockIdentityProviders.map(provider => provider.id)));
+    } else {
+      setSelectedProviders(new Set());
+    }
+  };
+
+  const handleSelectProvider = (providerId: number, isSelecting: boolean) => {
+    const newSelected = new Set(selectedProviders);
+    if (isSelecting) {
+      newSelected.add(providerId);
+    } else {
+      newSelected.delete(providerId);
+    }
+    setSelectedProviders(newSelected);
+  };
+
   return (
     <>
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isFilterOpen}
+                onSelect={() => setIsFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="plain"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    isExpanded={isFilterOpen}
+                  >
+                    <FilterIcon /> Identity provider
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="all">All providers</DropdownItem>
+                  <DropdownItem key="oauth">OAuth</DropdownItem>
+                  <DropdownItem key="oidc">OIDC</DropdownItem>
+                  <DropdownItem key="ldap">LDAP</DropdownItem>
+                  <DropdownItem key="saml">SAML</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem>
               <SearchInput
                 placeholder="Search identity providers"
@@ -74,32 +137,97 @@ const IdentityProvider: React.FunctionComponent = () => {
               />
             </ToolbarItem>
             <ToolbarItem>
-              <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateProvider}>
-                Add Identity Provider
-              </Button>
+              <Dropdown
+                isOpen={isAddProviderOpen}
+                onSelect={() => setIsAddProviderOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsAddProviderOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsAddProviderOpen(!isAddProviderOpen)}
+                    isExpanded={isAddProviderOpen}
+                    variant="primary"
+                  >
+                    Add Identity provider
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="header" isDisabled>
+                    Basic Authentication
+                  </DropdownItem>
+                  <DropdownItem key="github" onClick={() => handleSelectProviderType('GitHub')}>
+                    GitHub
+                  </DropdownItem>
+                  <DropdownItem key="gitlab" onClick={() => handleSelectProviderType('GitLab')}>
+                    GitLab
+                  </DropdownItem>
+                  <DropdownItem key="google" onClick={() => handleSelectProviderType('Google')}>
+                    Google
+                  </DropdownItem>
+                  <DropdownItem key="htpasswd" onClick={() => handleSelectProviderType('HTPasswd')}>
+                    HTPasswd
+                  </DropdownItem>
+                  <DropdownItem key="keystone" onClick={() => handleSelectProviderType('Keystone')}>
+                    Keystone
+                  </DropdownItem>
+                  <DropdownItem key="ldap" onClick={() => handleSelectProviderType('LDAP')}>
+                    LDAP
+                  </DropdownItem>
+                  <DropdownItem key="openid" onClick={() => handleSelectProviderType('OpenID Connect')}>
+                    OpenID Connect
+                  </DropdownItem>
+                  <DropdownItem key="request-header" onClick={() => handleSelectProviderType('Request Header')}>
+                    Request Header
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Identity providers table" variant="compact">
           <Thead>
             <Tr>
-              <Th>Name</Th>
-              <Th>Type</Th>
-              <Th>Status</Th>
-              <Th>Connected Users</Th>
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: isAllSelected,
+                  isPartiallySelected: isPartiallySelected,
+                }}
+              />
+              <Th width={35}>Name</Th>
+              <Th width={20}>Type</Th>
+              <Th width={20}>Status</Th>
+              <Th width={25}>Connected Users</Th>
             </Tr>
           </Thead>
           <Tbody>
             {mockIdentityProviders.map((provider) => (
               <Tr key={provider.id}>
-                <Td dataLabel="Name">{provider.name}</Td>
-                <Td dataLabel="Type">
+                <Td
+                  select={{
+                    rowIndex: provider.id,
+                    onSelect: (_event, isSelecting) => handleSelectProvider(provider.id, isSelecting),
+                    isSelected: selectedProviders.has(provider.id),
+                  }}
+                />
+                <Td dataLabel="Name" width={35} style={{ textAlign: 'left' }}>
+                  <Button
+                    variant="link"
+                    isInline
+                    onClick={() => navigate(`/user-management/identity-providers/${provider.name}`)}
+                    style={{ paddingLeft: 0 }}
+                  >
+                    {provider.name}
+                  </Button>
+                </Td>
+                <Td dataLabel="Type" width={20}>
                   <Label color="blue">{provider.type}</Label>
                 </Td>
-                <Td dataLabel="Status">
+                <Td dataLabel="Status" width={20}>
                   <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
                 </Td>
-                <Td dataLabel="Connected Users">{provider.users}</Td>
+                <Td dataLabel="Connected Users" width={25}>{provider.users}</Td>
               </Tr>
             ))}
           </Tbody>

@@ -34,6 +34,9 @@ import {
   Icon,
   Tooltip,
   Label,
+  ToolbarGroup,
+  Divider,
+  ButtonVariant,
 } from '@patternfly/react-core';
 import { CubesIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
@@ -89,13 +92,13 @@ const GroupDetail: React.FunctionComponent = () => {
     <Card>
       <CardBody>
         <div style={{ 
-          backgroundColor: '#f8f8f8', 
-          border: '1px solid #d2d2d2', 
-          borderRadius: '4px',
-          padding: '1rem',
-          fontFamily: 'monospace',
-          fontSize: '0.875rem',
-          lineHeight: '1.5',
+          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)', 
+          border: '1px solid var(--pf-t--global--border--color--default)', 
+          borderRadius: 'var(--pf-t--global--border--radius--medium)',
+          padding: 'var(--pf-t--global--spacer--md)',
+          fontFamily: 'var(--pf-t--global--font--family--mono)',
+          fontSize: 'var(--pf-t--global--font--size--body--sm)',
+          lineHeight: 'var(--pf-t--global--font--line-height--body)',
           overflow: 'auto',
           maxHeight: '400px'
         }}>
@@ -157,7 +160,12 @@ users:
       { id: 1, name: 'Joydeep Banerjee', username: 'jbanerje', identityProvider: 'LDAP', created: '5 minutes ago' },
       { id: 2, name: 'Anna Walker', username: 'awalker', identityProvider: 'LDAP', created: '1 month ago' },
       { id: 3, name: 'Joshua Packer', username: 'jpacker', identityProvider: 'LDAP', created: '1 month ago' },
+      { id: 4, name: 'Sarah Mitchell', username: 'smitchel', identityProvider: 'LDAP', created: '2 weeks ago' },
+      { id: 5, name: 'Michael Chen', username: 'mchen', identityProvider: 'LDAP', created: '3 weeks ago' },
     ];
+
+    const [selectedUsers, setSelectedUsers] = React.useState<Set<number>>(new Set());
+    const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
 
     const filteredUsers = mockUsers.filter(user =>
       user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -169,11 +177,85 @@ users:
       page * perPage
     );
 
+    const isAllSelected = selectedUsers.size === filteredUsers.length && filteredUsers.length > 0;
+    const isPartiallySelected = selectedUsers.size > 0 && selectedUsers.size < filteredUsers.length;
+
+    const handleSelectAll = (isSelecting: boolean) => {
+      if (isSelecting) {
+        setSelectedUsers(new Set(filteredUsers.map(user => user.id)));
+      } else {
+        setSelectedUsers(new Set());
+      }
+    };
+
+    const handleSelectUser = (userId: number, isSelecting: boolean) => {
+      const newSelected = new Set(selectedUsers);
+      if (isSelecting) {
+        newSelected.add(userId);
+      } else {
+        newSelected.delete(userId);
+      }
+      setSelectedUsers(newSelected);
+    };
+
+    const handleBulkAction = (action: string) => {
+      console.log(`Bulk action: ${action} for users:`, Array.from(selectedUsers));
+      setIsBulkActionOpen(false);
+      // Here you would implement the actual bulk action logic
+    };
+
+    const handleAddUser = () => {
+      console.log('Add user to group');
+      // Implement add user logic
+    };
+
+    const handleRemoveUser = () => {
+      console.log('Remove selected users from group');
+      // Implement remove user logic
+    };
+
     return (
       <Card>
         <CardBody>
           <Toolbar>
             <ToolbarContent>
+              {selectedUsers.size > 0 && (
+                <>
+                  <ToolbarGroup>
+                    <ToolbarItem>
+                      <Content component="p" className="pf-v6-u-font-weight-bold">
+                        {selectedUsers.size} selected
+                      </Content>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                      <Dropdown
+                        isOpen={isBulkActionOpen}
+                        onSelect={() => setIsBulkActionOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsBulkActionOpen(isOpen)}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle
+                            ref={toggleRef}
+                            onClick={() => setIsBulkActionOpen(!isBulkActionOpen)}
+                            isExpanded={isBulkActionOpen}
+                            variant="primary"
+                          >
+                            Actions
+                          </MenuToggle>
+                        )}
+                      >
+                        <DropdownList>
+                          <DropdownItem key="remove" onClick={() => handleBulkAction('remove')}>
+                            Remove from group
+                          </DropdownItem>
+                        </DropdownList>
+                      </Dropdown>
+                    </ToolbarItem>
+                  </ToolbarGroup>
+                  <ToolbarItem>
+                    <Divider orientation={{ default: 'vertical' }} />
+                  </ToolbarItem>
+                </>
+              )}
               <ToolbarItem>
                 <Dropdown
                   isOpen={isFilterOpen}
@@ -205,10 +287,17 @@ users:
                   onClear={() => setSearchValue('')}
                 />
               </ToolbarItem>
-              <ToolbarItem align={{ default: 'alignEnd' }}>
-                <span>1-3 of 3</span>
+              <ToolbarItem>
+                <Button variant={ButtonVariant.primary} onClick={handleAddUser}>
+                  Add user
+                </Button>
               </ToolbarItem>
               <ToolbarItem>
+                <Button variant={ButtonVariant.secondary} onClick={handleRemoveUser}>
+                  Remove user
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Pagination
                   itemCount={filteredUsers.length}
                   page={page}
@@ -224,7 +313,14 @@ users:
           <Table aria-label="Users table" variant="compact">
             <Thead>
               <Tr>
-                <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
+                <Th
+                  select={{
+                    onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                    isSelected: isAllSelected,
+                    isPartiallySelected: isPartiallySelected,
+                  }}
+                />
+                <Th width={40} sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Name</FlexItem>
                     <FlexItem>
@@ -234,7 +330,7 @@ users:
                     </FlexItem>
                   </Flex>
                 </Th>
-                <Th sort={{ columnIndex: 1, sortBy: { index: 1, direction: 'asc' } }}>
+                <Th width={20} sort={{ columnIndex: 1, sortBy: { index: 1, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Identity provider</FlexItem>
                     <FlexItem>
@@ -244,7 +340,7 @@ users:
                     </FlexItem>
                   </Flex>
                 </Th>
-                <Th sort={{ columnIndex: 2, sortBy: { index: 2, direction: 'asc' } }}>
+                <Th width={20} sort={{ columnIndex: 2, sortBy: { index: 2, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Created</FlexItem>
                     <FlexItem>
@@ -254,37 +350,48 @@ users:
                     </FlexItem>
                   </Flex>
                 </Th>
-                <Th>Actions</Th>
+                <Th width={10}>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
               {paginatedUsers.map((user) => (
                 <Tr key={user.id}>
+                  <Td
+                    select={{
+                      rowIndex: user.id,
+                      onSelect: (_event, isSelecting) => handleSelectUser(user.id, isSelecting),
+                      isSelected: selectedUsers.has(user.id),
+                    }}
+                  />
                   <Td dataLabel="Name">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '50%', 
-                        backgroundColor: '#f0ab00', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '14px'
-                      }}>
-                        {user.name.charAt(0)}
-                      </div>
-                      <div>
-                        <Button variant="link" isInline>
-                          {user.name}
-                        </Button>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                          {user.username}
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <FlexItem>
+                        <div style={{ 
+                          width: '32px', 
+                          height: '32px', 
+                          borderRadius: '50%', 
+                          backgroundColor: 'var(--pf-t--global--color--brand--default)', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          color: 'var(--pf-t--global--color--nonstatus--white--default)',
+                          fontWeight: 'var(--pf-t--global--font--weight--body--bold)',
+                          fontSize: 'var(--pf-t--global--font--size--body--default)'
+                        }}>
+                          {user.name.charAt(0)}
                         </div>
-                      </div>
-                    </div>
+                      </FlexItem>
+                      <FlexItem>
+                        <div>
+                          <Button variant="link" isInline className="pf-v6-u-p-0">
+                            {user.name}
+                          </Button>
+                          <div className="pf-v6-u-font-size-sm pf-v6-u-color-200">
+                            {user.username}
+                          </div>
+                        </div>
+                      </FlexItem>
+                    </Flex>
                   </Td>
                   <Td dataLabel="Identity provider">
                     <Label color="blue">{user.identityProvider}</Label>
@@ -345,18 +452,18 @@ users:
             <BreadcrumbItem isActive>{groupName}</BreadcrumbItem>
           </Breadcrumb>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
-            <div>
+          <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsFlexEnd' }} className="pf-v6-u-mb-md">
+            <FlexItem>
               <Title headingLevel="h1" size="lg">
                 {groupName}
               </Title>
-            </div>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            </FlexItem>
+            <FlexItem>
               <Button variant="plain" isInline>
                 Actions <Icon><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></Icon>
               </Button>
-            </div>
-          </div>
+            </FlexItem>
+          </Flex>
 
           <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Group detail tabs">
             <Tab eventKey={0} title={<TabTitleText>Details</TabTitleText>} aria-label="Details tab" />

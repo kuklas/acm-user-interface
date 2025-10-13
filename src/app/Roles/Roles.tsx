@@ -14,11 +14,13 @@ import {
   FormGroup,
   TextInput,
   Checkbox,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for Roles
 const mockRoles = [
@@ -54,26 +56,22 @@ const mockRoles = [
 
 const Roles: React.FunctionComponent = () => {
   useDocumentTitle('ACM RBAC | Roles');
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newRoleName, setNewRoleName] = React.useState('');
   const [selectedPermissions, setSelectedPermissions] = React.useState<string[]>([]);
-  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
-  const [selectedRole, setSelectedRole] = React.useState<{
-    id: number;
-    name: string;
-    type: string;
-  } | null>(null);
+  const [typeFilter, setTypeFilter] = React.useState<'All' | 'Default' | 'Custom'>('All');
+  const [sortBy, setSortBy] = React.useState<{
+    index: number;
+    direction: 'asc' | 'desc';
+  }>({ index: 0, direction: 'asc' });
+  const [selectedRoles, setSelectedRoles] = React.useState<Set<number>>(new Set());
 
   const availablePermissions = ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch'];
 
   const handleCreateRole = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleCreateRoleAssignment = (role: { id: number; name: string; type: string }) => {
-    setSelectedRole(role);
-    setIsWizardOpen(true);
+    navigate('/user-management/roles/create');
   };
 
   const handleModalClose = () => {
@@ -96,6 +94,54 @@ const Roles: React.FunctionComponent = () => {
     }
   };
 
+  const handleSort = (_event: React.MouseEvent, columnIndex: number, direction: 'asc' | 'desc') => {
+    setSortBy({ index: columnIndex, direction });
+  };
+
+  const sortedRoles = React.useMemo(() => {
+    // Filter by type first
+    const filtered = typeFilter === 'All' 
+      ? mockRoles 
+      : mockRoles.filter(role => role.type === typeFilter);
+    
+    // Then sort
+    const sorted = [...filtered];
+    if (sortBy.index === 0) {
+      sorted.sort((a, b) => {
+        const comparison = a.name.localeCompare(b.name);
+        return sortBy.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+    return sorted;
+  }, [sortBy, typeFilter]);
+
+  const isAllSelected = selectedRoles.size === sortedRoles.length && sortedRoles.length > 0;
+  const isPartiallySelected = selectedRoles.size > 0 && selectedRoles.size < sortedRoles.length;
+
+  const handleSelectAll = (isSelecting: boolean) => {
+    if (isSelecting) {
+      setSelectedRoles(new Set(sortedRoles.map(role => role.id)));
+    } else {
+      setSelectedRoles(new Set());
+    }
+  };
+
+  const handleSelectRole = (roleId: number, isSelecting: boolean) => {
+    const newSelected = new Set(selectedRoles);
+    if (isSelecting) {
+      newSelected.add(roleId);
+    } else {
+      newSelected.delete(roleId);
+    }
+    setSelectedRoles(newSelected);
+  };
+
+  const handleDeleteRoles = () => {
+    console.log('Delete roles:', Array.from(selectedRoles));
+    // Implement delete logic here
+    setSelectedRoles(new Set());
+  };
+
   return (
     <>
       <div className="table-content-card">
@@ -110,8 +156,39 @@ const Roles: React.FunctionComponent = () => {
               />
             </ToolbarItem>
             <ToolbarItem>
+              <ToggleGroup aria-label="Role type filter">
+                <ToggleGroupItem
+                  text="All"
+                  buttonId="all-toggle"
+                  isSelected={typeFilter === 'All'}
+                  onChange={() => setTypeFilter('All')}
+                />
+                <ToggleGroupItem
+                  text="Default"
+                  buttonId="default-toggle"
+                  isSelected={typeFilter === 'Default'}
+                  onChange={() => setTypeFilter('Default')}
+                />
+                <ToggleGroupItem
+                  text="Custom"
+                  buttonId="custom-toggle"
+                  isSelected={typeFilter === 'Custom'}
+                  onChange={() => setTypeFilter('Custom')}
+                />
+              </ToggleGroup>
+            </ToolbarItem>
+            <ToolbarItem>
               <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateRole}>
                 Create Custom Role
+              </Button>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button 
+                variant="secondary" 
+                onClick={handleDeleteRoles}
+                isDisabled={selectedRoles.size === 0}
+              >
+                Delete role
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -119,22 +196,53 @@ const Roles: React.FunctionComponent = () => {
         <Table aria-label="Roles table" variant="compact">
           <Thead>
             <Tr>
-              <Th>Role Name</Th>
-              <Th>Type</Th>
-              <Th>Resources</Th>
-              <Th>Permissions</Th>
-              <Th>Actions</Th>
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: isAllSelected,
+                  isPartiallySelected: isPartiallySelected,
+                }}
+              />
+              <Th 
+                width={30}
+                sort={{ 
+                  sortBy, 
+                  onSort: handleSort, 
+                  columnIndex: 0 
+                }}
+              >
+                Role Name
+              </Th>
+              <Th width={15}>Type</Th>
+              <Th width={30}>Resources</Th>
+              <Th width={25}>Permissions</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {mockRoles.map((role) => (
+            {sortedRoles.map((role) => (
               <Tr key={role.id}>
-                <Td dataLabel="Role Name">{role.name}</Td>
-                <Td dataLabel="Type">
+                <Td
+                  select={{
+                    rowIndex: role.id,
+                    onSelect: (_event, isSelecting) => handleSelectRole(role.id, isSelecting),
+                    isSelected: selectedRoles.has(role.id),
+                  }}
+                />
+                <Td dataLabel="Role Name" width={30} style={{ textAlign: 'left' }}>
+                  <Button 
+                    variant="link" 
+                    isInline 
+                    onClick={() => navigate(`/user-management/roles/${role.name}`)} 
+                    style={{ paddingLeft: 0 }}
+                  >
+                    {role.name}
+                  </Button>
+                </Td>
+                <Td dataLabel="Type" width={15}>
                   <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
                 </Td>
-                <Td dataLabel="Resources">{role.resources.join(', ')}</Td>
-                <Td dataLabel="Permissions">
+                <Td dataLabel="Resources" width={30}>{role.resources.join(', ')}</Td>
+                <Td dataLabel="Permissions" width={25}>
                   <Split hasGutter>
                     {role.permissions.slice(0, 3).map((perm) => (
                       <SplitItem key={perm}>
@@ -147,15 +255,6 @@ const Roles: React.FunctionComponent = () => {
                       </SplitItem>
                     )}
                   </Split>
-                </Td>
-                <Td dataLabel="Actions">
-                  <Button
-                    variant="link"
-                    isInline
-                    onClick={() => handleCreateRoleAssignment({ id: role.id, name: role.name, type: role.type })}
-                  >
-                    Create role assignment
-                  </Button>
                 </Td>
               </Tr>
             ))}
@@ -201,16 +300,6 @@ const Roles: React.FunctionComponent = () => {
           </Button>
         </div>
       </Modal>
-
-      <RoleAssignmentWizard
-        isOpen={isWizardOpen}
-        onClose={() => {
-          setIsWizardOpen(false);
-          setSelectedRole(null);
-        }}
-        context="roles"
-        preselectedRole={selectedRole || undefined}
-      />
     </>
   );
 };

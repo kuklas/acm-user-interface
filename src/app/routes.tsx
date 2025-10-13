@@ -6,6 +6,9 @@ import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
 import { IdentityDetail } from '@app/Identities/IdentityDetail';
 import { GroupDetail } from '@app/Identities/GroupDetail';
+import { CreateRole } from '@app/Roles/CreateRole';
+import { RoleDetail } from '@app/Roles/RoleDetail';
+import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDetail';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -147,10 +150,25 @@ const routes: AppRouteConfig[] = [
         title: 'ACM | Roles',
       },
       {
+        element: <CreateRole />,
+        path: '/user-management/roles/create',
+        title: 'ACM | Create Role',
+      },
+      {
+        element: <RoleDetail />,
+        path: '/user-management/roles/:roleName',
+        title: 'ACM | Role Detail',
+      },
+      {
         element: <IdentityProvidersPage />,
         label: 'Identity providers',
         path: '/user-management/identity-providers',
         title: 'ACM | Identity Providers',
+      },
+      {
+        element: <IdentityProviderDetail />,
+        path: '/user-management/identity-providers/:providerName',
+        title: 'ACM | Identity Provider Detail',
       },
     ],
   },
