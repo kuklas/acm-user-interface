@@ -259,7 +259,7 @@ users:
               </Th>
               <Th width={15}>Roles</Th>
               <Th width={10}>Status</Th>
-              <Th width={12}>Assigned date</Th>
+              <Th width={15}>Assigned date</Th>
               <Th width={10}>Assigned by</Th>
               <Th width={10}>Origin</Th>
             </Tr>
