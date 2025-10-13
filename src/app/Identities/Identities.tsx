@@ -210,7 +210,11 @@ const Identities: React.FunctionComponent = () => {
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
                     onSelect={() => setOpenUserActionMenuId(null)}
-                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenUserActionMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => {
+                      if (!isOpen) {
+                        setOpenUserActionMenuId(null);
+                      }
+                    }}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}
@@ -284,7 +288,11 @@ const Identities: React.FunctionComponent = () => {
                   <Dropdown
                     isOpen={openGroupActionMenuId === group.id}
                     onSelect={() => setOpenGroupActionMenuId(null)}
-                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenGroupActionMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => {
+                      if (!isOpen) {
+                        setOpenGroupActionMenuId(null);
+                      }
+                    }}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}

@@ -230,7 +230,11 @@ export const GroupsTable: React.FunctionComponent = () => {
                 <Dropdown
                   isOpen={openRowMenuId === group.id}
                   onSelect={() => setOpenRowMenuId(null)}
-                  onOpenChange={(isOpen: boolean) => !isOpen && setOpenRowMenuId(null)}
+                  onOpenChange={(isOpen: boolean) => {
+                    if (!isOpen) {
+                      setOpenRowMenuId(null);
+                    }
+                  }}
                   toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                     <MenuToggle
                       ref={toggleRef}
