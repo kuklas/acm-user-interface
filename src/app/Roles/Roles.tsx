@@ -18,7 +18,6 @@ import {
   ToggleGroupItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 
@@ -178,7 +177,7 @@ const Roles: React.FunctionComponent = () => {
               </ToggleGroup>
             </ToolbarItem>
             <ToolbarItem>
-              <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateRole}>
+              <Button variant="primary" onClick={handleCreateRole}>
                 Create Custom Role
               </Button>
             </ToolbarItem>
