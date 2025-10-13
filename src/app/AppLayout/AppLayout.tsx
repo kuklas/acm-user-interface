@@ -624,6 +624,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           fontWeight: 600,
           writingMode: 'vertical-rl',
           textOrientation: 'mixed',
+          transform: 'rotate(180deg)',
         }}
         aria-label="Give feedback"
       >
