@@ -28,7 +28,6 @@ import {
   Content,
 } from '@patternfly/react-core';
 import { StarIcon, ArrowRightIcon, InfoCircleIcon } from '@patternfly/react-icons';
-import { Chart, ChartArea, ChartAxis, ChartGroup, ChartVoronoiContainer } from '@patternfly/react-charts';
 
 export const ProjectDetail: React.FC = () => {
   const { projectName } = useParams<{ projectName: string }>();
@@ -36,21 +35,6 @@ export const ProjectDetail: React.FC = () => {
   const [activeTabKey, setActiveTabKey] = useState<string | number>(0);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(true);
-
-  // Mock utilization data
-  const cpuData = [
-    { x: '18:15', y: 100 },
-    { x: '18:30', y: 200 },
-    { x: '18:45', y: 400 },
-    { x: '19:00', y: 200 },
-  ];
-
-  const memoryData = [
-    { x: '18:15', y: 4.5 },
-    { x: '18:30', y: 5.0 },
-    { x: '18:45', y: 5.3 },
-    { x: '19:00', y: 5.2 },
-  ];
 
   return (
     <>
@@ -148,7 +132,7 @@ export const ProjectDetail: React.FC = () => {
                   
                   <Grid hasGutter>
                     <GridItem span={4}>
-                      <Card isFlat>
+                      <Card style={{ backgroundColor: 'var(--pf-t--global--background--color--primary--default)', border: 'none' }}>
                         <CardBody>
                           <Title headingLevel="h3" size="md" className="pf-v6-u-mb-sm">📱 Create applications using samples</Title>
                           <Content className="pf-v6-u-mb-md pf-v6-u-font-size-sm pf-v6-u-color-200">
@@ -161,7 +145,7 @@ export const ProjectDetail: React.FC = () => {
                       </Card>
                     </GridItem>
                     <GridItem span={4}>
-                      <Card isFlat>
+                      <Card style={{ backgroundColor: 'var(--pf-t--global--background--color--primary--default)', border: 'none' }}>
                         <CardBody>
                           <Title headingLevel="h3" size="md" className="pf-v6-u-mb-sm">🔧 Build with guided documentation</Title>
                           <Content className="pf-v6-u-mb-md pf-v6-u-font-size-sm pf-v6-u-color-200">
@@ -174,7 +158,7 @@ export const ProjectDetail: React.FC = () => {
                       </Card>
                     </GridItem>
                     <GridItem span={4}>
-                      <Card isFlat>
+                      <Card style={{ backgroundColor: 'var(--pf-t--global--background--color--primary--default)', border: 'none' }}>
                         <CardBody>
                           <Title headingLevel="h3" size="md" className="pf-v6-u-mb-sm">📦 Explore new developer features</Title>
                           <Content className="pf-v6-u-mb-md pf-v6-u-font-size-sm pf-v6-u-color-200">
@@ -315,41 +299,77 @@ export const ProjectDetail: React.FC = () => {
                       <GridItem span={12}>
                         <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm">CPU</Content>
                         <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)' }}>100.4m</Button>
-                        <div style={{ height: '80px', marginTop: '8px' }}>
-                          <Chart
-                            ariaDesc="CPU utilization"
-                            ariaTitle="CPU chart"
-                            containerComponent={<ChartVoronoiContainer labels={({ datum }) => `${datum.y}`} constrainToVisibleArea />}
-                            height={80}
-                            padding={{ bottom: 30, left: 50, right: 20, top: 0 }}
-                            maxDomain={{ y: 500 }}
-                          >
-                            <ChartAxis />
-                            <ChartAxis dependentAxis showGrid />
-                            <ChartGroup>
-                              <ChartArea data={cpuData} />
-                            </ChartGroup>
-                          </Chart>
+                        <div style={{ 
+                          height: '80px', 
+                          marginTop: '8px', 
+                          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Content className="pf-v6-u-font-size-sm pf-v6-u-color-200">[CPU utilization chart]</Content>
                         </div>
                       </GridItem>
                       <GridItem span={12}>
-                        <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm">Memory</Content>
+                        <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm pf-v6-u-mt-md">Memory</Content>
                         <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)' }}>6.38 GiB</Button>
-                        <div style={{ height: '80px', marginTop: '8px' }}>
-                          <Chart
-                            ariaDesc="Memory utilization"
-                            ariaTitle="Memory chart"
-                            containerComponent={<ChartVoronoiContainer labels={({ datum }) => `${datum.y} GiB`} constrainToVisibleArea />}
-                            height={80}
-                            padding={{ bottom: 30, left: 50, right: 20, top: 0 }}
-                            maxDomain={{ y: 6 }}
-                          >
-                            <ChartAxis />
-                            <ChartAxis dependentAxis showGrid />
-                            <ChartGroup>
-                              <ChartArea data={memoryData} />
-                            </ChartGroup>
-                          </Chart>
+                        <div style={{ 
+                          height: '80px', 
+                          marginTop: '8px', 
+                          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Content className="pf-v6-u-font-size-sm pf-v6-u-color-200">[Memory utilization chart]</Content>
+                        </div>
+                      </GridItem>
+                      <GridItem span={12}>
+                        <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm pf-v6-u-mt-md">Filesystem</Content>
+                        <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)' }}>438.2 MiB</Button>
+                        <div style={{ 
+                          height: '80px', 
+                          marginTop: '8px', 
+                          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Content className="pf-v6-u-font-size-sm pf-v6-u-color-200">[Filesystem utilization chart]</Content>
+                        </div>
+                      </GridItem>
+                      <GridItem span={12}>
+                        <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm pf-v6-u-mt-md">Network transfer</Content>
+                        <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)' }}>47.87 KBps in</Button>
+                        <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)', marginLeft: '8px' }}>27.21 KBps out</Button>
+                        <div style={{ 
+                          height: '80px', 
+                          marginTop: '8px', 
+                          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Content className="pf-v6-u-font-size-sm pf-v6-u-color-200">[Network transfer chart]</Content>
+                        </div>
+                      </GridItem>
+                      <GridItem span={12}>
+                        <Content className="pf-v6-u-font-weight-bold pf-v6-u-mb-sm pf-v6-u-mt-md">Pod count</Content>
+                        <Button variant="link" isInline style={{ fontSize: '14px', color: 'var(--pf-t--global--color--brand--default)' }}>19</Button>
+                        <div style={{ 
+                          height: '80px', 
+                          marginTop: '8px', 
+                          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Content className="pf-v6-u-font-size-sm pf-v6-u-color-200">[Pod count chart]</Content>
                         </div>
                       </GridItem>
                     </Grid>
