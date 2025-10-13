@@ -197,7 +197,6 @@ const routes: AppRouteConfig[] = [
     routes: [
       {
         element: <Projects />,
-        label: 'Projects',
         path: '/core/home/projects',
         title: 'Projects',
       },

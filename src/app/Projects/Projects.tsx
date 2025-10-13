@@ -110,7 +110,7 @@ export const Projects: React.FC = () => {
   };
 
   return (
-    <PageSection>
+    <PageSection style={{ padding: '24px' }}>
       <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} className="pf-v6-u-mb-md">
         <FlexItem>
           <Title headingLevel="h1" size="2xl">Projects</Title>
