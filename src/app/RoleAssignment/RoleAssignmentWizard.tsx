@@ -828,7 +828,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               <Tr>
                 <Th />
                 <Th>Project</Th>
-                <Th>Cluster</Th>
+                {/* Only show Cluster column when selecting from multiple clusters */}
+                {!isSingleClusterContext && selectedClusters.length > 1 && <Th>Cluster</Th>}
               </Tr>
             </Thead>
             <Tbody>
@@ -855,7 +856,10 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     </Td>
                   )}
                   <Td dataLabel="Project">{project.name}</Td>
-                  <Td dataLabel="Cluster">{project.clusters}</Td>
+                  {/* Only show Cluster cell when selecting from multiple clusters */}
+                  {!isSingleClusterContext && selectedClusters.length > 1 && (
+                    <Td dataLabel="Cluster">{project.clusters}</Td>
+                  )}
                 </Tr>
               ))}
             </Tbody>
