@@ -34,6 +34,7 @@ import {
   QuestionCircleIcon,
   BellIcon,
   EllipsisVIcon,
+  CubeIcon,
 } from '@patternfly/react-icons';
 
 interface IAppLayout {
@@ -49,6 +50,73 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     { name: 'Core platforms', disabled: true },
     { name: 'Fleet management', disabled: false },
     { name: 'Fleet virtualization', disabled: false },
+  ];
+
+  // Fleet virtualization navigation routes
+  const fleetVirtualizationRoutes: IAppRouteGroup[] = [
+    {
+      label: '',
+      routes: [
+        {
+          element: null,
+          label: 'Overview',
+          path: '/virtualization/overview',
+          title: 'Overview',
+        },
+        {
+          element: null,
+          label: 'Catalog',
+          path: '/virtualization/catalog',
+          title: 'Catalog',
+        },
+        {
+          element: null,
+          label: 'Virtual machines',
+          path: '/virtualization/virtual-machines',
+          title: 'Virtual machines',
+        },
+      ],
+    },
+    {
+      label: '',
+      routes: [
+        {
+          element: null,
+          label: 'InstanceTypes',
+          path: '/virtualization/instance-types',
+          title: 'InstanceTypes',
+        },
+        {
+          element: null,
+          label: 'Templates',
+          path: '/virtualization/templates',
+          title: 'Templates',
+        },
+      ],
+    },
+    {
+      label: 'User management',
+      routes: [
+        {
+          element: null,
+          label: 'Identities',
+          path: '/user-management/identities',
+          title: 'Identities',
+        },
+        {
+          element: null,
+          label: 'Identity providers',
+          path: '/user-management/identity-providers',
+          title: 'Identity providers',
+        },
+        {
+          element: null,
+          label: 'Roles',
+          path: '/user-management/roles',
+          title: 'Roles',
+        },
+      ],
+    },
   ];
 
   const onPerspectiveSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
@@ -151,31 +219,34 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   };
 
   const PerspectiveSelector = () => {
-    React.useEffect(() => {
-      console.log('PerspectiveSelector rendered, perspectiveOpen:', perspectiveOpen);
-    }, [perspectiveOpen]);
-
     return (
-      <div className="perspective-selector">
+      <div className="perspective-selector" style={{ position: 'relative' }}>
         <button
-          onClick={() => {
-            console.log('Button clicked, current state:', perspectiveOpen);
-            setPerspectiveOpen(!perspectiveOpen);
-          }}
+          onClick={() => setPerspectiveOpen(!perspectiveOpen)}
           style={{
             width: '100%',
-            padding: '8px 16px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            background: 'white',
+            padding: 'var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md)',
+            border: `1px solid var(--pf-t--global--border--color--default)`,
+            borderRadius: perspectiveOpen 
+              ? 'var(--pf-t--global--border--radius--small) var(--pf-t--global--border--radius--small) 0 0'
+              : 'var(--pf-t--global--border--radius--small)',
+            background: 'var(--pf-t--global--background--color--primary--default)',
             textAlign: 'left',
             cursor: 'pointer',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            fontSize: 'var(--pf-t--global--font--size--body--default)',
+            fontWeight: 'var(--pf-t--global--font--weight--body--default)',
+            color: 'var(--pf-t--global--text--color--regular)',
           }}
         >
-          <span>{activePerspective}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--pf-t--global--spacer--sm)' }}>
+            <Icon size="md">
+              <CubeIcon />
+            </Icon>
+            <span>{activePerspective}</span>
+          </div>
           <CaretDownIcon />
         </button>
         
@@ -186,12 +257,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               top: '100%',
               left: 0,
               right: 0,
-              marginTop: '4px',
-              backgroundColor: 'white',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              marginTop: '-1px',
+              backgroundColor: 'var(--pf-t--global--background--color--primary--default)',
+              border: `1px solid var(--pf-t--global--border--color--default)`,
+              borderRadius: '0 0 var(--pf-t--global--border--radius--small) var(--pf-t--global--border--radius--small)',
+              boxShadow: 'var(--pf-t--global--box-shadow--lg)',
               zIndex: 9999,
+              overflow: 'hidden',
             }}
           >
             {perspectives.map((perspective, index) => (
@@ -199,25 +271,28 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
                 key={index}
                 onClick={() => {
                   if (!perspective.disabled) {
-                    console.log('Perspective selected:', perspective.name);
                     setActivePerspective(perspective.name);
                     setPerspectiveOpen(false);
                   }
                 }}
                 style={{
-                  padding: '8px 16px',
+                  padding: 'var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md)',
                   cursor: perspective.disabled ? 'not-allowed' : 'pointer',
-                  opacity: perspective.disabled ? 0.5 : 1,
-                  backgroundColor: 'white',
-                  borderBottom: index < perspectives.length - 1 ? '1px solid #f0f0f0' : 'none',
+                  opacity: perspective.disabled ? 0.6 : 1,
+                  backgroundColor: 'var(--pf-t--global--background--color--primary--default)',
+                  fontSize: 'var(--pf-t--global--font--size--body--default)',
+                  color: perspective.disabled 
+                    ? 'var(--pf-t--global--text--color--disabled)' 
+                    : 'var(--pf-t--global--text--color--regular)',
+                  transition: 'background-color 0.2s',
                 }}
                 onMouseEnter={(e) => {
                   if (!perspective.disabled) {
-                    e.currentTarget.style.backgroundColor = '#f0f0f0';
+                    e.currentTarget.style.backgroundColor = 'var(--pf-t--global--background--color--action--hover--default)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.backgroundColor = 'var(--pf-t--global--background--color--primary--default)';
                 }}
               >
                 {perspective.name}
@@ -229,13 +304,33 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     );
   };
 
+  // Select routes based on active perspective
+  const activeRoutes = activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : routes;
+
   const Navigation = (
     <Nav id="nav-primary-simple">
       <PerspectiveSelector />
       <NavList id="nav-list-simple">
-        {routes.map((route, idx) =>
-          route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx)),
-        )}
+        {activeRoutes.map((route, idx) => {
+          // Handle groups with empty labels (for dividers)
+          if (route.routes && route.label === '') {
+            return (
+              <React.Fragment key={idx}>
+                {idx > 0 && (
+                  <div
+                    style={{
+                      borderTop: '1px solid var(--pf-t--global--border--color--default)',
+                      margin: 'var(--pf-t--global--spacer--md) 0',
+                    }}
+                  />
+                )}
+                {route.routes.map((subRoute, subIdx) => subRoute.label && renderNavItem(subRoute, `${idx}-${subIdx}`))}
+              </React.Fragment>
+            );
+          }
+          // Handle regular routes and groups
+          return route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx));
+        })}
       </NavList>
     </Nav>
   );
