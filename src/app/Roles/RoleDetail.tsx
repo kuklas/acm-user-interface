@@ -19,7 +19,11 @@ import {
   Split,
   SplitItem,
   Content,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateActions,
 } from '@patternfly/react-core';
+import { CubesIcon } from '@patternfly/react-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
@@ -215,21 +219,25 @@ rules:
         {activeTabKey === 3 && (
           <Card>
             <CardBody>
-              <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-                <SplitItem isFilled>
-                  <Title headingLevel="h2" size="lg">
-                    Role Assignments
-                  </Title>
-                </SplitItem>
-                <SplitItem>
+              <EmptyState>
+                <CubesIcon />
+                <Title headingLevel="h2" size="lg">
+                  No role assignments created yet
+                </Title>
+                <EmptyStateBody>
+                  Control what users and groups can access or view by assigning them this role for your managed resources.
+                </EmptyStateBody>
+                <EmptyStateActions>
                   <Button variant="primary" onClick={() => setIsWizardOpen(true)}>
                     Create role assignment
                   </Button>
-                </SplitItem>
-              </Split>
-              <Content component="p" className="pf-v6-u-color-200">
-                No role assignments found for this role.
-              </Content>
+                </EmptyStateActions>
+                <EmptyStateBody>
+                  <Button component="a" href="#" variant="link">
+                    Link to documentation
+                  </Button>
+                </EmptyStateBody>
+              </EmptyState>
             </CardBody>
           </Card>
         )}
