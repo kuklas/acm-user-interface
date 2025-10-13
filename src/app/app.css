@@ -58,11 +58,32 @@ body,
 .perspective-selector {
   padding: var(--pf-t--global--spacer--md);
   border-bottom: 1px solid var(--pf-t--global--border--color--default);
+  position: relative;
+  z-index: 1000;
 }
 
 .perspective-selector .pf-v6-c-menu-toggle {
   width: 100%;
   justify-content: space-between;
+}
+
+.perspective-selector .pf-v6-c-dropdown__menu {
+  z-index: 1001;
+  position: absolute;
+  width: 100%;
+}
+
+/* Ensure sidebar doesn't clip dropdown */
+.pf-v6-c-page__sidebar {
+  overflow: visible !important;
+}
+
+.pf-v6-c-page__sidebar-body {
+  overflow: visible !important;
+}
+
+#nav-primary-simple {
+  overflow: visible !important;
 }
 
 /* Wizard modal custom styling */
