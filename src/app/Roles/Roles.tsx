@@ -200,7 +200,6 @@ const Roles: React.FunctionComponent = () => {
                 select={{
                   onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
                   isSelected: isAllSelected,
-                  isPartiallySelected: isPartiallySelected,
                 }}
               />
               <Th 

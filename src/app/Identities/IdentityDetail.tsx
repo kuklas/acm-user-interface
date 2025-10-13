@@ -288,13 +288,12 @@ groups: null`}
           <Table aria-label="Groups table" variant="compact">
             <Thead>
               <Tr>
-                <Th
-                  select={{
-                    onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                    isSelected: isAllSelected,
-                    isPartiallySelected: isPartiallySelected,
-                  }}
-                />
+                      <Th
+                        select={{
+                          onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                          isSelected: isAllSelected,
+                        }}
+                      />
                 <Th width={50}>Group Name</Th>
                 <Th width={25}>Members</Th>
                 <Th width={25}>Created</Th>

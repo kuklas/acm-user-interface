@@ -192,7 +192,6 @@ const IdentityProvider: React.FunctionComponent = () => {
                 select={{
                   onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
                   isSelected: isAllSelected,
-                  isPartiallySelected: isPartiallySelected,
                 }}
               />
               <Th width={35}>Name</Th>

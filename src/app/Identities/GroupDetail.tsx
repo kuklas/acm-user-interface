@@ -313,13 +313,12 @@ users:
           <Table aria-label="Users table" variant="compact">
             <Thead>
               <Tr>
-                <Th
-                  select={{
-                    onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                    isSelected: isAllSelected,
-                    isPartiallySelected: isPartiallySelected,
-                  }}
-                />
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: isAllSelected,
+                }}
+              />
                 <Th width={40} sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Name</FlexItem>

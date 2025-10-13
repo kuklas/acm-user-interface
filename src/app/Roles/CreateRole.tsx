@@ -333,7 +333,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                 </div>
                 <Button 
                   variant="secondary" 
-                  isSmall 
+                  size="sm"
                   onClick={() => handleAddResourceFromCatalog(resource.name)}
                 >
                   Add
@@ -353,7 +353,6 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
         title=""
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
-        hasNoBodyWrapper
       >
         <Toolbar style={{ padding: 'var(--pf-t--global--spacer--md)' }}>
           <ToolbarContent>
@@ -388,7 +387,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                 <Td dataLabel="Actions" width={15} style={{ textAlign: 'left' }}>
                   <Button
                     variant="secondary"
-                    isSmall
+                    size="sm"
                     onClick={() => handleUseTemplate(template.name)}
                   >
                     Use template
