@@ -361,9 +361,9 @@ users:
                 </Td>
                 <Td dataLabel="Type">{assignment.type}</Td>
                 <Td dataLabel="Scope">
-                  <Flex spaceItems={{ default: 'spaceItemsMd' }}>
+                  <Flex spaceItems={{ default: 'spaceItemsMd' }} flexWrap={{ default: 'nowrap' }}>
                     <FlexItem>
-                      <Flex spaceItems={{ default: 'spaceItemsXs' }}>
+                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'nowrap' }}>
                         {assignment.clusters.map((cluster, idx) => (
                           <FlexItem key={idx}>
                             <Button variant="link" isInline style={{ paddingLeft: 0 }}>
