@@ -34,6 +34,9 @@ import {
   TextInput,
   TextArea,
   Alert,
+  Tabs,
+  Tab,
+  TabTitleText,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import {
@@ -46,6 +49,7 @@ import {
   CubeIcon,
   InfoCircleIcon,
 } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 
 interface IAppLayout {
   children: React.ReactNode;
@@ -56,86 +60,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [perspectiveOpen, setPerspectiveOpen] = React.useState(false);
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false);
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = React.useState(false);
-  const [feedbackName, setFeedbackName] = React.useState('');
-  const [feedbackEmail, setFeedbackEmail] = React.useState('');
-  const [feedbackText, setFeedbackText] = React.useState('');
-  const [feedbackSubmitted, setFeedbackSubmitted] = React.useState(false);
-
-  const handleFeedbackSubmit = async () => {
-    const timestamp = new Date().toLocaleString();
-    const currentPage = window.location.pathname;
-    const currentUrl = window.location.href;
-
-    // Store in localStorage as backup
-    const feedback = {
-      name: feedbackName || 'Anonymous',
-      email: feedbackEmail || 'Not provided',
-      feedback: feedbackText,
-      timestamp: timestamp,
-      page: currentPage,
-      url: currentUrl,
-    };
-    const existingFeedback = JSON.parse(localStorage.getItem('prototypeFeedback') || '[]');
-    existingFeedback.push(feedback);
-    localStorage.setItem('prototypeFeedback', JSON.stringify(existingFeedback));
-
-    // Send to FormSubmit (email service)
-    try {
-      const formData = new FormData();
-      formData.append('name', feedbackName || 'Anonymous');
-      formData.append('email', feedbackEmail || 'Not provided');
-      formData.append('message', feedbackText);
-      formData.append('page', currentPage);
-      formData.append('url', currentUrl);
-      formData.append('timestamp', timestamp);
-      formData.append('_subject', `ACM Prototype Feedback from ${feedbackName || 'Anonymous'}`);
-      formData.append('_captcha', 'false'); // Disable captcha
-      formData.append('_template', 'table'); // Table format
-      formData.append('_next', window.location.href); // Redirect back to same page
-      formData.append('_autoresponse', 'Thank you for your feedback!'); // Auto-reply to user
-
-      console.log('Sending feedback to FormSubmit...');
-      
-      const response = await fetch('https://formsubmit.co/skukla@redhat.com', {
-        method: 'POST',
-        body: formData,
-        mode: 'cors',
-      });
-      
-      console.log('FormSubmit response status:', response.status);
-      console.log('FormSubmit response ok:', response.ok);
-      
-      if (response.ok) {
-        console.log('✅ Feedback sent successfully to email');
-      } else {
-        console.warn('⚠️ FormSubmit response not OK, but may still work');
-      }
-    } catch (error) {
-      console.error('❌ Error sending feedback email:', error);
-      console.log('Feedback saved locally as backup');
-    }
-
-    // Log to console for easy viewing
-    console.log('Feedback submitted:', feedback);
-
-    // Show success message
-    setFeedbackSubmitted(true);
-
-    // Reset form after 2 seconds
-    setTimeout(() => {
-      setFeedbackName('');
-      setFeedbackEmail('');
-      setFeedbackText('');
-      setFeedbackSubmitted(false);
-      setIsFeedbackModalOpen(false);
-    }, 2000);
-  };
-
-  const handleFeedbackModalClose = () => {
-    setIsFeedbackModalOpen(false);
-    setFeedbackSubmitted(false);
-  };
 
   const perspectives = [
     { name: 'Core platforms', disabled: false },
@@ -630,27 +554,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         {children}
       </Page>
 
-      {/* Feedback Button */}
-      <Button
-        variant="secondary"
-        onClick={() => setIsFeedbackModalOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '96px',
-          right: '24px',
-          padding: '16px 12px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          zIndex: 1000,
-          fontWeight: 600,
-          writingMode: 'vertical-rl',
-          textOrientation: 'mixed',
-          transform: 'rotate(180deg)',
-        }}
-        aria-label="Give feedback"
-      >
-        Feedback
-      </Button>
-
       {/* Floating Action Button */}
       <Button
         variant="primary"
@@ -792,70 +695,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         </div>
       </Modal>
 
-      {/* Feedback Modal */}
-      <Modal
-        variant={ModalVariant.medium}
-        title="Share Your Feedback"
-        isOpen={isFeedbackModalOpen}
-        onClose={handleFeedbackModalClose}
-      >
-        <div style={{ padding: '16px' }}>
-          {feedbackSubmitted ? (
-            <Alert variant="success" title="Thank you for your feedback!" isInline>
-              Your feedback has been submitted successfully.
-            </Alert>
-          ) : (
-            <Form>
-              <FormGroup label="Name (optional)" fieldId="feedback-name">
-                <TextInput
-                  id="feedback-name"
-                  value={feedbackName}
-                  onChange={(_event, value) => setFeedbackName(value)}
-                  placeholder="Your name"
-                />
-              </FormGroup>
-
-              <FormGroup label="Email (optional)" fieldId="feedback-email">
-                <TextInput
-                  id="feedback-email"
-                  type="email"
-                  value={feedbackEmail}
-                  onChange={(_event, value) => setFeedbackEmail(value)}
-                  placeholder="your.email@example.com"
-                />
-              </FormGroup>
-
-              <FormGroup 
-                label="Feedback" 
-                fieldId="feedback-text"
-                isRequired
-              >
-                <TextArea
-                  id="feedback-text"
-                  value={feedbackText}
-                  onChange={(_event, value) => setFeedbackText(value)}
-                  placeholder="Share your thoughts, suggestions, or report issues..."
-                  rows={6}
-                  isRequired
-                />
-              </FormGroup>
-
-              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <Button variant="link" onClick={handleFeedbackModalClose}>
-                  Cancel
-                </Button>
-                <Button 
-                  variant="primary" 
-                  onClick={handleFeedbackSubmit}
-                  isDisabled={!feedbackText.trim()}
-                >
-                  Submit Feedback
-                </Button>
-              </div>
-            </Form>
-          )}
-        </div>
-      </Modal>
     </>
   );
 };
