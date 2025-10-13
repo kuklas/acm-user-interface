@@ -110,25 +110,27 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
           <BreadcrumbItem isActive>Add Identity provider: LDAP (Active directory)</BreadcrumbItem>
         </Breadcrumb>
 
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
-          <FlexItem>
-            <Title headingLevel="h1" size="2xl">
-              Add Identity provider: LDAP (Active directory)
-            </Title>
-          </FlexItem>
-          <FlexItem>
-            <Switch
-              id="yaml-toggle"
-              label="YAML"
-              isChecked={isYAMLView}
-              onChange={(_event, checked) => setIsYAMLView(checked)}
-            />
-          </FlexItem>
-        </Flex>
+        <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+          <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+            <FlexItem>
+              <Title headingLevel="h1" size="2xl">
+                Add Identity provider: LDAP (Active directory)
+              </Title>
+            </FlexItem>
+            <FlexItem>
+              <Switch
+                id="yaml-toggle"
+                label="YAML"
+                isChecked={isYAMLView}
+                onChange={(_event, checked) => setIsYAMLView(checked)}
+              />
+            </FlexItem>
+          </Flex>
 
-        <Content component="p" className="pf-v6-u-mt-sm pf-v6-u-color-200">
-          Integrate with an LDAP identity provider. Configure the LDAP identity provider to validate user names and passwords against an LDAPv3 server, using simple bind authentication.
-        </Content>
+          <Content component="p" className="pf-v6-u-mt-sm pf-v6-u-color-200">
+            Integrate with an LDAP identity provider. Configure the LDAP identity provider to validate user names and passwords against an LDAPv3 server, using simple bind authentication.
+          </Content>
+        </div>
       </div>
 
       <div style={{ padding: '24px' }}>
