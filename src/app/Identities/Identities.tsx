@@ -54,6 +54,8 @@ const Identities: React.FunctionComponent = () => {
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
 
+  console.log('Identities component rendered, openUserActionMenuId:', openUserActionMenuId);
+
   const handleUserSelect = (userId: number, isSelected: boolean) => {
     if (isSelected) {
       setSelectedUsers([...selectedUsers, userId]);
@@ -70,24 +72,27 @@ const Identities: React.FunctionComponent = () => {
     }
   };
 
-  const toggleUserActionMenu = (userId: number) => {
-    console.log('toggleUserActionMenu called for userId:', userId, 'current openUserActionMenuId:', openUserActionMenuId);
-    setOpenUserActionMenuId(openUserActionMenuId === userId ? null : userId);
-  };
+  const toggleUserActionMenu = React.useCallback((userId: number) => {
+    console.log('toggleUserActionMenu called for userId:', userId);
+    setOpenUserActionMenuId(prev => {
+      console.log('Previous openUserActionMenuId:', prev, 'New:', prev === userId ? null : userId);
+      return prev === userId ? null : userId;
+    });
+  }, []);
 
-  const toggleGroupActionMenu = (groupId: number) => {
-    setOpenGroupActionMenuId(openGroupActionMenuId === groupId ? null : groupId);
-  };
+  const toggleGroupActionMenu = React.useCallback((groupId: number) => {
+    setOpenGroupActionMenuId(prev => prev === groupId ? null : groupId);
+  }, []);
 
-  const handleImpersonateUser = (userName: string) => {
+  const handleImpersonateUser = React.useCallback((userName: string) => {
     console.log('Impersonate user:', userName);
     setOpenUserActionMenuId(null);
-  };
+  }, []);
 
-  const handleImpersonateGroup = (groupName: string) => {
+  const handleImpersonateGroup = React.useCallback((groupName: string) => {
     console.log('Impersonate group:', groupName);
     setOpenGroupActionMenuId(null);
-  };
+  }, []);
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -210,15 +215,24 @@ const Identities: React.FunctionComponent = () => {
                 <Td dataLabel="Actions" style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
-                    onSelect={() => setOpenUserActionMenuId(null)}
-                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenUserActionMenuId(null)}
+                    onSelect={() => {
+                      console.log('Dropdown onSelect called');
+                      setOpenUserActionMenuId(null);
+                    }}
+                    onOpenChange={(isOpen: boolean) => {
+                      console.log('Dropdown onOpenChange called, isOpen:', isOpen);
+                      if (!isOpen) {
+                        setOpenUserActionMenuId(null);
+                      }
+                    }}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}
                         aria-label="Actions menu"
                         variant="plain"
-                        onClick={() => {
-                          console.log('MenuToggle clicked for user:', user.name);
+                        onClick={(event: React.MouseEvent) => {
+                          event.stopPropagation();
+                          console.log('MenuToggle clicked for user:', user.name, user.id);
                           toggleUserActionMenu(user.id);
                         }}
                         isExpanded={openUserActionMenuId === user.id}
@@ -231,7 +245,10 @@ const Identities: React.FunctionComponent = () => {
                     <DropdownList>
                       <DropdownItem
                         key="impersonate"
-                        onClick={() => handleImpersonateUser(user.name)}
+                        onClick={() => {
+                          console.log('Impersonate clicked for user:', user.name);
+                          handleImpersonateUser(user.name);
+                        }}
                       >
                         Impersonate
                       </DropdownItem>

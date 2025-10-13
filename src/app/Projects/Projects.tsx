@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  PageSection,
   Title,
   Toolbar,
   ToolbarContent,
@@ -110,7 +109,7 @@ export const Projects: React.FC = () => {
   };
 
   return (
-    <PageSection style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--secondary--default)', minHeight: '100vh' }}>
       <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} className="pf-v6-u-mb-md">
         <FlexItem>
           <Title headingLevel="h1" size="2xl">Projects</Title>
@@ -278,7 +277,7 @@ export const Projects: React.FC = () => {
           </Table>
         </CardBody>
       </Card>
-    </PageSection>
+    </div>
   );
 };
 
