@@ -117,7 +117,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   
   // Step 2: Select resources
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
-  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(true);
+  // In single cluster context (when clusterName is provided), skip cluster selection
+  // In multi-cluster context (cluster set or no specific cluster), show cluster selection
+  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(!clusterName);
   const [showIncludeProjects, setShowIncludeProjects] = React.useState(false);
   const [showSpecifyProjects, setShowSpecifyProjects] = React.useState(false);
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
@@ -132,13 +134,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [projectViewMode, setProjectViewMode] = React.useState<'all' | 'selected'>('all');
   
   // Track which substeps have been visited (to keep them visible after step 2)
-  const [hasVisitedSpecifyClusters, setHasVisitedSpecifyClusters] = React.useState(true);
+  // In single cluster context, cluster selection is never visited
+  const [hasVisitedSpecifyClusters, setHasVisitedSpecifyClusters] = React.useState(!clusterName);
   const [hasVisitedIncludeProjects, setHasVisitedIncludeProjects] = React.useState(false);
   const [hasVisitedSpecifyProjects, setHasVisitedSpecifyProjects] = React.useState(false);
   
   // Step 3: Select role
   const [selectedRole, setSelectedRole] = React.useState<number | null>(
-    preselectedRole?.id || 1
+    preselectedRole?.id || null
   );
   const [roleSearchValue, setRoleSearchValue] = React.useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
@@ -153,63 +156,94 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const handleClose = () => {
     setCurrentStep(1);
     setActiveTabKey(0);
-    // Reset substep visibility
-    setShowSpecifyClusters(true);
+    // Reset substep visibility based on context
+    // In single cluster context, skip directly to project scope selection (no cluster selection)
+    setShowSpecifyClusters(!clusterName);
     setShowIncludeProjects(false);
     setShowSpecifyProjects(false);
     onClose();
   };
   
-  // When moving to step 2 from step 1, ensure we start with "Specify clusters"
+  // When moving to step 2 from step 1, ensure we start with the proper substep
   React.useEffect(() => {
     if (currentStep === 2 && resourceScope === 'specific') {
       if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
-        setShowSpecifyClusters(true);
+        // In single cluster context, don't show cluster selection
+        if (clusterName) {
+          // Start with project scope selection (showing the radio buttons)
+          // Don't set any substep visibility - the main view will show
+        } else {
+          // In multi-cluster context, start with cluster selection
+          setShowSpecifyClusters(true);
+        }
       }
     }
   }, [currentStep]);
 
   const handleNext = () => {
+    const isSingleClusterContext = !!clusterName;
+    
     if (currentStep === 2 && resourceScope === 'specific') {
-      // From "Specify clusters" substep → go to "Include projects" if clusters selected
-      if (showSpecifyClusters) {
-        if (selectedClusters.length > 0) {
-          setShowSpecifyClusters(false);
-          setShowIncludeProjects(true);
-          return;
+      // Single cluster context: handle project scope selection
+      if (isSingleClusterContext) {
+        // If not showing projects yet, handle project scope selection
+        if (!showSpecifyProjects) {
+          // If "Full access" (cluster scope) → go to next step
+          if (projectScope === 'cluster') {
+            // Fall through to move to next step
+          } else if (projectScope === 'project') {
+            // If "Partial access" (project scope) → show "Specify projects"
+            setShowSpecifyProjects(true);
+            return;
+          }
         } else {
-          // No clusters selected, can't proceed
-          return;
-        }
-      }
-      
-      // From "Include projects" substep
-      if (showIncludeProjects) {
-        setShowIncludeProjects(false);
-        
-        // If "Full access" (cluster scope) → skip project selection, go to next step
-        if (projectScope === 'cluster') {
+          // From "Specify projects" substep → validate and go to next step
+          if (selectedProjects.length === 0) return; // Need at least one project
+          setShowSpecifyProjects(false);
           // Fall through to move to next step
-        } else if (projectScope === 'project') {
-          // If "Partial access" (project scope) → show project selection
-          // Logic: 1 cluster = "Specify projects", >1 cluster = "Specify common projects"
-          setShowSpecifyProjects(true);
-          return;
         }
-      }
-      
-      // From "Specify projects" or "Specify common projects" substep → go to next step
-      if (showSpecifyProjects) {
-        // Validate selection based on cluster count
-        if (selectedClusters.length === 1) {
-          // Multi-select projects - need at least one selected
-          if (selectedProjects.length === 0) return;
-        } else {
-          // Single-select common project - need one selected
-          if (selectedCommonProject === null) return;
+      } else {
+        // Multi-cluster context: original logic
+        // From "Specify clusters" substep → go to "Include projects" if clusters selected
+        if (showSpecifyClusters) {
+          if (selectedClusters.length > 0) {
+            setShowSpecifyClusters(false);
+            setShowIncludeProjects(true);
+            return;
+          } else {
+            // No clusters selected, can't proceed
+            return;
+          }
         }
-        setShowSpecifyProjects(false);
-        // Fall through to move to next step
+        
+        // From "Include projects" substep
+        if (showIncludeProjects) {
+          setShowIncludeProjects(false);
+          
+          // If "Full access" (cluster scope) → skip project selection, go to next step
+          if (projectScope === 'cluster') {
+            // Fall through to move to next step
+          } else if (projectScope === 'project') {
+            // If "Partial access" (project scope) → show project selection
+            // Logic: 1 cluster = "Specify projects", >1 cluster = "Specify common projects"
+            setShowSpecifyProjects(true);
+            return;
+          }
+        }
+        
+        // From "Specify projects" or "Specify common projects" substep → go to next step
+        if (showSpecifyProjects) {
+          // Validate selection based on cluster count
+          if (selectedClusters.length === 1) {
+            // Multi-select projects - need at least one selected
+            if (selectedProjects.length === 0) return;
+          } else {
+            // Single-select common project - need one selected
+            if (selectedCommonProject === null) return;
+          }
+          setShowSpecifyProjects(false);
+          // Fall through to move to next step
+        }
       }
     }
     
@@ -228,24 +262,38 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const handleBack = () => {
+    const isSingleClusterContext = !!clusterName;
+    
     if (currentStep === 2 && resourceScope === 'specific') {
-      // From "Specify common projects" substep → go back to "Include projects"
-      if (showSpecifyProjects) {
-        setShowSpecifyProjects(false);
-        setShowIncludeProjects(true);
-        return;
-      }
-      
-      // From "Include projects" substep → go back to "Specify clusters"
-      if (showIncludeProjects) {
-        setShowIncludeProjects(false);
-        setShowSpecifyClusters(true);
-        return;
-      }
-      
-      // From "Specify clusters" substep → go back to previous step
-      if (showSpecifyClusters) {
-        // Fall through to go to previous step
+      // Single cluster context: handle back navigation
+      if (isSingleClusterContext) {
+        // From "Specify projects" substep → go back to project scope selection
+        if (showSpecifyProjects) {
+          setShowSpecifyProjects(false);
+          return;
+        }
+        // From project scope selection → go back to previous step
+        // Fall through
+      } else {
+        // Multi-cluster context: original logic
+        // From "Specify common projects" substep → go back to "Include projects"
+        if (showSpecifyProjects) {
+          setShowSpecifyProjects(false);
+          setShowIncludeProjects(true);
+          return;
+        }
+        
+        // From "Include projects" substep → go back to "Specify clusters"
+        if (showIncludeProjects) {
+          setShowIncludeProjects(false);
+          setShowSpecifyClusters(true);
+          return;
+        }
+        
+        // From "Specify clusters" substep → go back to previous step
+        if (showSpecifyClusters) {
+          // Fall through to go to previous step
+        }
       }
     }
     
@@ -300,8 +348,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const filteredProjects = mockProjects
     .filter((project) => project.name.toLowerCase().includes(projectSearchValue.toLowerCase()))
     .filter((project) => {
-      // For single cluster (multi-select), use projectViewMode
-      if (selectedClusters.length === 1) {
+      // For single cluster context or single cluster selection (multi-select), use projectViewMode
+      if (clusterName || selectedClusters.length === 1) {
         return projectViewMode === 'all' || selectedProjects.includes(project.id);
       }
       // For multiple clusters (single-select), always show all
@@ -327,8 +375,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const getSelectedProjectNames = () => {
-    if (selectedClusters.length === 1) {
-      // Single cluster - show multiple selected projects
+    if (clusterName || selectedClusters.length === 1) {
+      // Single cluster context or single cluster selection - show multiple selected projects
       return selectedProjects.map((id) => mockProjects.find((p) => p.id === id)?.name).join(', ');
     } else {
       // Multiple clusters - show single selected common project
@@ -551,9 +599,46 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   );
 
   // Step 2: Select resources
-  const Step2SelectResources = () => (
+  const Step2SelectResources = () => {
+    // If we have a clusterName, we're in single cluster context - skip to project scope
+    const isSingleClusterContext = !!clusterName;
+    
+    return (
     <div>
-      {showSpecifyClusters && (
+      {isSingleClusterContext && !showSpecifyProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Select resources
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Define project scope on {clusterName}
+          </Content>
+
+          <Form>
+            <FormGroup>
+              <Radio
+                isChecked={projectScope === 'cluster'}
+                name="project-scope"
+                onChange={() => setProjectScope('cluster')}
+                label="Apply to cluster / Full cluster scope"
+                description="Not binds a cluster role to the cluster. It includes all existing and new projects."
+                id="radio-cluster-scope"
+              />
+              <Radio
+                isChecked={projectScope === 'project'}
+                name="project-scope"
+                onChange={() => setProjectScope('project')}
+                label="Apply to project(s) / Partial / Project-specific access"
+                description="Scope with projects by name to bind a role by."
+                id="radio-project-scope"
+                className="pf-v6-u-mt-md"
+              />
+            </FormGroup>
+          </Form>
+        </>
+      )}
+
+      {!isSingleClusterContext && showSpecifyClusters && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
             Specify clusters
@@ -685,9 +770,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       {showSpecifyProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-md">
-            {selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects'}
+            {isSingleClusterContext || selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects'}
           </Title>
-          {selectedClusters.length > 1 && (
+          {!isSingleClusterContext && selectedClusters.length > 1 && (
             <Content component="p" className="pf-v6-u-mb-md">
               Common projects are projects with the same name across selected clusters. Select one common project.
             </Content>
@@ -718,7 +803,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 onClear={() => setProjectSearchValue('')}
               />
             </FlexItem>
-            {selectedClusters.length === 1 && (
+            {(isSingleClusterContext || selectedClusters.length === 1) && (
               <FlexItem align={{ default: 'alignRight' }}>
                 <ToggleGroup aria-label="Project view toggle">
                   <ToggleGroupItem
@@ -749,8 +834,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <Tbody>
               {filteredProjects.map((project) => (
                 <Tr key={project.id}>
-                  {selectedClusters.length === 1 ? (
-                    // Multi-select with checkboxes for single cluster
+                  {(isSingleClusterContext || selectedClusters.length === 1) ? (
+                    // Multi-select with checkboxes for single cluster context or single cluster selection
                     <Td
                       select={{
                         rowIndex: project.id,
@@ -778,7 +863,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         </>
       )}
     </div>
-  );
+    );
+  };
 
   // Step 3: Select role
   const Step3SelectRole = () => (
@@ -1114,6 +1200,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const isNextButtonDisabled = () => {
+    const isSingleClusterContext = !!clusterName;
+    
     // Step 1: Select user or group
     if (currentStep === 1) {
       if (selectedIdentityType === 'user') {
@@ -1125,6 +1213,17 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     
     // Step 2: Select resources
     if (currentStep === 2) {
+      // Single cluster context
+      if (isSingleClusterContext) {
+        // If showing "Specify projects", need at least one project selected
+        if (showSpecifyProjects) {
+          return selectedProjects.length === 0;
+        }
+        // If on project scope selection, can always proceed (always has a selection)
+        return false;
+      }
+      
+      // Multi-cluster context: original logic
       // If in "Specify clusters" substep
       if (showSpecifyClusters) {
         return selectedClusters.length === 0;
@@ -1229,8 +1328,17 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
                   {renderStepIndicator(3, 'Review', false, false)}
                 </>
+              ) : clusterName ? (
+                // Single cluster context: Show simplified steps without cluster selection
+                <>
+                  {renderStepIndicator(1, 'Select user or group', false, true)}
+                  {renderStepIndicator(2, 'Select resources', false, true)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, 'Specify projects', true, false)}
+                  {renderStepIndicator(3, 'Select role', false, true)}
+                  {renderStepIndicator(4, 'Review', false, false)}
+                </>
               ) : (
-                // Default clusters context: Show all steps
+                // Default clusters/cluster set context: Show all steps with cluster selection
                 <>
                   {renderStepIndicator(1, 'Select user or group', false, true)}
                   {renderStepIndicator(2, 'Select resources', false, true)}
