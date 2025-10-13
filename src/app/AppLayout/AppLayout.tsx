@@ -63,36 +63,48 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [feedbackSubmitted, setFeedbackSubmitted] = React.useState(false);
 
   const handleFeedbackSubmit = async () => {
+    const timestamp = new Date().toLocaleString();
+    const currentPage = window.location.pathname;
+    const currentUrl = window.location.href;
+
+    // Store in localStorage as backup
     const feedback = {
       name: feedbackName || 'Anonymous',
       email: feedbackEmail || 'Not provided',
       feedback: feedbackText,
-      timestamp: new Date().toLocaleString(),
-      page: window.location.pathname,
-      url: window.location.href,
+      timestamp: timestamp,
+      page: currentPage,
+      url: currentUrl,
     };
-
-    // Store in localStorage as backup
     const existingFeedback = JSON.parse(localStorage.getItem('prototypeFeedback') || '[]');
     existingFeedback.push(feedback);
     localStorage.setItem('prototypeFeedback', JSON.stringify(existingFeedback));
 
-    // Send to Google Sheets
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/redhat.com/s/AKfycbyQ9K41GMbz78rcJiWVsyPT54fGQFTqBRJSBVOIPSzEbjLVMMU3MOpbUkYc1K_ti_OoHA/exec';
-    
+    // Send to FormSubmit (email service)
     try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
+      const formData = new FormData();
+      formData.append('name', feedbackName || 'Anonymous');
+      formData.append('email', feedbackEmail || 'Not provided');
+      formData.append('message', feedbackText);
+      formData.append('page', currentPage);
+      formData.append('url', currentUrl);
+      formData.append('timestamp', timestamp);
+      formData.append('_subject', `ACM Prototype Feedback from ${feedbackName || 'Anonymous'}`);
+      formData.append('_captcha', 'false'); // Disable captcha for seamless UX
+      formData.append('_template', 'table'); // Nice table format in email
+
+      const response = await fetch('https://formsubmit.co/skukla@redhat.com', {
         method: 'POST',
-        mode: 'no-cors', // Important for Google Apps Script
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feedback),
+        body: formData,
       });
       
-      console.log('Feedback sent to Google Sheets successfully');
+      if (response.ok) {
+        console.log('Feedback sent successfully to email');
+      } else {
+        console.warn('Feedback email may have failed, but saved locally');
+      }
     } catch (error) {
-      console.error('Error sending to Google Sheets:', error);
+      console.error('Error sending feedback email:', error);
       console.log('Feedback saved locally as backup');
     }
 
