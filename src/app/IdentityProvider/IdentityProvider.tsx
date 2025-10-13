@@ -156,7 +156,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                 )}
               >
                 <DropdownList>
-                  <DropdownItem key="header" isDisabled>
+                  <DropdownItem key="basic-auth" onClick={() => handleSelectProviderType('Basic Authentication')}>
                     Basic Authentication
                   </DropdownItem>
                   <DropdownItem key="github" onClick={() => handleSelectProviderType('GitHub')}>
