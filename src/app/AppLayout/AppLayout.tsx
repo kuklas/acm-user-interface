@@ -151,33 +151,30 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   };
 
   const PerspectiveSelector = () => {
-    const handleToggleClick = () => {
-      console.log('Toggle clicked! Current state:', perspectiveOpen);
-      setPerspectiveOpen(!perspectiveOpen);
-    };
-
     return (
       <div className="perspective-selector">
         <Dropdown
           isOpen={perspectiveOpen}
           onSelect={onPerspectiveSelect}
-          onOpenChange={(isOpen: boolean) => {
-            console.log('onOpenChange called with:', isOpen);
-            setPerspectiveOpen(isOpen);
-          }}
+          onOpenChange={(isOpen: boolean) => setPerspectiveOpen(isOpen)}
+          shouldFocusToggleOnSelect
           toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
             <MenuToggle
               ref={toggleRef}
-              onClick={handleToggleClick}
+              onClick={() => {
+                console.log('Clicking toggle, current state:', perspectiveOpen);
+                setPerspectiveOpen(!perspectiveOpen);
+              }}
               isExpanded={perspectiveOpen}
               isFullWidth
+              style={{ width: '100%' }}
             >
-              {activePerspective}
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                {activePerspective}
+                <CaretDownIcon />
+              </span>
             </MenuToggle>
           )}
-          popperProps={{
-            position: 'bottom-start',
-          }}
         >
           <DropdownList>
             {perspectives.map((perspective, index) => (
@@ -185,12 +182,14 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
                 key={index}
                 value={perspective.name}
                 isDisabled={perspective.disabled}
+                onClick={() => console.log('Dropdown item clicked:', perspective.name)}
               >
                 {perspective.name}
               </DropdownItem>
             ))}
           </DropdownList>
         </Dropdown>
+        {perspectiveOpen && <div style={{ padding: '8px', fontSize: '12px', color: 'red' }}>DEBUG: Dropdown is open!</div>}
       </div>
     );
   };
