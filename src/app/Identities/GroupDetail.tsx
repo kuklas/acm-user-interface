@@ -132,10 +132,21 @@ users:
   const RoleAssignmentsTab = () => {
     // Mock role assignments data - only for dev-team-alpha
     const mockRoleAssignments = groupName === 'dev-team-alpha' ? [
-      { id: 1, role: 'kubevirt.io:edit', scope: 'Cluster', resource: 'local-cluster', created: '2024-01-15' },
-      { id: 2, role: 'storage-admin', scope: 'Namespace', resource: 'dev-storage', created: '2024-01-18' },
-      { id: 3, role: 'network-operator', scope: 'Namespace', resource: 'dev-network', created: '2024-01-20' },
+      { 
+        id: 1, 
+        name: 'dev-team-alpha',
+        type: 'Group',
+        clusters: ['dev-linux-a', 'dev-win-a'],
+        project: 'project-starlight-dev',
+        role: 'Virtualization admin',
+        status: 'Active',
+        assignedDate: '1/1/2025, 3:15:21 PM',
+        assignedBy: 'Walter',
+        origin: 'Hub cluster'
+      },
     ] : [];
+
+    const [isActionsOpen, setIsActionsOpen] = React.useState(false);
 
     if (mockRoleAssignments.length === 0) {
       return (
@@ -170,8 +181,29 @@ users:
         <Toolbar>
           <ToolbarContent>
             <ToolbarItem>
+              <Dropdown
+                isOpen={isFilterOpen}
+                onSelect={() => setIsFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="plain"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    isExpanded={isFilterOpen}
+                  >
+                    Filter
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="all">All</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
               <SearchInput
-                placeholder="Search role assignments"
+                placeholder="Search for role assignment"
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
@@ -182,26 +214,97 @@ users:
                 Create role assignment
               </Button>
             </ToolbarItem>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isActionsOpen}
+                onSelect={() => setIsActionsOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsActionsOpen(!isActionsOpen)}
+                    isExpanded={isActionsOpen}
+                  >
+                    Actions
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="delete">Delete</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Role assignments table" variant="compact">
           <Thead>
             <Tr>
-              <Th width={30}>Role</Th>
-              <Th width={20}>Scope</Th>
-              <Th width={30}>Resource</Th>
-              <Th width={20}>Created</Th>
+              <Th>
+                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
+                  <FlexItem style={{ fontWeight: 'bold' }}>Subject</FlexItem>
+                  <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Name</FlexItem>
+                </Flex>
+              </Th>
+              <Th width={10}>Type</Th>
+              <Th>
+                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
+                  <FlexItem style={{ fontWeight: 'bold' }}>Scope</FlexItem>
+                  <FlexItem>
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+                      <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Clusters</FlexItem>
+                      <FlexItem style={{ color: 'var(--pf-t--global--color--nonstatus--gray--default)', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Project</FlexItem>
+                    </Flex>
+                  </FlexItem>
+                </Flex>
+              </Th>
+              <Th width={15}>Roles</Th>
+              <Th width={10}>Status</Th>
+              <Th width={12}>Assigned date</Th>
+              <Th width={10}>Assigned by</Th>
+              <Th width={10}>Origin</Th>
             </Tr>
           </Thead>
           <Tbody>
             {mockRoleAssignments.map((assignment) => (
               <Tr key={assignment.id}>
-                <Td dataLabel="Role" width={30}>
+                <Td dataLabel="Name">
+                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                    {assignment.name}
+                  </Button>
+                </Td>
+                <Td dataLabel="Type">{assignment.type}</Td>
+                <Td dataLabel="Scope">
+                  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                    <FlexItem>
+                      <Flex spaceItems={{ default: 'spaceItemsXs' }}>
+                        {assignment.clusters.map((cluster, idx) => (
+                          <FlexItem key={idx}>
+                            <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                              {cluster}
+                            </Button>
+                            {idx < assignment.clusters.length - 1 && <span>, </span>}
+                          </FlexItem>
+                        ))}
+                      </Flex>
+                    </FlexItem>
+                    <FlexItem>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {assignment.project}
+                      </Button>
+                    </FlexItem>
+                  </Flex>
+                </Td>
+                <Td dataLabel="Roles">
                   <Label color="blue">{assignment.role}</Label>
                 </Td>
-                <Td dataLabel="Scope" width={20}>{assignment.scope}</Td>
-                <Td dataLabel="Resource" width={30}>{assignment.resource}</Td>
-                <Td dataLabel="Created" width={20}>{assignment.created}</Td>
+                <Td dataLabel="Status">
+                  <Label color="green" icon={<Icon status="success" />}>
+                    {assignment.status}
+                  </Label>
+                </Td>
+                <Td dataLabel="Assigned date">{assignment.assignedDate}</Td>
+                <Td dataLabel="Assigned by">{assignment.assignedBy}</Td>
+                <Td dataLabel="Origin">{assignment.origin}</Td>
               </Tr>
             ))}
           </Tbody>
