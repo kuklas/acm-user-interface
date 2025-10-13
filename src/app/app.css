@@ -500,6 +500,26 @@ input[type="checkbox"] {
   line-height: 1.2 !important;
 }
 
+/* Detail page wrapper to override aggressive padding removal */
+.detail-page-wrapper {
+  padding: 24px !important;
+  background-color: #f5f5f5 !important;
+  min-height: 100vh !important;
+}
+
+/* Detail page header section - white background with padding */
+.detail-page-header {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+/* Detail page content section - gray background with padding */
+.detail-page-content {
+  background-color: #f5f5f5 !important;
+  padding: 24px !important;
+}
+
 /* Reduce spacing between checkbox column and Name column to exactly 16px */
 /* Only apply to tables with checkboxes (when first cell contains a checkbox) */
 .pf-v6-c-table th:first-child:has(.pf-v6-c-check),

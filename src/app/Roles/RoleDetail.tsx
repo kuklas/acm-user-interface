@@ -77,40 +77,48 @@ rules:
   };
 
   return (
-    <div className="pf-v6-u-p-lg">
-      <Breadcrumb className="pf-v6-u-mb-md">
-        <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/roles'); }}>
-          Roles
-        </BreadcrumbItem>
-        <BreadcrumbItem isActive>{roleData.name}</BreadcrumbItem>
-      </Breadcrumb>
+    <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div className="detail-page-header">
+        <Breadcrumb className="pf-v6-u-mb-md">
+          <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/roles'); }}>
+            Roles
+          </BreadcrumbItem>
+          <BreadcrumbItem isActive>{roleData.name}</BreadcrumbItem>
+        </Breadcrumb>
 
-      <Split hasGutter className="pf-v6-u-mb-md">
-        <SplitItem isFilled>
-          <Title headingLevel="h1" size="2xl">
-            {roleData.name}
-          </Title>
-        </SplitItem>
-        <SplitItem>
-          <Button variant="primary" onClick={handleEditRole}>
-            Edit Role
-          </Button>
-        </SplitItem>
-        <SplitItem>
-          <Button variant="link" onClick={handleBack}>
-            Back
-          </Button>
-        </SplitItem>
-      </Split>
+        <Split hasGutter className="pf-v6-u-mb-md">
+          <SplitItem isFilled>
+            <Title headingLevel="h1" size="2xl">
+              {roleData.name}
+            </Title>
+          </SplitItem>
+          <SplitItem>
+            <Button variant="primary" onClick={handleEditRole}>
+              Edit Role
+            </Button>
+          </SplitItem>
+          <SplitItem>
+            <Button variant="link" onClick={handleBack}>
+              Back
+            </Button>
+          </SplitItem>
+        </Split>
 
-      <Tabs
-        activeKey={activeTabKey}
-        onSelect={handleTabClick}
-        aria-label="Role details tabs"
-        className="pf-v6-u-mb-md"
-      >
-        <Tab eventKey={0} title={<TabTitleText>General</TabTitleText>} aria-label="General">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        <Tabs
+          activeKey={activeTabKey}
+          onSelect={handleTabClick}
+          aria-label="Role details tabs"
+        >
+        <Tab eventKey={0} title={<TabTitleText>General</TabTitleText>} aria-label="General"></Tab>
+        <Tab eventKey={1} title={<TabTitleText>YAML</TabTitleText>} aria-label="YAML"></Tab>
+        <Tab eventKey={2} title={<TabTitleText>Permissions</TabTitleText>} aria-label="Permissions"></Tab>
+        <Tab eventKey={3} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments"></Tab>
+      </Tabs>
+      </div>
+
+      <div className="detail-page-content">
+        {activeTabKey === 0 && (
+          <Card>
             <CardBody>
               <Title headingLevel="h2" size="lg" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 Information
@@ -145,10 +153,10 @@ rules:
               </DescriptionList>
             </CardBody>
           </Card>
-        </Tab>
+        )}
 
-        <Tab eventKey={1} title={<TabTitleText>YAML</TabTitleText>} aria-label="YAML">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        {activeTabKey === 1 && (
+          <Card>
             <CardBody>
               <CodeBlock>
                 <CodeBlockCode>
@@ -157,10 +165,10 @@ rules:
               </CodeBlock>
             </CardBody>
           </Card>
-        </Tab>
+        )}
 
-        <Tab eventKey={2} title={<TabTitleText>Permissions</TabTitleText>} aria-label="Permissions">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        {activeTabKey === 2 && (
+          <Card>
             <CardBody>
               <Title headingLevel="h2" size="lg" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 Permission Rules
@@ -200,10 +208,10 @@ rules:
               ))}
             </CardBody>
           </Card>
-        </Tab>
+        )}
 
-        <Tab eventKey={3} title={<TabTitleText>Role assignments</TabTitleText>} aria-label="Role assignments">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        {activeTabKey === 3 && (
+          <Card>
             <CardBody>
               <Title headingLevel="h2" size="lg" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 Role Assignments
@@ -213,8 +221,8 @@ rules:
               </Content>
             </CardBody>
           </Card>
-        </Tab>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };

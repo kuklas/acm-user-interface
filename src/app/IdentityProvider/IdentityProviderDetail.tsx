@@ -127,58 +127,65 @@ spec:
   };
 
   return (
-    <div className="pf-v6-u-p-lg">
-      <Breadcrumb className="pf-v6-u-mb-md">
-        <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/identity-providers'); }}>
-          Identity providers
-        </BreadcrumbItem>
-        <BreadcrumbItem isActive>{providerData.name}</BreadcrumbItem>
-      </Breadcrumb>
+    <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div className="detail-page-header">
+        <Breadcrumb className="pf-v6-u-mb-md">
+          <BreadcrumbItem to="#" onClick={(e) => { e.preventDefault(); navigate('/user-management/identity-providers'); }}>
+            Identity providers
+          </BreadcrumbItem>
+          <BreadcrumbItem isActive>{providerData.name}</BreadcrumbItem>
+        </Breadcrumb>
 
-      <Split hasGutter className="pf-v6-u-mb-md">
-        <SplitItem isFilled>
-          <div>
-            <Title headingLevel="h1" size="2xl">
-              {providerData.name}
-            </Title>
-            <Content component="p" className="pf-v6-u-color-200">
-              {providerData.type}
-            </Content>
-          </div>
-        </SplitItem>
-        <SplitItem>
-          <Dropdown
-            isOpen={isActionsOpen}
-            onSelect={() => setIsActionsOpen(false)}
-            onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
-            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-              <MenuToggle
-                ref={toggleRef}
-                onClick={() => setIsActionsOpen(!isActionsOpen)}
-                isExpanded={isActionsOpen}
-                variant="secondary"
-              >
-                Actions
-              </MenuToggle>
-            )}
-          >
-            <DropdownList>
-              <DropdownItem key="edit">Edit</DropdownItem>
-              <DropdownItem key="sync">Sync now</DropdownItem>
-              <DropdownItem key="delete">Delete</DropdownItem>
-            </DropdownList>
-          </Dropdown>
-        </SplitItem>
-      </Split>
+        <Split hasGutter className="pf-v6-u-mb-md">
+          <SplitItem isFilled>
+            <div>
+              <Title headingLevel="h1" size="2xl">
+                {providerData.name}
+              </Title>
+              <Content component="p" className="pf-v6-u-color-200">
+                {providerData.type}
+              </Content>
+            </div>
+          </SplitItem>
+          <SplitItem>
+            <Dropdown
+              isOpen={isActionsOpen}
+              onSelect={() => setIsActionsOpen(false)}
+              onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsActionsOpen(!isActionsOpen)}
+                  isExpanded={isActionsOpen}
+                  variant="secondary"
+                >
+                  Actions
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem key="edit">Edit</DropdownItem>
+                <DropdownItem key="sync">Sync now</DropdownItem>
+                <DropdownItem key="delete">Delete</DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </SplitItem>
+        </Split>
 
-      <Tabs
-        activeKey={activeTabKey}
-        onSelect={handleTabClick}
-        aria-label="Identity provider details tabs"
-        className="pf-v6-u-mb-md"
-      >
-        <Tab eventKey={0} title={<TabTitleText>Details</TabTitleText>} aria-label="Details">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        <Tabs
+          activeKey={activeTabKey}
+          onSelect={handleTabClick}
+          aria-label="Identity provider details tabs"
+        >
+        <Tab eventKey={0} title={<TabTitleText>Details</TabTitleText>} aria-label="Details"></Tab>
+        <Tab eventKey={1} title={<TabTitleText>YAML</TabTitleText>} aria-label="YAML"></Tab>
+        <Tab eventKey={2} title={<TabTitleText>Connected users</TabTitleText>} aria-label="Connected users"></Tab>
+      </Tabs>
+      </div>
+
+      <div className="detail-page-content">
+        {activeTabKey === 0 && (
+          <Card>
             <CardBody>
               <Title headingLevel="h2" size="lg" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 General information
@@ -207,10 +214,10 @@ spec:
               </DescriptionList>
             </CardBody>
           </Card>
-        </Tab>
+        )}
 
-        <Tab eventKey={1} title={<TabTitleText>YAML</TabTitleText>} aria-label="YAML">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        {activeTabKey === 1 && (
+          <Card>
             <CardBody>
               <CodeBlock>
                 <CodeBlockCode>
@@ -219,10 +226,10 @@ spec:
               </CodeBlock>
             </CardBody>
           </Card>
-        </Tab>
+        )}
 
-        <Tab eventKey={2} title={<TabTitleText>Connected users</TabTitleText>} aria-label="Connected users">
-          <Card style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
+        {activeTabKey === 2 && (
+          <Card>
             <CardBody>
               <Toolbar>
                 <ToolbarContent>
@@ -313,8 +320,8 @@ spec:
               </Toolbar>
             </CardBody>
           </Card>
-        </Tab>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };
