@@ -58,19 +58,19 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: '',
       routes: [
         {
-          element: null,
+          element: <></>,
           label: 'Overview',
           path: '/virtualization/overview',
           title: 'Overview',
         },
         {
-          element: null,
+          element: <></>,
           label: 'Catalog',
           path: '/virtualization/catalog',
           title: 'Catalog',
         },
         {
-          element: null,
+          element: <></>,
           label: 'Virtual machines',
           path: '/virtualization/virtual-machines',
           title: 'Virtual machines',
@@ -81,13 +81,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: '',
       routes: [
         {
-          element: null,
+          element: <></>,
           label: 'InstanceTypes',
           path: '/virtualization/instance-types',
           title: 'InstanceTypes',
         },
         {
-          element: null,
+          element: <></>,
           label: 'Templates',
           path: '/virtualization/templates',
           title: 'Templates',
@@ -98,19 +98,19 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: 'User management',
       routes: [
         {
-          element: null,
+          element: <></>,
           label: 'Identities',
           path: '/user-management/identities',
           title: 'Identities',
         },
         {
-          element: null,
+          element: <></>,
           label: 'Identity providers',
           path: '/user-management/identity-providers',
           title: 'Identity providers',
         },
         {
-          element: null,
+          element: <></>,
           label: 'Roles',
           path: '/user-management/roles',
           title: 'Roles',
@@ -324,7 +324,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
                     }}
                   />
                 )}
-                {route.routes.map((subRoute, subIdx) => subRoute.label && renderNavItem(subRoute, `${idx}-${subIdx}`))}
+                {route.routes.map((subRoute, subIdx) => subRoute.label && renderNavItem(subRoute, idx * 1000 + subIdx))}
               </React.Fragment>
             );
           }
