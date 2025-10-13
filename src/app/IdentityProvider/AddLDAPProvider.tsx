@@ -289,7 +289,7 @@ ${emailAttributes.filter(a => a).map(attr => `        - ${attr}`).join('\n') || 
                       value={caFile}
                       onChange={(_event, value) => setCaFile(value)}
                       placeholder="Browse..."
-                      isReadOnly
+                      readOnly
                     />
                   </FlexItem>
                   <FlexItem>
