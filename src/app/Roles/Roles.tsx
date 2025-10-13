@@ -16,8 +16,14 @@ import {
   Checkbox,
   ToggleGroup,
   ToggleGroupItem,
+  Dropdown,
+  DropdownList,
+  DropdownItem,
+  MenuToggle,
+  MenuToggleElement,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 
@@ -66,6 +72,7 @@ const Roles: React.FunctionComponent = () => {
     direction: 'asc' | 'desc';
   }>({ index: 0, direction: 'asc' });
   const [selectedRoles, setSelectedRoles] = React.useState<Set<number>>(new Set());
+  const [openActionMenuId, setOpenActionMenuId] = React.useState<number | null>(null);
 
   const availablePermissions = ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch'];
 
@@ -141,6 +148,22 @@ const Roles: React.FunctionComponent = () => {
     setSelectedRoles(new Set());
   };
 
+  const handleDuplicateRole = (roleId: number, roleName: string) => {
+    console.log('Duplicate role:', roleId, roleName);
+    // In a real application, this would duplicate the role
+    setOpenActionMenuId(null);
+  };
+
+  const handleDeleteRole = (roleId: number, roleName: string) => {
+    console.log('Delete role:', roleId, roleName);
+    // In a real application, this would delete the role
+    setOpenActionMenuId(null);
+  };
+
+  const toggleActionMenu = (roleId: number) => {
+    setOpenActionMenuId(openActionMenuId === roleId ? null : roleId);
+  };
+
   return (
     <>
       <div className="table-content-card">
@@ -212,8 +235,9 @@ const Roles: React.FunctionComponent = () => {
                 Role Name
               </Th>
               <Th width={15}>Type</Th>
-              <Th width={30}>Resources</Th>
-              <Th width={25}>Permissions</Th>
+              <Th width={25}>Resources</Th>
+              <Th width={20}>Permissions</Th>
+              <Th width={10}></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -239,8 +263,8 @@ const Roles: React.FunctionComponent = () => {
                 <Td dataLabel="Type" width={15}>
                   <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
                 </Td>
-                <Td dataLabel="Resources" width={30}>{role.resources.join(', ')}</Td>
-                <Td dataLabel="Permissions" width={25}>
+                <Td dataLabel="Resources" width={25}>{role.resources.join(', ')}</Td>
+                <Td dataLabel="Permissions" width={20}>
                   <Split hasGutter>
                     {role.permissions.slice(0, 3).map((perm) => (
                       <SplitItem key={perm}>
@@ -253,6 +277,40 @@ const Roles: React.FunctionComponent = () => {
                       </SplitItem>
                     )}
                   </Split>
+                </Td>
+                <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
+                  <Dropdown
+                    isOpen={openActionMenuId === role.id}
+                    onSelect={() => setOpenActionMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenActionMenuId(null)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        aria-label="Actions menu"
+                        variant="plain"
+                        onClick={() => toggleActionMenu(role.id)}
+                        isExpanded={openActionMenuId === role.id}
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                    shouldFocusToggleOnSelect
+                  >
+                    <DropdownList>
+                      <DropdownItem
+                        key="duplicate"
+                        onClick={() => handleDuplicateRole(role.id, role.name)}
+                      >
+                        Duplicate role
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete"
+                        onClick={() => handleDeleteRole(role.id, role.name)}
+                      >
+                        Delete role
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
                 </Td>
               </Tr>
             ))}
