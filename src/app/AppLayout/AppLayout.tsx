@@ -570,67 +570,72 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
 
       {/* Task Details Modal */}
       <Modal
-        variant={ModalVariant.medium}
+        variant={ModalVariant.large}
         title="Current Task"
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
       >
-        <div style={{ lineHeight: '1.8' }}>
-          <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>Tenant admin:</strong>{' '}
-            <span style={{ color: 'var(--pf-t--color--blue--60)' }}>Walter Joseph Kovacs</span>
+        <div style={{ lineHeight: '2', padding: '16px', fontSize: '15px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>Tenant admin:</strong>{' '}
+            <span style={{ color: 'var(--pf-t--color--blue--60)', fontWeight: 500 }}>Walter Joseph Kovacs</span>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>User / Group / Service account</strong>
+          <div style={{ marginBottom: '24px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>User / Group / Service account</strong>
             <br />
-            is setting up a permission for <strong>60 users</strong> that are in the group:{' '}
+            <div style={{ marginTop: '8px' }}>
+              is setting up a permission for <strong>60 users</strong> that are in the group:{' '}
             <span style={{ 
               color: 'var(--pf-t--color--blue--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--blue--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "dev-team-alpha"
             </span>
+            </div>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>Role</strong>
+          <div style={{ marginBottom: '24px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>Role</strong>
             <br />
-            to have role:{' '}
+            <div style={{ marginTop: '8px' }}>
+              to have role:{' '}
             <span style={{ 
               color: 'var(--pf-t--color--green--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--green--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "Virtualization admin"
             </span>
+            </div>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>"Object" / "Context"</strong>
+          <div style={{ marginBottom: '24px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>"Object" / "Context"</strong>
             <br />
-            on the Cluster set:{' '}
+            <div style={{ marginTop: '8px' }}>
+              on the Cluster set:{' '}
             <span style={{ 
               color: 'var(--pf-t--color--purple--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--purple--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "petemobile-dev-clusters"
             </span>
-            <br />
+            <br /><br />
             more specifically on the clusters:{' '}
             <span style={{ 
               color: 'var(--pf-t--color--orange--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--orange--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "dev-team-a"
@@ -640,22 +645,23 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               color: 'var(--pf-t--color--orange--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--orange--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "dev-team-b"
             </span>
-            <br />
+            <br /><br />
             that have common project called:{' '}
             <span style={{ 
               color: 'var(--pf-t--color--cyan--60)', 
               fontWeight: 600,
               backgroundColor: 'var(--pf-t--color--cyan--10)',
-              padding: '2px 8px',
+              padding: '4px 12px',
               borderRadius: '4px'
             }}>
               "project-starlight-dev"
             </span>
+            </div>
           </div>
 
           <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
