@@ -25,6 +25,10 @@ import {
   ToolbarGroup,
   ToolbarItem,
   Icon,
+  Modal,
+  ModalVariant,
+  Title,
+  Content,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import {
@@ -35,6 +39,7 @@ import {
   BellIcon,
   EllipsisVIcon,
   CubeIcon,
+  InfoCircleIcon,
 } from '@patternfly/react-icons';
 
 interface IAppLayout {
@@ -45,6 +50,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const [perspectiveOpen, setPerspectiveOpen] = React.useState(false);
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
+  const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false);
 
   const perspectives = [
     { name: 'Core platforms', disabled: false },
@@ -529,14 +535,136 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   );
 
   return (
-    <Page
-      mainContainerId={pageId}
-      masthead={masthead}
-      sidebar={sidebarOpen && Sidebar}
-      skipToContent={PageSkipToContent}
-    >
-      {children}
-    </Page>
+    <>
+      <Page
+        mainContainerId={pageId}
+        masthead={masthead}
+        sidebar={sidebarOpen && Sidebar}
+        skipToContent={PageSkipToContent}
+      >
+        {children}
+      </Page>
+
+      {/* Floating Action Button */}
+      <Button
+        variant="primary"
+        onClick={() => setIsTaskModalOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          padding: '0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+        }}
+        aria-label="View task details"
+      >
+        <InfoCircleIcon size="lg" />
+      </Button>
+
+      {/* Task Details Modal */}
+      <Modal
+        variant={ModalVariant.medium}
+        title="Current Task"
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        actions={[
+          <Button key="close" variant="primary" onClick={() => setIsTaskModalOpen(false)}>
+            Close
+          </Button>,
+        ]}
+      >
+        <div style={{ lineHeight: '1.8' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>Tenant admin:</strong>{' '}
+            <span style={{ color: 'var(--pf-t--color--blue--60)' }}>Walter Joseph Kovacs</span>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>User / Group / Service account</strong>
+            <br />
+            is setting up a permission for <strong>60 users</strong> that are in the group:{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--blue--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--blue--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "dev-team-alpha"
+            </span>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>Role</strong>
+            <br />
+            to have role:{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--green--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--green--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "Virtualization admin"
+            </span>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--pf-t--global--text--color--regular)' }}>"Object" / "Context"</strong>
+            <br />
+            on the Cluster set:{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--purple--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--purple--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "petemobile-dev-clusters"
+            </span>
+            <br />
+            more specifically on the clusters:{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--orange--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--orange--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "dev-team-a"
+            </span>
+            ,{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--orange--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--orange--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "dev-team-b"
+            </span>
+            <br />
+            that have common project called:{' '}
+            <span style={{ 
+              color: 'var(--pf-t--color--cyan--60)', 
+              fontWeight: 600,
+              backgroundColor: 'var(--pf-t--color--cyan--10)',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              "project-starlight-dev"
+            </span>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 
