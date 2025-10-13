@@ -81,20 +81,16 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/redhat.com/s/AKfycbyQ9K41GMbz78rcJiWVsyPT54fGQFTqBRJSBVOIPSzEbjLVMMU3MOpbUkYc1K_ti_OoHA/exec';
     
     try {
-      if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_SCRIPT_URL_HERE') {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors', // Important for Google Apps Script
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(feedback),
-        });
-        
-        console.log('Feedback sent to Google Sheets');
-      } else {
-        console.warn('Google Sheets URL not configured. Feedback saved locally only.');
-      }
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Important for Google Apps Script
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedback),
+      });
+      
+      console.log('Feedback sent to Google Sheets successfully');
     } catch (error) {
       console.error('Error sending to Google Sheets:', error);
       console.log('Feedback saved locally as backup');
