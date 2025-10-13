@@ -16,7 +16,7 @@ import {
   Icon,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { SyncAltIcon, CogIcon } from '@patternfly/react-icons';
+import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 
 // Mock data for groups
@@ -37,6 +37,7 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+  const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -67,6 +68,16 @@ export const GroupsTable: React.FunctionComponent = () => {
   const handleConfigureSync = () => {
     console.log('Opening group sync configuration...');
     // Navigate to sync configuration page or open modal
+  };
+
+  const handleDeleteGroup = (groupId: number, groupName: string) => {
+    console.log('Delete group:', groupId, groupName);
+    // In a real application, this would delete the group
+    setOpenRowMenuId(null);
+  };
+
+  const toggleRowMenu = (groupId: number) => {
+    setOpenRowMenuId(openRowMenuId === groupId ? null : groupId);
   };
 
   return (
@@ -164,11 +175,12 @@ export const GroupsTable: React.FunctionComponent = () => {
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th width={25}>Group Name</Th>
-            <Th width={15}>Members</Th>
-            <Th width={20}>Sync Source</Th>
-            <Th width={20}>Last Synced</Th>
-            <Th width={20}>Created</Th>
+            <Th width={20}>Group Name</Th>
+            <Th width={12}>Members</Th>
+            <Th width={18}>Sync Source</Th>
+            <Th width={18}>Last Synced</Th>
+            <Th width={18}>Created</Th>
+            <Th width={10}></Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -183,7 +195,7 @@ export const GroupsTable: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
-              <Td dataLabel="Group Name" width={25}>
+              <Td dataLabel="Group Name" width={20}>
                 <Button
                   variant="link"
                   isInline
@@ -192,22 +204,53 @@ export const GroupsTable: React.FunctionComponent = () => {
                   {group.name}
                 </Button>
               </Td>
-              <Td dataLabel="Members" width={15}>{group.members}</Td>
-              <Td dataLabel="Sync Source" width={20}>
+              <Td dataLabel="Members" width={12}>{group.members}</Td>
+              <Td dataLabel="Sync Source" width={18}>
                 {group.syncSource === 'Local' ? (
                   <Label color="grey">{group.syncSource}</Label>
                 ) : (
                   <Label color="blue" icon={<SyncAltIcon />}>{group.syncSource}</Label>
                 )}
               </Td>
-              <Td dataLabel="Last Synced" width={20}>
+              <Td dataLabel="Last Synced" width={18}>
                 {group.lastSynced ? (
                   <span>{group.lastSynced}</span>
                 ) : (
                   <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
                 )}
               </Td>
-              <Td dataLabel="Created" width={20}>{group.created}</Td>
+              <Td dataLabel="Created" width={18}>{group.created}</Td>
+              <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
+                <Dropdown
+                  isOpen={openRowMenuId === group.id}
+                  onSelect={() => setOpenRowMenuId(null)}
+                  onOpenChange={(isOpen: boolean) => !isOpen && setOpenRowMenuId(null)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      aria-label="Actions menu"
+                      variant="plain"
+                      onClick={() => toggleRowMenu(group.id)}
+                      isExpanded={openRowMenuId === group.id}
+                    >
+                      <EllipsisVIcon />
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      key="delete"
+                      icon={<TrashIcon />}
+                      onClick={() => handleDeleteGroup(group.id, group.name)}
+                      isDisabled={group.syncSource !== 'Local'}
+                      description={group.syncSource !== 'Local' ? 'Synced groups cannot be deleted locally' : undefined}
+                    >
+                      Delete group
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </Td>
             </Tr>
           ))}
         </Tbody>
