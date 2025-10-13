@@ -36,6 +36,7 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isActionsOpen, setIsActionsOpen] = React.useState(false);
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -113,28 +114,41 @@ export const GroupsTable: React.FunctionComponent = () => {
             <Button variant="primary">Create group</Button>
           </ToolbarItem>
           <ToolbarItem>
-            <Tooltip content="Sync groups from connected identity providers">
-              <Button 
-                variant="secondary" 
-                icon={<SyncAltIcon />}
-                onClick={handleSyncGroups}
-                isLoading={isSyncing}
-                isDisabled={isSyncing}
-              >
-                {isSyncing ? 'Syncing...' : 'Sync groups'}
-              </Button>
-            </Tooltip>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Tooltip content="Configure group sync from identity providers">
-              <Button 
-                variant="link" 
-                icon={<CogIcon />}
-                onClick={handleConfigureSync}
-              >
-                Configure sync
-              </Button>
-            </Tooltip>
+            <Dropdown
+              isOpen={isActionsOpen}
+              onSelect={() => setIsActionsOpen(false)}
+              onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle 
+                  ref={toggleRef} 
+                  onClick={() => setIsActionsOpen(!isActionsOpen)} 
+                  isExpanded={isActionsOpen}
+                  variant="plain"
+                >
+                  Actions
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem 
+                  key="sync-groups"
+                  icon={<SyncAltIcon />}
+                  onClick={handleSyncGroups}
+                  isDisabled={isSyncing}
+                  description="Sync groups from connected identity providers"
+                >
+                  {isSyncing ? 'Syncing...' : 'Sync groups'}
+                </DropdownItem>
+                <DropdownItem 
+                  key="configure-sync"
+                  icon={<CogIcon />}
+                  onClick={handleConfigureSync}
+                  description="Configure group sync from identity providers"
+                >
+                  Configure sync
+                </DropdownItem>
+              </DropdownList>
+            </Dropdown>
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
