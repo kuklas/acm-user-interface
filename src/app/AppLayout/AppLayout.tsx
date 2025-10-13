@@ -200,6 +200,14 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       ],
     },
     {
+      label: 'User Management',
+      routes: [
+        { element: <></>, label: 'Identities', path: '/user-management/identities', title: 'Identities' },
+        { element: <></>, label: 'Identity providers', path: '/user-management/identity-providers', title: 'Identity providers' },
+        { element: <></>, label: 'Roles', path: '/user-management/roles', title: 'Roles' },
+      ],
+    },
+    {
       label: 'Administration',
       routes: [
         { element: <></>, label: 'Cluster Settings', path: '/core/administration/settings', title: 'Cluster Settings' },
