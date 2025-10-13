@@ -90,21 +90,29 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       formData.append('url', currentUrl);
       formData.append('timestamp', timestamp);
       formData.append('_subject', `ACM Prototype Feedback from ${feedbackName || 'Anonymous'}`);
-      formData.append('_captcha', 'false'); // Disable captcha for seamless UX
-      formData.append('_template', 'table'); // Nice table format in email
+      formData.append('_captcha', 'false'); // Disable captcha
+      formData.append('_template', 'table'); // Table format
+      formData.append('_next', window.location.href); // Redirect back to same page
+      formData.append('_autoresponse', 'Thank you for your feedback!'); // Auto-reply to user
 
+      console.log('Sending feedback to FormSubmit...');
+      
       const response = await fetch('https://formsubmit.co/skukla@redhat.com', {
         method: 'POST',
         body: formData,
+        mode: 'cors',
       });
       
+      console.log('FormSubmit response status:', response.status);
+      console.log('FormSubmit response ok:', response.ok);
+      
       if (response.ok) {
-        console.log('Feedback sent successfully to email');
+        console.log('✅ Feedback sent successfully to email');
       } else {
-        console.warn('Feedback email may have failed, but saved locally');
+        console.warn('⚠️ FormSubmit response not OK, but may still work');
       }
     } catch (error) {
-      console.error('Error sending feedback email:', error);
+      console.error('❌ Error sending feedback email:', error);
       console.log('Feedback saved locally as backup');
     }
 
