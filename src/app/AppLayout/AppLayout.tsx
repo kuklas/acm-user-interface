@@ -150,37 +150,84 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     );
   };
 
-  const PerspectiveSelector = () => (
-    <div className="perspective-selector">
-      <Dropdown
-        isOpen={perspectiveOpen}
-        onSelect={onPerspectiveSelect}
-        onOpenChange={(isOpen: boolean) => setPerspectiveOpen(isOpen)}
-        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-          <MenuToggle
-            ref={toggleRef}
-            onClick={() => setPerspectiveOpen(!perspectiveOpen)}
-            isExpanded={perspectiveOpen}
-            isFullWidth
+  const PerspectiveSelector = () => {
+    React.useEffect(() => {
+      console.log('PerspectiveSelector rendered, perspectiveOpen:', perspectiveOpen);
+    }, [perspectiveOpen]);
+
+    return (
+      <div className="perspective-selector">
+        <button
+          onClick={() => {
+            console.log('Button clicked, current state:', perspectiveOpen);
+            setPerspectiveOpen(!perspectiveOpen);
+          }}
+          style={{
+            width: '100%',
+            padding: '8px 16px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            background: 'white',
+            textAlign: 'left',
+            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span>{activePerspective}</span>
+          <CaretDownIcon />
+        </button>
+        
+        {perspectiveOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '4px',
+              backgroundColor: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              zIndex: 9999,
+            }}
           >
-            {activePerspective}
-          </MenuToggle>
+            {perspectives.map((perspective, index) => (
+              <div
+                key={index}
+                onClick={() => {
+                  if (!perspective.disabled) {
+                    console.log('Perspective selected:', perspective.name);
+                    setActivePerspective(perspective.name);
+                    setPerspectiveOpen(false);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  cursor: perspective.disabled ? 'not-allowed' : 'pointer',
+                  opacity: perspective.disabled ? 0.5 : 1,
+                  backgroundColor: 'white',
+                  borderBottom: index < perspectives.length - 1 ? '1px solid #f0f0f0' : 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!perspective.disabled) {
+                    e.currentTarget.style.backgroundColor = '#f0f0f0';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white';
+                }}
+              >
+                {perspective.name}
+              </div>
+            ))}
+          </div>
         )}
-      >
-        <DropdownList>
-          {perspectives.map((perspective, index) => (
-            <DropdownItem
-              key={index}
-              value={perspective.name}
-              isDisabled={perspective.disabled}
-            >
-              {perspective.name}
-            </DropdownItem>
-          ))}
-        </DropdownList>
-      </Dropdown>
-    </div>
-  );
+      </div>
+    );
+  };
 
   const Navigation = (
     <Nav id="nav-primary-simple">
