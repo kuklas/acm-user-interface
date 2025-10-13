@@ -65,6 +65,16 @@ const CreateRole: React.FunctionComponent = () => {
   const [catalogFilter, setCatalogFilter] = React.useState<'All' | 'Core' | 'KubeVirt' | 'Networking' | 'Storage'>('All');
   const [isTemplateModalOpen, setIsTemplateModalOpen] = React.useState(false);
   const [templateSearch, setTemplateSearch] = React.useState('');
+  
+  // Navigation access control
+  const [navigationAccess, setNavigationAccess] = React.useState({
+    overview: true,
+    infrastructure: true,
+    applications: true,
+    userManagement: true,
+    observability: true,
+    settings: true,
+  });
 
   const allVerbs = [
     { name: 'get', label: 'get - Read individual resources' },
@@ -200,10 +210,19 @@ const CreateRole: React.FunctionComponent = () => {
       verbs: rule.verbs.length > 0 ? rule.verbs : ['get'],
     }));
 
+    const navigationAccessAnnotations = Object.entries(navigationAccess)
+      .map(([key, value]) => `    acm.io/nav-${key}: "${value}"`)
+      .join('\n');
+
     return `apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: ${roleName || 'unnamed-role'}
+  name: ${roleName || 'unnamed-role'}${description ? `
+  annotations:
+    description: "${description}"
+${navigationAccessAnnotations}` : `
+  annotations:
+${navigationAccessAnnotations}`}
 rules:
 ${rules.map(rule => `- apiGroups:
 ${rule.apiGroups.map(g => `  - "${g}"`).join('\n')}
@@ -218,6 +237,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
       name: roleName,
       description,
       rules: permissionRules,
+      navigationAccess,
     });
     navigate('/user-management/roles');
   };
@@ -466,6 +486,73 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                     rows={4}
                   />
                 </FormGroup>
+
+                <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
+
+                <FormGroup label="Navigation Access" fieldId="navigation-access">
+                  <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                    Control which navigation sections are visible to users with this role. Unselected sections will be hidden from the navigation menu.
+                  </Content>
+                  
+                  <Grid hasGutter span={6}>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="Overview"
+                        id="nav-overview"
+                        isChecked={navigationAccess.overview}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, overview: !navigationAccess.overview })}
+                        description="Dashboard and home page"
+                      />
+                    </GridItem>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="Infrastructure"
+                        id="nav-infrastructure"
+                        isChecked={navigationAccess.infrastructure}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, infrastructure: !navigationAccess.infrastructure })}
+                        description="Clusters, automation, and host inventory"
+                      />
+                    </GridItem>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="Applications"
+                        id="nav-applications"
+                        isChecked={navigationAccess.applications}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, applications: !navigationAccess.applications })}
+                        description="Application deployments and management"
+                      />
+                    </GridItem>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="User Management"
+                        id="nav-user-management"
+                        isChecked={navigationAccess.userManagement}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, userManagement: !navigationAccess.userManagement })}
+                        description="Identities, roles, and providers"
+                      />
+                    </GridItem>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="Observability"
+                        id="nav-observability"
+                        isChecked={navigationAccess.observability}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, observability: !navigationAccess.observability })}
+                        description="Monitoring, logs, and metrics"
+                      />
+                    </GridItem>
+                    <GridItem span={6}>
+                      <Checkbox
+                        label="Settings"
+                        id="nav-settings"
+                        isChecked={navigationAccess.settings}
+                        onChange={() => setNavigationAccess({ ...navigationAccess, settings: !navigationAccess.settings })}
+                        description="System settings and preferences"
+                      />
+                    </GridItem>
+                  </Grid>
+                </FormGroup>
+
+                <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
 
                 <Split hasGutter style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}>
                   <SplitItem isFilled>
