@@ -9,6 +9,7 @@ import { GroupDetail } from '@app/Identities/GroupDetail';
 import { CreateRole } from '@app/Roles/CreateRole';
 import { RoleDetail } from '@app/Roles/RoleDetail';
 import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDetail';
+import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -176,6 +177,11 @@ const routes: AppRouteConfig[] = [
         label: 'Identity providers',
         path: '/user-management/identity-providers',
         title: 'ACM | Identity Providers',
+      },
+      {
+        element: <AddLDAPProvider />,
+        path: '/user-management/identity-providers/add/ldap',
+        title: 'ACM | Add LDAP Provider',
       },
       {
         element: <IdentityProviderDetail />,
