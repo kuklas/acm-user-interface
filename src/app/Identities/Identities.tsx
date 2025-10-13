@@ -54,8 +54,6 @@ const Identities: React.FunctionComponent = () => {
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
 
-  console.log('Identities component rendered, openUserActionMenuId:', openUserActionMenuId);
-
   const handleUserSelect = (userId: number, isSelected: boolean) => {
     if (isSelected) {
       setSelectedUsers([...selectedUsers, userId]);
@@ -73,11 +71,7 @@ const Identities: React.FunctionComponent = () => {
   };
 
   const toggleUserActionMenu = React.useCallback((userId: number) => {
-    console.log('toggleUserActionMenu called for userId:', userId);
-    setOpenUserActionMenuId(prev => {
-      console.log('Previous openUserActionMenuId:', prev, 'New:', prev === userId ? null : userId);
-      return prev === userId ? null : userId;
-    });
+    setOpenUserActionMenuId(prev => prev === userId ? null : userId);
   }, []);
 
   const toggleGroupActionMenu = React.useCallback((groupId: number) => {
@@ -185,7 +179,7 @@ const Identities: React.FunctionComponent = () => {
               <Th>Name</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
-              <Th></Th>
+              <Th width={10}></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -212,15 +206,11 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Identity provider">{user.identityProvider}</Td>
                 <Td dataLabel="Created">{user.created}</Td>
-                <Td dataLabel="Actions" style={{ textAlign: 'right' }}>
+                <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
-                    onSelect={() => {
-                      console.log('Dropdown onSelect called');
-                      setOpenUserActionMenuId(null);
-                    }}
+                    onSelect={() => setOpenUserActionMenuId(null)}
                     onOpenChange={(isOpen: boolean) => {
-                      console.log('Dropdown onOpenChange called, isOpen:', isOpen);
                       if (!isOpen) {
                         setOpenUserActionMenuId(null);
                       }
@@ -230,11 +220,7 @@ const Identities: React.FunctionComponent = () => {
                         ref={toggleRef}
                         aria-label="Actions menu"
                         variant="plain"
-                        onClick={(event: React.MouseEvent) => {
-                          event.stopPropagation();
-                          console.log('MenuToggle clicked for user:', user.name, user.id);
-                          toggleUserActionMenu(user.id);
-                        }}
+                        onClick={() => toggleUserActionMenu(user.id)}
                         isExpanded={openUserActionMenuId === user.id}
                       >
                         <EllipsisVIcon />
@@ -245,10 +231,7 @@ const Identities: React.FunctionComponent = () => {
                     <DropdownList>
                       <DropdownItem
                         key="impersonate"
-                        onClick={() => {
-                          console.log('Impersonate clicked for user:', user.name);
-                          handleImpersonateUser(user.name);
-                        }}
+                        onClick={() => handleImpersonateUser(user.name)}
                       >
                         Impersonate
                       </DropdownItem>
