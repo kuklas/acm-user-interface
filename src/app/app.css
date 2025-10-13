@@ -176,6 +176,7 @@ body,
   min-height: 100vh !important;
   width: 100% !important;
   max-width: 100% !important;
+  overflow: visible !important;
 }
 
 .identities-page-container .page-header-section {
@@ -197,6 +198,7 @@ body,
   margin: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
+  overflow: visible !important;
 }
 
 /* Roles page container - same layout as clusters */
