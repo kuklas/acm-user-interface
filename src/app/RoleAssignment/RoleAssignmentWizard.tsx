@@ -125,7 +125,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
   // In single cluster context (when clusterName is provided), skip cluster selection
   // In multi-cluster context (cluster set or no specific cluster), show cluster selection
-  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(!clusterName);
+  // For identities context, always start with no substeps visible (show main selection first)
+  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(context === 'identities' ? false : !clusterName);
   const [showIncludeProjects, setShowIncludeProjects] = React.useState(false);
   const [showSpecifyProjects, setShowSpecifyProjects] = React.useState(false);
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
@@ -141,7 +142,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   
   // Track which substeps have been visited (to keep them visible after step 2)
   // In single cluster context, cluster selection is never visited
-  const [hasVisitedSpecifyClusters, setHasVisitedSpecifyClusters] = React.useState(!clusterName);
+  // For identities context, start with nothing visited
+  const [hasVisitedSpecifyClusters, setHasVisitedSpecifyClusters] = React.useState(context === 'identities' ? false : !clusterName);
   const [hasVisitedIncludeProjects, setHasVisitedIncludeProjects] = React.useState(false);
   const [hasVisitedSpecifyProjects, setHasVisitedSpecifyProjects] = React.useState(false);
   
@@ -170,8 +172,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setCurrentStep(getInitialStep());
     setActiveTabKey(0);
     // Reset substep visibility based on context
+    // For identities context, reset everything to false (start fresh)
     // In single cluster context, skip directly to project scope selection (no cluster selection)
-    setShowSpecifyClusters(!clusterName);
+    setShowSpecifyClusters(context === 'identities' ? false : !clusterName);
     setShowIncludeProjects(false);
     setShowSpecifyProjects(false);
     // Reset identities-specific state
@@ -182,8 +185,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
   
   // When moving to step 2 from step 1, ensure we start with the proper substep
+  // This is for clusters/roles context only (identities uses step 1 for resources)
   React.useEffect(() => {
-    if (currentStep === 2 && resourceScope === 'specific') {
+    if (context !== 'identities' && currentStep === 2 && resourceScope === 'specific') {
       if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
         // In single cluster context, don't show cluster selection
         if (clusterName) {
