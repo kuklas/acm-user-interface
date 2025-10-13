@@ -206,17 +206,18 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Identity provider">{user.identityProvider}</Td>
                 <Td dataLabel="Created">{user.created}</Td>
-                <Td>
+                <Td dataLabel="Actions" style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
                     onSelect={() => setOpenUserActionMenuId(null)}
-                    onOpenChange={(isOpen) => !isOpen && setOpenUserActionMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenUserActionMenuId(null)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}
+                        aria-label="Actions menu"
+                        variant="plain"
                         onClick={() => toggleUserActionMenu(user.id)}
                         isExpanded={openUserActionMenuId === user.id}
-                        variant="plain"
                       >
                         <EllipsisVIcon />
                       </MenuToggle>
@@ -224,7 +225,10 @@ const Identities: React.FunctionComponent = () => {
                     shouldFocusToggleOnSelect
                   >
                     <DropdownList>
-                      <DropdownItem value="impersonate" onClick={() => handleImpersonateUser(user.name)}>
+                      <DropdownItem
+                        key="impersonate"
+                        onClick={() => handleImpersonateUser(user.name)}
+                      >
                         Impersonate
                       </DropdownItem>
                     </DropdownList>
@@ -276,17 +280,18 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Members">{group.members}</Td>
                 <Td dataLabel="Created">{group.created}</Td>
-                <Td>
+                <Td dataLabel="Actions" style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openGroupActionMenuId === group.id}
                     onSelect={() => setOpenGroupActionMenuId(null)}
-                    onOpenChange={(isOpen) => !isOpen && setOpenGroupActionMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenGroupActionMenuId(null)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}
+                        aria-label="Actions menu"
+                        variant="plain"
                         onClick={() => toggleGroupActionMenu(group.id)}
                         isExpanded={openGroupActionMenuId === group.id}
-                        variant="plain"
                       >
                         <EllipsisVIcon />
                       </MenuToggle>
@@ -294,7 +299,10 @@ const Identities: React.FunctionComponent = () => {
                     shouldFocusToggleOnSelect
                   >
                     <DropdownList>
-                      <DropdownItem value="impersonate" onClick={() => handleImpersonateGroup(group.name)}>
+                      <DropdownItem
+                        key="impersonate"
+                        onClick={() => handleImpersonateGroup(group.name)}
+                      >
                         Impersonate
                       </DropdownItem>
                     </DropdownList>
