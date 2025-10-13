@@ -10,6 +10,8 @@ import { CreateRole } from '@app/Roles/CreateRole';
 import { RoleDetail } from '@app/Roles/RoleDetail';
 import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDetail';
 import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
+import { Projects } from '@app/Projects/Projects';
+import { ProjectDetail } from '@app/Projects/ProjectDetail';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -187,6 +189,22 @@ const routes: AppRouteConfig[] = [
         element: <IdentityProviderDetail />,
         path: '/user-management/identity-providers/:providerName',
         title: 'ACM | Identity Provider Detail',
+      },
+    ],
+  },
+  {
+    label: 'Core Platforms',
+    routes: [
+      {
+        element: <Projects />,
+        label: 'Projects',
+        path: '/core/home/projects',
+        title: 'Projects',
+      },
+      {
+        element: <ProjectDetail />,
+        path: '/core/home/projects/:projectName',
+        title: 'Project Detail',
       },
     ],
   },
