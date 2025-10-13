@@ -148,11 +148,12 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [hasVisitedSpecifyProjects, setHasVisitedSpecifyProjects] = React.useState(false);
   
   // For Identities and Roles context - cluster sets selection
-  // Start with showSpecifyClusterSets true for identities and roles to skip initial selection
-  const [showSpecifyClusterSets, setShowSpecifyClusterSets] = React.useState(context === 'identities' || context === 'roles');
+  // For roles: start with showSpecifyClusterSets true to skip initial selection (role is preselected)
+  // For identities: start with false to show initial "Apply to all" / "Assign specific" selection
+  const [showSpecifyClusterSets, setShowSpecifyClusterSets] = React.useState(context === 'roles');
   const [selectedClusterSets, setSelectedClusterSets] = React.useState<number[]>([]);
   const [clusterSetSearchValue, setClusterSetSearchValue] = React.useState('');
-  const [hasVisitedSpecifyClusterSets, setHasVisitedSpecifyClusterSets] = React.useState(context === 'identities' || context === 'roles');
+  const [hasVisitedSpecifyClusterSets, setHasVisitedSpecifyClusterSets] = React.useState(context === 'roles');
   const [showIncludeClusters, setShowIncludeClusters] = React.useState(false);
   const [clusterSetScope, setClusterSetScope] = React.useState<'all' | 'specific'>('all');
   const [hasVisitedIncludeClusters, setHasVisitedIncludeClusters] = React.useState(false);
@@ -177,13 +178,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setCurrentStep(getInitialStep());
     setActiveTabKey(0);
     // Reset substep visibility based on context
-    // For identities and roles context, start with cluster sets selection
+    // For identities: start with initial selection screen (Apply to all / Assign specific)
+    // For roles: start with cluster sets selection (role is preselected)
     // In single cluster context, skip directly to project scope selection (no cluster selection)
     setShowSpecifyClusters((context === 'identities' || context === 'roles') ? false : !clusterName);
     setShowIncludeProjects(false);
     setShowSpecifyProjects(false);
     // Reset identities and roles-specific state
-    setShowSpecifyClusterSets(context === 'identities' || context === 'roles'); // Start with cluster sets for identities and roles
+    setShowSpecifyClusterSets(context === 'roles'); // Only roles starts with cluster sets, identities starts with initial selection
     setShowIncludeClusters(false);
     setSelectedClusterSets([]);
     setResourceScope('specific');
@@ -214,8 +216,21 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // === IDENTITIES CONTEXT ===
     if (context === 'identities') {
       if (currentStep === 1) {
-        // Step 1: Navigate through substeps
-        // Flow: Cluster sets → Include clusters → Specify clusters → Include projects → Specify projects
+        // Step 1: Navigate through initial selection and substeps
+        // Flow: Initial selection → [Cluster sets → Include clusters → Specify clusters → Include projects → Specify projects]
+        
+        // If on the initial selection screen (no substeps active)
+        if (!showSpecifyClusterSets && !showIncludeClusters && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
+          if (resourceScope === 'all') {
+            // "Apply to all resources" → skip directly to role selection
+            setCurrentStep(2);
+            return;
+          } else if (resourceScope === 'specific') {
+            // "Assign specific resources" → show cluster sets selection
+            setShowSpecifyClusterSets(true);
+            return;
+          }
+        }
         
         if (showSpecifyClusterSets) {
           // From "Specify cluster sets" → go to "Include clusters"
@@ -442,7 +457,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         // Step 2 (Select role) → Step 1 (Select resources)
         setCurrentStep(1);
         return;
-      } else if (currentStep === 1 && resourceScope === 'specific') {
+      } else if (currentStep === 1) {
         // Step 1: Handle substep back navigation
         if (showSpecifyProjects) {
           // From "Specify projects" → back to "Include projects"
@@ -472,8 +487,13 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           return;
         }
         
-        // If on showSpecifyClusterSets (first substep), don't allow back since there's no previous screen
-        // The Back button shouldn't be shown in this case
+        if (showSpecifyClusterSets) {
+          // From "Specify cluster sets" → back to initial selection screen
+          setShowSpecifyClusterSets(false);
+          return;
+        }
+        
+        // If on the initial selection screen, can't go back further
       }
       return;
     }
@@ -866,6 +886,40 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const Step1SelectResourcesForIdentities = () => {
     return (
     <div>
+      {/* Initial selection screen - show when no substeps are active */}
+      {!showSpecifyClusterSets && !showIncludeClusters && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Select resources
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Manage resource assignments.
+          </Content>
+
+          <Form>
+            <FormGroup>
+              <Radio
+                isChecked={resourceScope === 'all'}
+                name="resource-scope"
+                onChange={() => setResourceScope('all')}
+                label="Apply to all resources"
+                description="This permission will apply to all cluster sets, clusters, projects, and resources currently managed by ACM, and any new ones added in the future."
+                id="radio-all-resources"
+              />
+              <Radio
+                isChecked={resourceScope === 'specific'}
+                name="resource-scope"
+                onChange={() => setResourceScope('specific')}
+                label="Assign specific resources"
+                description="Select exactly which cluster sets, clusters and projects this permission will apply to."
+                id="radio-specific-resources"
+                className="pf-v6-u-mt-md"
+              />
+            </FormGroup>
+          </Form>
+        </>
+      )}
+      
       {showSpecifyClusterSets && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
@@ -2089,7 +2143,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 backgroundColor: '#ffffff',
                 flexShrink: 0
               }}>
-                {((context === 'identities' && (currentStep > 1 || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
+                {((context === 'identities' && (currentStep > 1 || showSpecifyClusterSets || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
                   (context === 'roles' && (currentStep > 1 || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
                   (context === 'clusters' && currentStep > 1)) && (
                   <Button variant="secondary" onClick={handleBack}>
