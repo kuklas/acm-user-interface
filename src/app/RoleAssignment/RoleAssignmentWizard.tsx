@@ -188,6 +188,19 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setSelectedClusterSets([]);
     setResourceScope('specific');
     setClusterSetScope('all');
+    // Reset hasVisited flags to ensure clean state on next wizard open
+    setHasVisitedSpecifyClusters(false);
+    setHasVisitedIncludeProjects(false);
+    setHasVisitedSpecifyProjects(false);
+    setHasVisitedSpecifyClusterSets(false);
+    setHasVisitedIncludeClusters(false);
+    // Reset selections
+    setSelectedUser(preselectedIdentity?.type === 'user' ? preselectedIdentity.id : null);
+    setSelectedGroup(preselectedIdentity?.type === 'group' ? preselectedIdentity.id : null);
+    setSelectedClusters([]);
+    setSelectedProjects([]);
+    setSelectedCommonProject(null);
+    setSelectedRole(preselectedRole?.id || null);
     onClose();
   };
   
