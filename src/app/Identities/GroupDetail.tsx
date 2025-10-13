@@ -361,7 +361,7 @@ users:
                 </Td>
                 <Td dataLabel="Type">{assignment.type}</Td>
                 <Td dataLabel="Scope">
-                  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
                     <FlexItem>
                       <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                         {assignment.clusters.map((cluster, idx) => (
@@ -374,7 +374,7 @@ users:
                         ))}
                       </Flex>
                     </FlexItem>
-                    <FlexItem>
+                    <FlexItem style={{ marginTop: '8px' }}>
                       <Button variant="link" isInline style={{ paddingLeft: 0 }}>
                         {assignment.project}
                       </Button>
