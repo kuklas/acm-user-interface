@@ -69,6 +69,12 @@ const mockClusters = [
   { id: 6, name: 'dev-test-b', infrastructure: 'Host Inventory', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['9 labels'] },
 ];
 
+const mockClusterSets = [
+  { id: 1, name: 'development-clusters', clusters: 4 },
+  { id: 2, name: 'production-clusters', clusters: 3 },
+  { id: 3, name: 'test-clusters', clusters: 2 },
+];
+
 const mockProjects = [
   { id: 1, name: 'project-starlight-dev', clusters: 'dev-linux-a, dev-linux-b' },
   { id: 2, name: 'analytics', clusters: 'dev-linux-a, dev-linux-b' },
@@ -93,9 +99,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 }) => {
   // Determine initial step based on context
   const getInitialStep = () => {
-    if (context === 'identities') return 2; // Skip user/group selection
+    if (context === 'identities') return 1; // For identities, step 1 is "Select resources"
     if (context === 'roles') return 1; // Start with user/group selection
-    return 1; // Default for clusters
+    return 1; // Default for clusters - start with user/group selection
   };
 
   const [currentStep, setCurrentStep] = React.useState(getInitialStep());
@@ -139,6 +145,12 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [hasVisitedIncludeProjects, setHasVisitedIncludeProjects] = React.useState(false);
   const [hasVisitedSpecifyProjects, setHasVisitedSpecifyProjects] = React.useState(false);
   
+  // For Identities context - cluster sets selection
+  const [showSpecifyClusterSets, setShowSpecifyClusterSets] = React.useState(false);
+  const [selectedClusterSets, setSelectedClusterSets] = React.useState<number[]>([]);
+  const [clusterSetSearchValue, setClusterSetSearchValue] = React.useState('');
+  const [hasVisitedSpecifyClusterSets, setHasVisitedSpecifyClusterSets] = React.useState(false);
+  
   // Step 3: Select role
   const [selectedRole, setSelectedRole] = React.useState<number | null>(
     preselectedRole?.id || null
@@ -151,16 +163,21 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     if (showSpecifyClusters) setHasVisitedSpecifyClusters(true);
     if (showIncludeProjects) setHasVisitedIncludeProjects(true);
     if (showSpecifyProjects) setHasVisitedSpecifyProjects(true);
-  }, [showSpecifyClusters, showIncludeProjects, showSpecifyProjects]);
+    if (showSpecifyClusterSets) setHasVisitedSpecifyClusterSets(true);
+  }, [showSpecifyClusters, showIncludeProjects, showSpecifyProjects, showSpecifyClusterSets]);
 
   const handleClose = () => {
-    setCurrentStep(1);
+    setCurrentStep(getInitialStep());
     setActiveTabKey(0);
     // Reset substep visibility based on context
     // In single cluster context, skip directly to project scope selection (no cluster selection)
     setShowSpecifyClusters(!clusterName);
     setShowIncludeProjects(false);
     setShowSpecifyProjects(false);
+    // Reset identities-specific state
+    setShowSpecifyClusterSets(false);
+    setSelectedClusterSets([]);
+    setResourceScope('specific');
     onClose();
   };
   
@@ -183,6 +200,72 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const handleNext = () => {
     const isSingleClusterContext = !!clusterName;
     
+    // === IDENTITIES CONTEXT ===
+    if (context === 'identities') {
+      if (currentStep === 1) {
+        // Step 1: Select resources
+        if (resourceScope === 'all') {
+          // "Apply to all resources" → Jump to Select role (step 2)
+          setCurrentStep(2);
+          return;
+        } else if (resourceScope === 'specific') {
+          // "Assign specific resources" → Show substeps
+          // Navigate through: Cluster sets → Clusters → Projects
+          
+          if (!showSpecifyClusterSets && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
+            // Just selected "Assign specific resources" → Show "Specify cluster sets"
+            setShowSpecifyClusterSets(true);
+            return;
+          }
+          
+          if (showSpecifyClusterSets) {
+            // From "Specify cluster sets" → go to "Specify clusters"
+            if (selectedClusterSets.length === 0) return; // Need at least one cluster set
+            setShowSpecifyClusterSets(false);
+            setShowSpecifyClusters(true);
+            return;
+          }
+          
+          if (showSpecifyClusters) {
+            // From "Specify clusters" → go to "Include projects"
+            if (selectedClusters.length === 0) return; // Need at least one cluster
+            setShowSpecifyClusters(false);
+            setShowIncludeProjects(true);
+            return;
+          }
+          
+          if (showIncludeProjects) {
+            setShowIncludeProjects(false);
+            
+            // If "Full access" (cluster scope) → go to next step
+            if (projectScope === 'cluster') {
+              // Fall through to move to step 2
+            } else if (projectScope === 'project') {
+              // If "Partial access" (project scope) → show project selection
+              setShowSpecifyProjects(true);
+              return;
+            }
+          }
+          
+          if (showSpecifyProjects) {
+            // From "Specify projects" → validate and go to step 2
+            if (selectedProjects.length === 0) return; // Need at least one project
+            setShowSpecifyProjects(false);
+            // Fall through to move to step 2
+          }
+        }
+        
+        // Move to Step 2: Select role
+        setCurrentStep(2);
+        return;
+      } else if (currentStep === 2) {
+        // Step 2: Select role → Step 3: Review
+        setCurrentStep(3);
+        return;
+      }
+    }
+    
+    // === CLUSTERS / ROLES CONTEXT ===
     if (currentStep === 2 && resourceScope === 'specific') {
       // Single cluster context: handle project scope selection
       if (isSingleClusterContext) {
@@ -250,10 +333,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // Determine next step based on context
     let nextStep = currentStep + 1;
     
-    if (context === 'identities') {
-      // Skip step 1 (user/group selection), step 3 (role selection)
-      if (currentStep === 2) nextStep = 4; // Go from resources to review
-    } else if (context === 'roles') {
+    if (context === 'roles') {
       // Skip step 3 (role selection)
       if (currentStep === 2) nextStep = 4; // Go from resources to review
     }
@@ -264,6 +344,49 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const handleBack = () => {
     const isSingleClusterContext = !!clusterName;
     
+    // === IDENTITIES CONTEXT ===
+    if (context === 'identities') {
+      if (currentStep === 3) {
+        // Step 3 (Review) → Step 2 (Select role)
+        setCurrentStep(2);
+        return;
+      } else if (currentStep === 2) {
+        // Step 2 (Select role) → Step 1 (Select resources)
+        setCurrentStep(1);
+        return;
+      } else if (currentStep === 1 && resourceScope === 'specific') {
+        // Step 1: Handle substep back navigation
+        if (showSpecifyProjects) {
+          // From "Specify projects" → back to "Include projects"
+          setShowSpecifyProjects(false);
+          setShowIncludeProjects(true);
+          return;
+        }
+        
+        if (showIncludeProjects) {
+          // From "Include projects" → back to "Specify clusters"
+          setShowIncludeProjects(false);
+          setShowSpecifyClusters(true);
+          return;
+        }
+        
+        if (showSpecifyClusters) {
+          // From "Specify clusters" → back to "Specify cluster sets"
+          setShowSpecifyClusters(false);
+          setShowSpecifyClusterSets(true);
+          return;
+        }
+        
+        if (showSpecifyClusterSets) {
+          // From "Specify cluster sets" → back to main resource scope selection
+          setShowSpecifyClusterSets(false);
+          return;
+        }
+      }
+      return;
+    }
+    
+    // === CLUSTERS / ROLES CONTEXT ===
     if (currentStep === 2 && resourceScope === 'specific') {
       // Single cluster context: handle back navigation
       if (isSingleClusterContext) {
@@ -300,10 +423,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // Determine previous step based on context
     let prevStep = currentStep - 1;
     
-    if (context === 'identities') {
-      // Skip step 1 (user/group selection), step 3 (role selection)
-      if (currentStep === 4) prevStep = 2; // Go from review to resources
-    } else if (context === 'roles') {
+    if (context === 'roles') {
       // Skip step 3 (role selection)
       if (currentStep === 4) prevStep = 2; // Go from review to resources
     }
@@ -322,6 +442,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       setSelectedIdentityType('user');
     } else {
       setSelectedIdentityType('group');
+    }
+  };
+
+  const toggleClusterSetSelection = (clusterSetId: number) => {
+    if (selectedClusterSets.includes(clusterSetId)) {
+      setSelectedClusterSets(selectedClusterSets.filter((id) => id !== clusterSetId));
+    } else {
+      setSelectedClusterSets([...selectedClusterSets, clusterSetId]);
     }
   };
 
@@ -599,6 +727,292 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   );
 
   // Step 2: Select resources
+  // Identities-specific: Step 1 = Select resources (with Apply to all / Assign specific)
+  const Step1SelectResourcesForIdentities = () => {
+    return (
+    <div>
+      {!showSpecifyClusterSets && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Select resources
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Manage resource assignments
+          </Content>
+
+          <Form>
+            <FormGroup>
+              <Radio
+                isChecked={resourceScope === 'all'}
+                name="resource-scope"
+                onChange={() => setResourceScope('all')}
+                label="Apply to all resources"
+                description="This permission will apply to all cluster sets, clusters, projects, and resources currently managed by ACM, and any new ones added in the future."
+                id="radio-all-resources"
+              />
+              <Radio
+                isChecked={resourceScope === 'specific'}
+                name="resource-scope"
+                onChange={() => setResourceScope('specific')}
+                label="Assign specific resources"
+                description="Select exactly which cluster sets, clusters and projects this permission will apply to."
+                id="radio-specific-resources"
+                className="pf-v6-u-mt-md"
+              />
+            </FormGroup>
+          </Form>
+        </>
+      )}
+
+      {showSpecifyClusterSets && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Specify cluster sets
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Select cluster sets to define scope
+          </Content>
+
+          <Flex className="pf-v6-u-mb-md">
+            <FlexItem>
+              <SearchInput
+                placeholder="Search"
+                value={clusterSetSearchValue}
+                onChange={(_event, value) => setClusterSetSearchValue(value)}
+                onClear={() => setClusterSetSearchValue('')}
+              />
+            </FlexItem>
+          </Flex>
+
+          <Table aria-label="Cluster sets table" variant="compact" className="pf-v6-u-mt-md">
+            <Thead>
+              <Tr>
+                <Th />
+                <Th>Name</Th>
+                <Th>Clusters</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {mockClusterSets
+                .filter((cs) => cs.name.toLowerCase().includes(clusterSetSearchValue.toLowerCase()))
+                .map((clusterSet) => (
+                <Tr key={clusterSet.id}>
+                  <Td
+                    select={{
+                      rowIndex: clusterSet.id,
+                      onSelect: () => toggleClusterSetSelection(clusterSet.id),
+                      isSelected: selectedClusterSets.includes(clusterSet.id),
+                    }}
+                  />
+                  <Td dataLabel="Name">{clusterSet.name}</Td>
+                  <Td dataLabel="Clusters">{clusterSet.clusters}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </>
+      )}
+
+      {showSpecifyClusters && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Specify clusters
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Select clusters from the selected cluster sets
+          </Content>
+
+          <Flex className="pf-v6-u-mb-md">
+            <FlexItem>
+              <Dropdown
+                isOpen={isClusterFilterOpen}
+                onSelect={() => setIsClusterFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle ref={toggleRef} onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} isExpanded={isClusterFilterOpen}>
+                    Filter
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem>All clusters</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </FlexItem>
+            <FlexItem>
+              <SearchInput
+                placeholder="Search"
+                value={clusterSearchValue}
+                onChange={(_event, value) => setClusterSearchValue(value)}
+                onClear={() => setClusterSearchValue('')}
+              />
+            </FlexItem>
+            <FlexItem align={{ default: 'alignRight' }}>
+              <ToggleGroup aria-label="Cluster view toggle">
+                <ToggleGroupItem
+                  text="All"
+                  buttonId="cluster-view-all"
+                  isSelected={clusterViewMode === 'all'}
+                  onChange={() => setClusterViewMode('all')}
+                />
+                <ToggleGroupItem
+                  text={`Selected ${selectedClusters.length}`}
+                  buttonId="cluster-view-selected"
+                  isSelected={clusterViewMode === 'selected'}
+                  onChange={() => setClusterViewMode('selected')}
+                />
+              </ToggleGroup>
+            </FlexItem>
+          </Flex>
+
+          <Table aria-label="Clusters table" variant="compact" className="pf-v6-u-mt-md">
+            <Thead>
+              <Tr>
+                <Th />
+                <Th>Name</Th>
+                <Th>Infrastructure</Th>
+                <Th>Control plane type</Th>
+                <Th>Distribution version</Th>
+                <Th>Labels</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredClusters.map((cluster) => (
+                <Tr key={cluster.id}>
+                  <Td
+                    select={{
+                      rowIndex: cluster.id,
+                      onSelect: () => toggleClusterSelection(cluster.id),
+                      isSelected: selectedClusters.includes(cluster.id),
+                    }}
+                  />
+                  <Td dataLabel="Name">{cluster.name}</Td>
+                  <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
+                  <Td dataLabel="Control plane type">{cluster.controlPlane}</Td>
+                  <Td dataLabel="Distribution version">{cluster.distribution}</Td>
+                  <Td dataLabel="Labels">{cluster.labels[0]}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </>
+      )}
+
+      {showIncludeProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Include projects
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Define project scope on selected clusters
+          </Content>
+
+          <Form>
+            <FormGroup>
+              <Radio
+                isChecked={projectScope === 'cluster'}
+                name="project-scope"
+                onChange={() => setProjectScope('cluster')}
+                label="Apply to all projects on these clusters"
+                description="This also includes any new projects created in the future."
+                id="radio-all-projects"
+              />
+              <Radio
+                isChecked={projectScope === 'project'}
+                name="project-scope"
+                onChange={() => setProjectScope('project')}
+                label="Apply to specific projects"
+                description="Scope with projects by name to bind a role by."
+                id="radio-specific-projects"
+                className="pf-v6-u-mt-md"
+              />
+            </FormGroup>
+          </Form>
+        </>
+      )}
+
+      {showSpecifyProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Specify projects
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Select specific projects for role assignment
+          </Content>
+
+          <Flex className="pf-v6-u-mb-md">
+            <FlexItem>
+              <Dropdown
+                isOpen={isProjectFilterOpen}
+                onSelect={() => setIsProjectFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsProjectFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle ref={toggleRef} onClick={() => setIsProjectFilterOpen(!isProjectFilterOpen)} isExpanded={isProjectFilterOpen}>
+                    Filter
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem>All projects</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </FlexItem>
+            <FlexItem>
+              <SearchInput
+                placeholder="Search"
+                value={projectSearchValue}
+                onChange={(_event, value) => setProjectSearchValue(value)}
+                onClear={() => setProjectSearchValue('')}
+              />
+            </FlexItem>
+            <FlexItem align={{ default: 'alignRight' }}>
+              <ToggleGroup aria-label="Project view toggle">
+                <ToggleGroupItem
+                  text="All"
+                  buttonId="project-view-all"
+                  isSelected={projectViewMode === 'all'}
+                  onChange={() => setProjectViewMode('all')}
+                />
+                <ToggleGroupItem
+                  text={`Selected ${selectedProjects.length}`}
+                  buttonId="project-view-selected"
+                  isSelected={projectViewMode === 'selected'}
+                  onChange={() => setProjectViewMode('selected')}
+                />
+              </ToggleGroup>
+            </FlexItem>
+          </Flex>
+
+          <Table aria-label="Projects table" variant="compact" className="pf-v6-u-mt-md">
+            <Thead>
+              <Tr>
+                <Th />
+                <Th>Project</Th>
+                <Th>Cluster</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredProjects.map((project) => (
+                <Tr key={project.id}>
+                  <Td
+                    select={{
+                      rowIndex: project.id,
+                      onSelect: () => toggleProjectSelection(project.id),
+                      isSelected: selectedProjects.includes(project.id),
+                    }}
+                  />
+                  <Td dataLabel="Project">{project.name}</Td>
+                  <Td dataLabel="Cluster">{project.clusters}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </>
+      )}
+    </div>
+    );
+  };
+
   const Step2SelectResources = () => {
     // If we have a clusterName, we're in single cluster context - skip to project scope
     const isSingleClusterContext = !!clusterName;
@@ -1064,16 +1478,25 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   );
 
   const getCurrentStepContent = () => {
+    if (context === 'identities') {
+      // Identities context: Step 1 = Resources, Step 2 = Role, Step 3 = Review
+      switch (currentStep) {
+        case 1:
+          return <Step1SelectResourcesForIdentities />;
+        case 2:
+          return <Step3SelectRole />;
+        case 3:
+          return <Step4Review />;
+        default:
+          return null;
+      }
+    }
+    
+    // Clusters/Roles context
     switch (currentStep) {
       case 1:
-        if (context === 'identities') {
-          return <Step2SelectResources />; // Skip user/group selection
-        }
         return <Step1SelectUserOrGroup />;
       case 2:
-        if (context === 'identities') {
-          return <Step4Review />; // Skip role selection, go to review
-        }
         return <Step2SelectResources />;
       case 3:
         if (context === 'roles') {
@@ -1088,6 +1511,19 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const getStepTitle = () => {
+    if (context === 'identities') {
+      if (currentStep === 1) {
+        // Step 1 for Identities: Select resources with substeps
+        if (showSpecifyClusterSets) return 'Specify cluster sets';
+        if (showSpecifyClusters) return 'Specify clusters';
+        if (showIncludeProjects) return 'Include projects';
+        if (showSpecifyProjects) return 'Specify projects';
+        return 'Select resources';
+      }
+      const titles = ['', 'Select resources', 'Select role', 'Review'];
+      return titles[currentStep] || '';
+    }
+    
     if (currentStep === 2) {
       if (showSpecifyClusters) return 'Specify clusters';
       if (showIncludeProjects) return 'Include projects';
@@ -1095,11 +1531,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       return 'Select resources';
     }
     
-    // Adjust titles based on context
-    if (context === 'identities') {
-      const titles = ['', 'Select resources', 'Review'];
-      return titles[currentStep] || '';
-    } else if (context === 'roles') {
+    if (context === 'roles') {
       const titles = ['', 'Select user or group', 'Select resources', 'Review'];
       return titles[currentStep] || '';
     }
@@ -1115,11 +1547,20 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // Render substeps without circles
     if (isSubStep) {
       // Check if this substep is currently active
-      const isSubStepActive = currentStep === 2 && (
-        (label === 'Specify clusters' && showSpecifyClusters) ||
-        (label === 'Include projects' && showIncludeProjects) ||
-        ((label === 'Specify common projects' || label === 'Specify projects') && showSpecifyProjects)
-      );
+      let isSubStepActive = false;
+      
+      if (context === 'identities' && currentStep === 1) {
+        isSubStepActive = 
+          (label === 'Specify cluster sets' && showSpecifyClusterSets) ||
+          (label === 'Specify clusters' && showSpecifyClusters) ||
+          (label === 'Include projects' && showIncludeProjects) ||
+          (label === 'Specify projects' && showSpecifyProjects);
+      } else if (currentStep === 2) {
+        isSubStepActive = 
+          (label === 'Specify clusters' && showSpecifyClusters) ||
+          (label === 'Include projects' && showIncludeProjects) ||
+          ((label === 'Specify common projects' || label === 'Specify projects') && showSpecifyProjects);
+      }
       
       return (
         <div style={{ position: 'relative', marginBottom: '0.25rem', paddingLeft: '3.5rem' }}>
@@ -1206,6 +1647,35 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const isNextButtonDisabled = () => {
     const isSingleClusterContext = !!clusterName;
     
+    // === IDENTITIES CONTEXT ===
+    if (context === 'identities') {
+      if (currentStep === 1) {
+        // Step 1: Select resources (with substeps)
+        if (showSpecifyClusterSets) {
+          return selectedClusterSets.length === 0;
+        }
+        if (showSpecifyClusters) {
+          return selectedClusters.length === 0;
+        }
+        if (showIncludeProjects) {
+          return false; // Can always proceed from project scope selection
+        }
+        if (showSpecifyProjects) {
+          return selectedProjects.length === 0;
+        }
+        // On main "Apply to all / Assign specific" selection, can always proceed
+        return false;
+      }
+      
+      if (currentStep === 2) {
+        // Step 2: Select role
+        return selectedRole === null;
+      }
+      
+      return false;
+    }
+    
+    // === CLUSTERS / ROLES CONTEXT ===
     // Step 1: Select user or group
     if (currentStep === 1) {
       if (selectedIdentityType === 'user') {
@@ -1314,13 +1784,15 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               margin: 0
             }}>
               {context === 'identities' ? (
-                // Identities context: Skip user/group selection, skip role selection
+                // Identities context: New flow with cluster sets
                 <>
                   {renderStepIndicator(1, 'Select resources', false, true)}
+                  {(hasVisitedSpecifyClusterSets || (currentStep === 1 && showSpecifyClusterSets)) && renderStepIndicator(1, 'Specify cluster sets', true, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 1 && showSpecifyClusters)) && renderStepIndicator(1, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 1 && showIncludeProjects)) && renderStepIndicator(1, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
-                  {renderStepIndicator(2, 'Review', false, false)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, 'Specify projects', true, false)}
+                  {renderStepIndicator(2, 'Select role', false, true)}
+                  {renderStepIndicator(3, 'Review', false, false)}
                 </>
               ) : context === 'roles' ? (
                 // Roles context: Skip role selection
@@ -1390,7 +1862,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     Back
                   </Button>
                 )}{' '}
-                {((context === 'identities' && currentStep < 2) || 
+                {((context === 'identities' && currentStep < 3) || 
                   (context === 'roles' && currentStep < 3) || 
                   (context === 'clusters' && currentStep < 4)) ? (
                   <Button variant="primary" onClick={handleNext} isDisabled={isNextButtonDisabled()}>
