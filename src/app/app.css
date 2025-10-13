@@ -366,7 +366,8 @@ body,
   border-radius: 8px !important;
   border: 1px solid #e0e0e0 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
   margin: 0 !important;
 }
 
@@ -420,6 +421,7 @@ body,
 /* Ensure table doesn't overflow the card */
 .table-content-card .pf-v6-c-table-container {
   overflow-x: auto !important;
+  overflow-y: visible !important;
   max-width: 100% !important;
   width: 100% !important;
 }
@@ -540,4 +542,23 @@ input[type="checkbox"] {
 .pf-v6-c-table td:first-child:has(input[type="checkbox"]) + td {
   padding-left: 0 !important;
   padding-right: 16px !important;
+}
+
+/* Ensure dropdowns in tables can appear above other content */
+.pf-v6-c-table .pf-v6-c-dropdown {
+  position: relative !important;
+}
+
+.pf-v6-c-table .pf-v6-c-dropdown__menu,
+.pf-v6-c-dropdown__menu {
+  z-index: 9999 !important;
+}
+
+/* Ensure table cells with dropdowns allow overflow */
+.pf-v6-c-table td:has(.pf-v6-c-dropdown) {
+  overflow: visible !important;
+}
+
+.pf-v6-c-table tbody tr {
+  overflow: visible !important;
 }

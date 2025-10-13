@@ -110,23 +110,24 @@ export const Projects: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--secondary--default)', minHeight: '100vh' }}>
-      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} className="pf-v6-u-mb-md">
-        <FlexItem>
-          <Title headingLevel="h1" size="2xl">Projects</Title>
-        </FlexItem>
-        <FlexItem>
-          <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-            <FlexItem>
-              <Button variant="plain" icon={<StarIcon />} />
-            </FlexItem>
-            <FlexItem>
-              <Button variant="primary">Create Project</Button>
-            </FlexItem>
-          </Flex>
-        </FlexItem>
-      </Flex>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '24px' }}>
+          <FlexItem>
+            <Title headingLevel="h1" size="2xl">Projects</Title>
+          </FlexItem>
+          <FlexItem>
+            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+              <FlexItem>
+                <Button variant="plain" icon={<StarIcon />} />
+              </FlexItem>
+              <FlexItem>
+                <Button variant="primary">Create Project</Button>
+              </FlexItem>
+            </Flex>
+          </FlexItem>
+        </Flex>
 
-      <Card>
+        <Card>
         <CardBody style={{ padding: 0 }}>
           <Toolbar>
             <ToolbarContent>
@@ -276,7 +277,8 @@ export const Projects: React.FC = () => {
             </Tbody>
           </Table>
         </CardBody>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
