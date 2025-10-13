@@ -176,10 +176,10 @@ export const GroupsTable: React.FunctionComponent = () => {
               />
             </Th>
             <Th width={20}>Group Name</Th>
-            <Th width={12}>Members</Th>
-            <Th width={18}>Sync Source</Th>
-            <Th width={18}>Last Synced</Th>
-            <Th width={18}>Created</Th>
+            <Th width={15}>Members</Th>
+            <Th width={20}>Sync Source</Th>
+            <Th width={20}>Last Synced</Th>
+            <Th width={15}>Created</Th>
             <Th width={10}></Th>
           </Tr>
         </Thead>
@@ -204,22 +204,22 @@ export const GroupsTable: React.FunctionComponent = () => {
                   {group.name}
                 </Button>
               </Td>
-              <Td dataLabel="Members" width={12}>{group.members}</Td>
-              <Td dataLabel="Sync Source" width={18}>
+              <Td dataLabel="Members" width={15}>{group.members}</Td>
+              <Td dataLabel="Sync Source" width={20}>
                 {group.syncSource === 'Local' ? (
                   <Label color="grey">{group.syncSource}</Label>
                 ) : (
                   <Label color="blue" icon={<SyncAltIcon />}>{group.syncSource}</Label>
                 )}
               </Td>
-              <Td dataLabel="Last Synced" width={18}>
+              <Td dataLabel="Last Synced" width={20}>
                 {group.lastSynced ? (
                   <span>{group.lastSynced}</span>
                 ) : (
                   <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
                 )}
               </Td>
-              <Td dataLabel="Created" width={18}>{group.created}</Td>
+              <Td dataLabel="Created" width={15}>{group.created}</Td>
               <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
                 <Dropdown
                   isOpen={openRowMenuId === group.id}
