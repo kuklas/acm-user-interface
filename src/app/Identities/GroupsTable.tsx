@@ -11,16 +11,22 @@ import {
   MenuToggle,
   MenuToggleElement,
   Checkbox,
+  Label,
+  Tooltip,
+  Icon,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { SyncAltIcon, CogIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 
 // Mock data for groups
 const mockGroups = [
-  { id: 1, name: 'cluster-admins', members: 5, created: '2024-01-15' },
-  { id: 2, name: 'developers', members: 12, created: '2024-01-10' },
-  { id: 3, name: 'operators', members: 8, created: '2024-02-01' },
-  { id: 4, name: 'viewers', members: 20, created: '2024-01-20' },
+  { id: 1, name: 'cluster-admins', members: 5, created: '2024-01-15', syncSource: 'Local', lastSynced: null },
+  { id: 2, name: 'developers', members: 12, created: '2024-01-10', syncSource: 'Corporate LDAP', lastSynced: '2 hours ago' },
+  { id: 3, name: 'operators', members: 8, created: '2024-02-01', syncSource: 'Corporate LDAP', lastSynced: '2 hours ago' },
+  { id: 4, name: 'viewers', members: 20, created: '2024-01-20', syncSource: 'Local', lastSynced: null },
+  { id: 5, name: 'engineering-team', members: 45, created: '2024-01-05', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
+  { id: 6, name: 'qa-team', members: 15, created: '2024-01-08', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
 ];
 
 export const GroupsTable: React.FunctionComponent = () => {
@@ -29,6 +35,7 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [filterType, setFilterType] = React.useState('Group');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
+  const [isSyncing, setIsSyncing] = React.useState(false);
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -44,6 +51,21 @@ export const GroupsTable: React.FunctionComponent = () => {
     } else {
       setSelectedGroups([]);
     }
+  };
+
+  const handleSyncGroups = () => {
+    console.log('Syncing groups from external identity providers...');
+    setIsSyncing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSyncing(false);
+      console.log('Groups synced successfully');
+    }, 2000);
+  };
+
+  const handleConfigureSync = () => {
+    console.log('Opening group sync configuration...');
+    // Navigate to sync configuration page or open modal
   };
 
   return (
@@ -90,6 +112,30 @@ export const GroupsTable: React.FunctionComponent = () => {
           <ToolbarItem>
             <Button variant="primary">Create group</Button>
           </ToolbarItem>
+          <ToolbarItem>
+            <Tooltip content="Sync groups from connected identity providers">
+              <Button 
+                variant="secondary" 
+                icon={<SyncAltIcon />}
+                onClick={handleSyncGroups}
+                isLoading={isSyncing}
+                isDisabled={isSyncing}
+              >
+                {isSyncing ? 'Syncing...' : 'Sync groups'}
+              </Button>
+            </Tooltip>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Tooltip content="Configure group sync from identity providers">
+              <Button 
+                variant="link" 
+                icon={<CogIcon />}
+                onClick={handleConfigureSync}
+              >
+                Configure sync
+              </Button>
+            </Tooltip>
+          </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
       <Table aria-label="Groups table" variant="compact">
@@ -104,9 +150,11 @@ export const GroupsTable: React.FunctionComponent = () => {
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th>Group Name</Th>
-            <Th>Members</Th>
-            <Th>Created</Th>
+            <Th width={25}>Group Name</Th>
+            <Th width={15}>Members</Th>
+            <Th width={20}>Sync Source</Th>
+            <Th width={20}>Last Synced</Th>
+            <Th width={20}>Created</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -121,7 +169,7 @@ export const GroupsTable: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
-              <Td dataLabel="Group Name">
+              <Td dataLabel="Group Name" width={25}>
                 <Button
                   variant="link"
                   isInline
@@ -130,8 +178,22 @@ export const GroupsTable: React.FunctionComponent = () => {
                   {group.name}
                 </Button>
               </Td>
-              <Td dataLabel="Members">{group.members}</Td>
-              <Td dataLabel="Created">{group.created}</Td>
+              <Td dataLabel="Members" width={15}>{group.members}</Td>
+              <Td dataLabel="Sync Source" width={20}>
+                {group.syncSource === 'Local' ? (
+                  <Label color="grey">{group.syncSource}</Label>
+                ) : (
+                  <Label color="blue" icon={<SyncAltIcon />}>{group.syncSource}</Label>
+                )}
+              </Td>
+              <Td dataLabel="Last Synced" width={20}>
+                {group.lastSynced ? (
+                  <span>{group.lastSynced}</span>
+                ) : (
+                  <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
+                )}
+              </Td>
+              <Td dataLabel="Created" width={20}>{group.created}</Td>
             </Tr>
           ))}
         </Tbody>
