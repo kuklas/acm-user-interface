@@ -69,6 +69,7 @@ const IdentityProviderDetail: React.FunctionComponent = () => {
     baseDN: 'dc=example,dc=com',
     lastSync: '2024-01-15 14:30:00 UTC',
     connectedUsers: mockConnectedUsers.length,
+    clusters: ['local-cluster', 'dev-cluster', 'staging-cluster'],
     yaml: `apiVersion: config.openshift.io/v1
 kind: OAuth
 metadata:
@@ -206,6 +207,22 @@ spec:
                 <DescriptionListGroup>
                   <DescriptionListTerm>Connected Users</DescriptionListTerm>
                   <DescriptionListDescription>{providerData.connectedUsers}</DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Applied to Clusters</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {providerData.clusters.length > 0 ? (
+                      <Flex spaceItems={{ default: 'spaceItemsXs' }}>
+                        {providerData.clusters.map((cluster, index) => (
+                          <FlexItem key={index}>
+                            <Label color="blue">{cluster}</Label>
+                          </FlexItem>
+                        ))}
+                      </Flex>
+                    ) : (
+                      <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>No clusters</span>
+                    )}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Last sync</DescriptionListTerm>

@@ -18,6 +18,8 @@ import {
   DropdownItem,
   MenuToggle,
   MenuToggleElement,
+  Split,
+  SplitItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
@@ -26,10 +28,10 @@ import { useNavigate } from 'react-router-dom';
 
 // Mock data for Identity Providers
 const mockIdentityProviders = [
-  { id: 1, name: 'GitHub OAuth', type: 'OAuth', status: 'Active', users: 45 },
-  { id: 2, name: 'Corporate LDAP', type: 'LDAP', status: 'Active', users: 120 },
-  { id: 3, name: 'Google Workspace', type: 'OAuth', status: 'Active', users: 89 },
-  { id: 4, name: 'Azure AD', type: 'OIDC', status: 'Inactive', users: 0 },
+  { id: 1, name: 'GitHub OAuth', type: 'OAuth', status: 'Active', users: 45, clusters: ['local-cluster', 'prod-cluster'] },
+  { id: 2, name: 'Corporate LDAP', type: 'LDAP', status: 'Active', users: 120, clusters: ['local-cluster', 'dev-cluster', 'staging-cluster'] },
+  { id: 3, name: 'Google Workspace', type: 'OAuth', status: 'Active', users: 89, clusters: ['prod-cluster'] },
+  { id: 4, name: 'Azure AD', type: 'OIDC', status: 'Inactive', users: 0, clusters: [] },
 ];
 
 const IdentityProvider: React.FunctionComponent = () => {
@@ -197,10 +199,11 @@ const IdentityProvider: React.FunctionComponent = () => {
                   isSelected: isAllSelected,
                 }}
               />
-              <Th width={35}>Name</Th>
-              <Th width={20}>Type</Th>
-              <Th width={20}>Status</Th>
-              <Th width={25}>Connected Users</Th>
+              <Th width={25}>Name</Th>
+              <Th width={15}>Type</Th>
+              <Th width={15}>Status</Th>
+              <Th width={15}>Connected Users</Th>
+              <Th width={30}>Clusters</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -213,7 +216,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                     isSelected: selectedProviders.has(provider.id),
                   }}
                 />
-                <Td dataLabel="Name" width={35} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Name" width={25} style={{ textAlign: 'left' }}>
                   <Button
                     variant="link"
                     isInline
@@ -223,13 +226,31 @@ const IdentityProvider: React.FunctionComponent = () => {
                     {provider.name}
                   </Button>
                 </Td>
-                <Td dataLabel="Type" width={20}>
+                <Td dataLabel="Type" width={15}>
                   <Label color="blue">{provider.type}</Label>
                 </Td>
-                <Td dataLabel="Status" width={20}>
+                <Td dataLabel="Status" width={15}>
                   <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
                 </Td>
-                <Td dataLabel="Connected Users" width={25}>{provider.users}</Td>
+                <Td dataLabel="Connected Users" width={15}>{provider.users}</Td>
+                <Td dataLabel="Clusters" width={30}>
+                  {provider.clusters.length > 0 ? (
+                    <Split hasGutter>
+                      {provider.clusters.slice(0, 2).map((cluster, index) => (
+                        <SplitItem key={index}>
+                          <Label isCompact color="blue">{cluster}</Label>
+                        </SplitItem>
+                      ))}
+                      {provider.clusters.length > 2 && (
+                        <SplitItem>
+                          <Label isCompact>+{provider.clusters.length - 2} more</Label>
+                        </SplitItem>
+                      )}
+                    </Split>
+                  ) : (
+                    <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>No clusters</span>
+                  )}
+                </Td>
               </Tr>
             ))}
           </Tbody>
