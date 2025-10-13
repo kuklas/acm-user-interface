@@ -58,47 +58,11 @@ body,
 .perspective-selector {
   padding: var(--pf-t--global--spacer--md);
   border-bottom: 1px solid var(--pf-t--global--border--color--default);
-  position: relative;
-  z-index: 1000;
 }
 
 .perspective-selector .pf-v6-c-menu-toggle {
   width: 100%;
   justify-content: space-between;
-}
-
-/* Force dropdown menu to be visible */
-.perspective-selector .pf-v6-c-dropdown__menu {
-  z-index: 9999 !important;
-  position: absolute !important;
-  width: 100% !important;
-  background-color: white !important;
-  border: 1px solid #ccc !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-  margin-top: 4px !important;
-}
-
-.perspective-selector .pf-v6-c-dropdown__list {
-  background-color: white !important;
-}
-
-.perspective-selector .pf-v6-c-dropdown__list-item {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Ensure sidebar doesn't clip dropdown */
-.pf-v6-c-page__sidebar {
-  overflow: visible !important;
-}
-
-.pf-v6-c-page__sidebar-body {
-  overflow: visible !important;
-}
-
-#nav-primary-simple {
-  overflow: visible !important;
 }
 
 /* Wizard modal custom styling */

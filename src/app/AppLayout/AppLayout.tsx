@@ -150,49 +150,37 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     );
   };
 
-  const PerspectiveSelector = () => {
-    return (
-      <div className="perspective-selector">
-        <Dropdown
-          isOpen={perspectiveOpen}
-          onSelect={onPerspectiveSelect}
-          onOpenChange={(isOpen: boolean) => setPerspectiveOpen(isOpen)}
-          shouldFocusToggleOnSelect
-          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-            <MenuToggle
-              ref={toggleRef}
-              onClick={() => {
-                console.log('Clicking toggle, current state:', perspectiveOpen);
-                setPerspectiveOpen(!perspectiveOpen);
-              }}
-              isExpanded={perspectiveOpen}
-              isFullWidth
-              style={{ width: '100%' }}
+  const PerspectiveSelector = () => (
+    <div className="perspective-selector">
+      <Dropdown
+        isOpen={perspectiveOpen}
+        onSelect={onPerspectiveSelect}
+        onOpenChange={(isOpen: boolean) => setPerspectiveOpen(isOpen)}
+        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => setPerspectiveOpen(!perspectiveOpen)}
+            isExpanded={perspectiveOpen}
+            isFullWidth
+          >
+            {activePerspective}
+          </MenuToggle>
+        )}
+      >
+        <DropdownList>
+          {perspectives.map((perspective, index) => (
+            <DropdownItem
+              key={index}
+              value={perspective.name}
+              isDisabled={perspective.disabled}
             >
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                {activePerspective}
-                <CaretDownIcon />
-              </span>
-            </MenuToggle>
-          )}
-        >
-          <DropdownList>
-            {perspectives.map((perspective, index) => (
-              <DropdownItem
-                key={index}
-                value={perspective.name}
-                isDisabled={perspective.disabled}
-                onClick={() => console.log('Dropdown item clicked:', perspective.name)}
-              >
-                {perspective.name}
-              </DropdownItem>
-            ))}
-          </DropdownList>
-        </Dropdown>
-        {perspectiveOpen && <div style={{ padding: '8px', fontSize: '12px', color: 'red' }}>DEBUG: Dropdown is open!</div>}
-      </div>
-    );
-  };
+              {perspective.name}
+            </DropdownItem>
+          ))}
+        </DropdownList>
+      </Dropdown>
+    </div>
+  );
 
   const Navigation = (
     <Nav id="nav-primary-simple">
