@@ -52,16 +52,13 @@ const IdentityProvider: React.FunctionComponent = () => {
   };
 
   const handleSelectProviderType = (providerType: string) => {
-    console.log('Selected provider type:', providerType);
     setIsAddProviderOpen(false);
     
-    // Navigate to the appropriate configuration page based on provider type
+    // Only LDAP is implemented - navigate to the configuration page
     if (providerType === 'LDAP') {
       navigate('/user-management/identity-providers/add/ldap');
-    } else {
-      // For other provider types, show modal (temporary)
-      setIsCreateModalOpen(true);
     }
+    // Other provider types do nothing (not yet implemented)
   };
 
   const handleModalClose = () => {
