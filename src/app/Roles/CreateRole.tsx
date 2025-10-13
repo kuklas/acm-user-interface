@@ -136,6 +136,20 @@ const CreateRole: React.FunctionComponent = () => {
     },
   ];
 
+  const catalogApiGroups = [
+    { name: '', description: 'Core Kubernetes APIs (pods, services, etc.)', category: 'Core' },
+    { name: 'apps', description: 'Deployments, StatefulSets, DaemonSets', category: 'Core' },
+    { name: 'batch', description: 'Jobs and CronJobs', category: 'Core' },
+    { name: 'kubevirt.io', description: 'KubeVirt virtualization APIs', category: 'KubeVirt' },
+    { name: 'cdi.kubevirt.io', description: 'Containerized Data Importer', category: 'KubeVirt' },
+    { name: 'instancetype.kubevirt.io', description: 'VM instance types', category: 'KubeVirt' },
+    { name: 'networking.k8s.io', description: 'Network policies and ingress', category: 'Networking' },
+    { name: 'k8s.cni.cncf.io', description: 'Network attachment definitions', category: 'Networking' },
+    { name: 'storage.k8s.io', description: 'Storage classes and volume attachments', category: 'Storage' },
+    { name: 'snapshot.storage.k8s.io', description: 'Volume snapshots', category: 'Storage' },
+    { name: 'rbac.authorization.k8s.io', description: 'Roles and role bindings', category: 'Core' },
+  ];
+
   const catalogResources = [
     { name: 'pods', description: 'Basic compute units', category: 'Core' },
     { name: 'services', description: 'Network services', category: 'Core' },
@@ -156,12 +170,27 @@ const CreateRole: React.FunctionComponent = () => {
     template.category.toLowerCase().includes(templateSearch.toLowerCase())
   );
 
+  const filteredCatalogApiGroups = catalogApiGroups.filter(apiGroup => {
+    const matchesSearch = apiGroup.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+                         apiGroup.description.toLowerCase().includes(catalogSearch.toLowerCase());
+    const matchesFilter = catalogFilter === 'All' || apiGroup.category === catalogFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   const filteredCatalogResources = catalogResources.filter(resource => {
     const matchesSearch = resource.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
                          resource.description.toLowerCase().includes(catalogSearch.toLowerCase());
     const matchesFilter = catalogFilter === 'All' || resource.category === catalogFilter;
     return matchesSearch && matchesFilter;
   });
+
+  const groupedApiGroups = filteredCatalogApiGroups.reduce((acc, apiGroup) => {
+    if (!acc[apiGroup.category]) {
+      acc[apiGroup.category] = [];
+    }
+    acc[apiGroup.category].push(apiGroup);
+    return acc;
+  }, {} as Record<string, typeof catalogApiGroups>);
 
   const groupedResources = filteredCatalogResources.reduce((acc, resource) => {
     if (!acc[resource.category]) {
@@ -247,9 +276,28 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
   };
 
   const handleOpenDrawer = (ruleId: number, type: 'apiGroups' | 'resources') => {
+    // If opening a different drawer type, reset search
+    if (isDrawerOpen && drawerType !== type) {
+      setCatalogSearch('');
+      setCatalogFilter('All');
+    }
     setActiveRuleId(ruleId);
     setDrawerType(type);
     setIsDrawerOpen(true);
+  };
+
+  const handleAddApiGroupFromCatalog = (apiGroupName: string) => {
+    if (activeRuleId !== null) {
+      setPermissionRules(permissionRules.map(rule => {
+        if (rule.id === activeRuleId) {
+          const currentApiGroups = rule.apiGroups ? rule.apiGroups.split(',').map(g => g.trim()).filter(g => g) : [];
+          if (!currentApiGroups.includes(apiGroupName)) {
+            return { ...rule, apiGroups: [...currentApiGroups, apiGroupName].join(', ') };
+          }
+        }
+        return rule;
+      }));
+    }
   };
 
   const handleAddResourceFromCatalog = (resourceName: string) => {
@@ -276,7 +324,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
     <DrawerPanelContent style={{ minWidth: '500px' }}>
       <DrawerHead>
         <Title headingLevel="h2" size="xl">
-          Browse Resources
+          {drawerType === 'apiGroups' ? 'Browse API Groups' : 'Browse Resources'}
         </Title>
         <DrawerActions>
           <DrawerCloseButton onClick={() => setIsDrawerOpen(false)} />
@@ -284,7 +332,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
       </DrawerHead>
       <div style={{ padding: 'var(--pf-t--global--spacer--md)' }}>
         <SearchInput
-          placeholder="Search resources..."
+          placeholder={drawerType === 'apiGroups' ? 'Search API groups...' : 'Search resources...'}
           value={catalogSearch}
           onChange={(_event, value) => setCatalogSearch(value)}
           onClear={() => setCatalogSearch('')}
@@ -328,40 +376,77 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
           />
         </ToggleGroup>
 
-        {Object.entries(groupedResources).map(([category, resources]) => (
-          <div key={category} style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
-            <Title headingLevel="h3" size="md" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-              {category}
-            </Title>
-            {resources.map((resource) => (
-              <div 
-                key={resource.name} 
-                style={{ 
-                  marginBottom: 'var(--pf-t--global--spacer--md)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start'
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 'var(--pf-t--global--font--weight--body--bold)' }}>
-                    {resource.name}
-                  </div>
-                  <Content component="small" className="pf-v6-u-color-200">
-                    {resource.description}
-                  </Content>
-                </div>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => handleAddResourceFromCatalog(resource.name)}
+        {drawerType === 'apiGroups' ? (
+          Object.entries(groupedApiGroups).map(([category, apiGroups]) => (
+            <div key={category} style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
+              <Title headingLevel="h3" size="md" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                {category}
+              </Title>
+              {apiGroups.map((apiGroup) => (
+                <div 
+                  key={apiGroup.name || 'core'} 
+                  style={{ 
+                    marginBottom: 'var(--pf-t--global--spacer--md)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start'
+                  }}
                 >
-                  Add
-                </Button>
-              </div>
-            ))}
-          </div>
-        ))}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'var(--pf-t--global--font--weight--body--bold)' }}>
+                      {apiGroup.name || '""'} <span style={{ fontWeight: 'normal', fontStyle: 'italic', fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>(empty string)</span>
+                    </div>
+                    <Content component="small" className="pf-v6-u-color-200">
+                      {apiGroup.description}
+                    </Content>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => handleAddApiGroupFromCatalog(apiGroup.name)}
+                  >
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          Object.entries(groupedResources).map(([category, resources]) => (
+            <div key={category} style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
+              <Title headingLevel="h3" size="md" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                {category}
+              </Title>
+              {resources.map((resource) => (
+                <div 
+                  key={resource.name} 
+                  style={{ 
+                    marginBottom: 'var(--pf-t--global--spacer--md)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'var(--pf-t--global--font--weight--body--bold)' }}>
+                      {resource.name}
+                    </div>
+                    <Content component="small" className="pf-v6-u-color-200">
+                      {resource.description}
+                    </Content>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => handleAddResourceFromCatalog(resource.name)}
+                  >
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
       </div>
     </DrawerPanelContent>
   );
@@ -605,7 +690,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                           style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
                           onClick={() => handleOpenDrawer(rule.id, 'apiGroups')}
                         >
-                          Browse catalog
+                          Browse API catalog
                         </Button>
                       </FormGroup>
 
@@ -626,7 +711,7 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                           style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
                           onClick={() => handleOpenDrawer(rule.id, 'resources')}
                         >
-                          Browse catalog
+                          Browse resources catalog
                         </Button>
                       </FormGroup>
 
