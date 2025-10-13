@@ -657,11 +657,25 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       {/* Task Details Modal */}
       <Modal
         variant={ModalVariant.large}
-        title="Current Task"
+        title="Use Case - Role Assignment Task"
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
       >
-        <div style={{ lineHeight: '2', padding: '16px', fontSize: '15px' }}>
+        <div style={{ 
+          padding: '16px 24px 8px 24px',
+          marginBottom: '0'
+        }}>
+          <p style={{ 
+            marginTop: '0', 
+            marginBottom: '24px',
+            fontSize: '14px',
+            color: 'var(--pf-t--global--text--color--subtle)',
+            fontStyle: 'italic'
+          }}>
+            Please complete the following role assignment task using this prototype interface.
+          </p>
+        </div>
+        <div style={{ lineHeight: '2', padding: '0 24px 16px 24px', fontSize: '15px' }}>
           <div style={{ marginBottom: '24px' }}>
             <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>Tenant admin:</strong>{' '}
             <span style={{ color: 'var(--pf-t--color--blue--60)', fontWeight: 500 }}>Walter Joseph Kovacs</span>
@@ -750,7 +764,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
             </div>
           </div>
 
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--pf-t--global--border--color--default)', display: 'flex', justifyContent: 'flex-end' }}>
             <Button variant="primary" onClick={() => setIsTaskModalOpen(false)}>
               Close
             </Button>
