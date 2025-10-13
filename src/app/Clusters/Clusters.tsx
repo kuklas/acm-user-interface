@@ -325,14 +325,6 @@ const Clusters: React.FunctionComponent = () => {
             />
           </ToolbarItem>
           <ToolbarItem>
-            <SearchInput
-              placeholder="Search"
-              value={searchValue}
-              onChange={(_event, value) => setSearchValue(value)}
-              onClear={() => setSearchValue('')}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
             <Dropdown
               isOpen={isFilterDropdownOpen}
               onSelect={() => setIsFilterDropdownOpen(false)}
@@ -378,7 +370,15 @@ const Clusters: React.FunctionComponent = () => {
               </DropdownList>
             </Dropdown>
           </ToolbarItem>
-          <ToolbarItem align={{ default: 'alignEnd' }}>
+          <ToolbarItem>
+            <SearchInput
+              placeholder="Search"
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
             <Button variant="primary">Create cluster</Button>
           </ToolbarItem>
           <ToolbarItem>
@@ -411,20 +411,6 @@ const Clusters: React.FunctionComponent = () => {
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </Icon>
             </Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <span>1 - 10 of 12</span>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Pagination
-              itemCount={mockClusters.length}
-              perPage={perPage}
-              page={page}
-              onSetPage={onSetPage}
-              widgetId="top-pagination"
-              onPerPageSelect={onPerPageSelect}
-              variant={PaginationVariant.top}
-            />
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
@@ -592,7 +578,7 @@ const Clusters: React.FunctionComponent = () => {
                 onClear={() => setSearchValue('')}
               />
             </ToolbarItem>
-            <ToolbarItem align={{ default: 'alignEnd' }}>
+            <ToolbarItem>
               <Button variant="primary">Create cluster set</Button>
             </ToolbarItem>
             <ToolbarItem>
@@ -622,20 +608,6 @@ const Clusters: React.FunctionComponent = () => {
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </Icon>
               </Button>
-            </ToolbarItem>
-            <ToolbarItem>
-              <span>1-7 of 7</span>
-            </ToolbarItem>
-            <ToolbarItem>
-              <Pagination
-                itemCount={mockClusterSets.length}
-                perPage={perPage}
-                page={page}
-                onSetPage={onSetPage}
-                widgetId="top-pagination"
-                onPerPageSelect={onPerPageSelect}
-                variant={PaginationVariant.top}
-              />
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>

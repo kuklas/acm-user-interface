@@ -62,6 +62,18 @@ const routes: AppRouteConfig[] = [
         path: '/infrastructure/clusters/:clusterName',
         title: 'ACM | Cluster Detail',
       },
+      {
+        element: <Dashboard />,
+        label: 'Automation',
+        path: '/infrastructure/automation',
+        title: 'ACM | Automation',
+      },
+      {
+        element: <Dashboard />,
+        label: 'Host inventory',
+        path: '/infrastructure/host-inventory',
+        title: 'ACM | Host Inventory',
+      },
     ],
   },
   {
