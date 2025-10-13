@@ -228,7 +228,7 @@ const ClusterDetail: React.FunctionComponent = () => {
         id: 1,
         name: 'aks-agentpool-62974295-vmss000000',
         status: 'Ready',
-        role: '',
+        role: 'Worker',
         region: 'centralus',
         zone: '0',
         instanceType: 'Standard_D4ds_v5',
@@ -239,7 +239,7 @@ const ClusterDetail: React.FunctionComponent = () => {
         id: 2,
         name: 'aks-agentpool-62974295-vmss000001',
         status: 'Ready',
-        role: '',
+        role: 'Worker',
         region: 'centralus',
         zone: '0',
         instanceType: 'Standard_D4ds_v5',
@@ -249,9 +249,7 @@ const ClusterDetail: React.FunctionComponent = () => {
     ];
 
     const filteredNodes = mockNodes.filter(node =>
-      node.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      node.region.toLowerCase().includes(searchValue.toLowerCase()) ||
-      node.instanceType.toLowerCase().includes(searchValue.toLowerCase())
+      node.name.toLowerCase().includes(searchValue.toLowerCase())
     );
 
     const paginatedNodes = filteredNodes.slice(
@@ -265,7 +263,7 @@ const ClusterDetail: React.FunctionComponent = () => {
           <ToolbarContent>
             <ToolbarItem>
               <SearchInput
-                placeholder="Q Search"
+                placeholder="Search for a node"
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
@@ -273,35 +271,13 @@ const ClusterDetail: React.FunctionComponent = () => {
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
-        <Table aria-label="Nodes table">
+        <Table aria-label="Nodes table" variant="compact">
           <Thead>
             <Tr>
-              <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
-                <Flex spaceItems={{ default: 'spaceItemsXs' }}>
-                  <FlexItem>Name</FlexItem>
-                  <FlexItem>
-                    <Tooltip content="Information about node names">
-                      <InfoCircleIcon />
-                    </Tooltip>
-                  </FlexItem>
-                </Flex>
-              </Th>
-              <Th>
-                <Flex spaceItems={{ default: 'spaceItemsXs' }}>
-                  <FlexItem>Status</FlexItem>
-                  <FlexItem>
-                    <Tooltip content="Information about node status">
-                      <InfoCircleIcon />
-                    </Tooltip>
-                  </FlexItem>
-                </Flex>
-              </Th>
-              <Th>Role</Th>
+              <Th>Name</Th>
+              <Th>Status</Th>
               <Th>Region</Th>
-              <Th>Zone</Th>
               <Th>Instance type</Th>
-              <Th>CPU</Th>
-              <Th>RAM</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -311,18 +287,17 @@ const ClusterDetail: React.FunctionComponent = () => {
                   <Button variant="link" isInline>
                     {node.name}
                   </Button>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                    {node.instanceType}
+                  </div>
                 </Td>
                 <Td dataLabel="Status">
                   <Label color="green" icon={<CheckIcon />}>
                     {node.status}
                   </Label>
                 </Td>
-                <Td dataLabel="Role">{node.role}</Td>
                 <Td dataLabel="Region">{node.region}</Td>
-                <Td dataLabel="Zone">{node.zone}</Td>
-                <Td dataLabel="Instance type">{node.instanceType}</Td>
-                <Td dataLabel="CPU">{node.cpu}</Td>
-                <Td dataLabel="RAM">{node.ram}</Td>
+                <Td dataLabel="Instance type">{node.cpu} CPU / {node.ram} RAM</Td>
               </Tr>
             ))}
           </Tbody>
@@ -347,16 +322,16 @@ const ClusterDetail: React.FunctionComponent = () => {
 
   const AddOnsTab = () => {
     const mockAddOns = [
-      { id: 1, name: 'application-manager', status: 'Available', message: 'application-manager add-on is available.' },
-      { id: 2, name: 'cert-policy-controller', status: 'Available', message: 'cert-policy-controller add-on is available.' },
-      { id: 3, name: 'cluster-proxy', status: 'Available', message: 'cluster-proxy add-on is available.' },
-      { id: 4, name: 'config-policy-controller', status: 'Available', message: 'config-policy-controller add-on is available.' },
-      { id: 5, name: 'gitops-addon', status: 'Available', message: 'gitops-addon add-on is available.' },
-      { id: 6, name: 'governance-policy-framework', status: 'Available', message: 'governance-policy-framework add-on is available.' },
-      { id: 7, name: 'managed-serviceaccount', status: 'Available', message: 'managed-serviceaccount add-on is available.' },
-      { id: 8, name: 'observability-controller', status: 'Available', message: 'observability-controller add-on is available.' },
-      { id: 9, name: 'search-collector', status: 'Available', message: 'search-collector add-on is available.' },
-      { id: 10, name: 'work-manager', status: 'Available', message: 'work-manager add-on is available.' }
+      { id: 1, name: 'application-manager', status: 'Available', version: 'v1.2.3', updated: '2 hours ago' },
+      { id: 2, name: 'cert-policy-controller', status: 'Available', version: 'v2.1.0', updated: '5 hours ago' },
+      { id: 3, name: 'cluster-proxy', status: 'Available', version: 'v1.5.2', updated: '1 day ago' },
+      { id: 4, name: 'config-policy-controller', status: 'Available', version: 'v3.0.1', updated: '3 days ago' },
+      { id: 5, name: 'gitops-addon', status: 'Available', version: 'v1.8.0', updated: '5 days ago' },
+      { id: 6, name: 'governance-policy-framework', status: 'Available', version: 'v2.4.1', updated: '1 week ago' },
+      { id: 7, name: 'managed-serviceaccount', status: 'Available', version: 'v1.0.5', updated: '2 weeks ago' },
+      { id: 8, name: 'observability-controller', status: 'Available', version: 'v4.1.2', updated: '3 weeks ago' },
+      { id: 9, name: 'search-collector', status: 'Available', version: 'v2.3.0', updated: '1 month ago' },
+      { id: 10, name: 'work-manager', status: 'Available', version: 'v1.7.4', updated: '1 month ago' }
     ];
 
     const filteredAddOns = mockAddOns.filter(addon =>
@@ -374,7 +349,7 @@ const ClusterDetail: React.FunctionComponent = () => {
           <ToolbarContent>
             <ToolbarItem>
               <SearchInput
-                placeholder="Q Search"
+                placeholder="Search for an add-on"
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
@@ -382,24 +357,29 @@ const ClusterDetail: React.FunctionComponent = () => {
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
-        <Table aria-label="Add-ons table">
+        <Table aria-label="Add-ons table" variant="compact">
           <Thead>
             <Tr>
               <Th>Name</Th>
               <Th>Status</Th>
-              <Th>Message</Th>
+              <Th>Updated</Th>
             </Tr>
           </Thead>
           <Tbody>
             {paginatedAddOns.map((addon) => (
               <Tr key={addon.id}>
-                <Td dataLabel="Name">{addon.name}</Td>
+                <Td dataLabel="Name">
+                  <div>{addon.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                    {addon.version}
+                  </div>
+                </Td>
                 <Td dataLabel="Status">
                   <Label color="green" icon={<CheckIcon />}>
                     {addon.status}
                   </Label>
                 </Td>
-                <Td dataLabel="Message">{addon.message}</Td>
+                <Td dataLabel="Updated">{addon.updated}</Td>
               </Tr>
             ))}
           </Tbody>
