@@ -71,6 +71,7 @@ const Identities: React.FunctionComponent = () => {
   };
 
   const toggleUserActionMenu = (userId: number) => {
+    console.log('toggleUserActionMenu called for userId:', userId, 'current openUserActionMenuId:', openUserActionMenuId);
     setOpenUserActionMenuId(openUserActionMenuId === userId ? null : userId);
   };
 
@@ -210,17 +211,16 @@ const Identities: React.FunctionComponent = () => {
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
                     onSelect={() => setOpenUserActionMenuId(null)}
-                    onOpenChange={(isOpen: boolean) => {
-                      if (!isOpen) {
-                        setOpenUserActionMenuId(null);
-                      }
-                    }}
+                    onOpenChange={(isOpen: boolean) => !isOpen && setOpenUserActionMenuId(null)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
                         ref={toggleRef}
                         aria-label="Actions menu"
                         variant="plain"
-                        onClick={() => toggleUserActionMenu(user.id)}
+                        onClick={() => {
+                          console.log('MenuToggle clicked for user:', user.name);
+                          toggleUserActionMenu(user.id);
+                        }}
                         isExpanded={openUserActionMenuId === user.id}
                       >
                         <EllipsisVIcon />
