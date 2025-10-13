@@ -29,6 +29,11 @@ import {
   ModalVariant,
   Title,
   Content,
+  Form,
+  FormGroup,
+  TextInput,
+  TextArea,
+  Alert,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import {
@@ -51,6 +56,47 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [perspectiveOpen, setPerspectiveOpen] = React.useState(false);
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = React.useState(false);
+  const [feedbackName, setFeedbackName] = React.useState('');
+  const [feedbackEmail, setFeedbackEmail] = React.useState('');
+  const [feedbackText, setFeedbackText] = React.useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = React.useState(false);
+
+  const handleFeedbackSubmit = () => {
+    const feedback = {
+      name: feedbackName,
+      email: feedbackEmail,
+      feedback: feedbackText,
+      timestamp: new Date().toISOString(),
+      page: window.location.pathname,
+    };
+
+    // Store in localStorage
+    const existingFeedback = JSON.parse(localStorage.getItem('prototypeFeedback') || '[]');
+    existingFeedback.push(feedback);
+    localStorage.setItem('prototypeFeedback', JSON.stringify(existingFeedback));
+
+    // Log to console for easy viewing
+    console.log('Feedback submitted:', feedback);
+    console.log('All feedback:', existingFeedback);
+
+    // Show success message
+    setFeedbackSubmitted(true);
+
+    // Reset form after 2 seconds
+    setTimeout(() => {
+      setFeedbackName('');
+      setFeedbackEmail('');
+      setFeedbackText('');
+      setFeedbackSubmitted(false);
+      setIsFeedbackModalOpen(false);
+    }, 2000);
+  };
+
+  const handleFeedbackModalClose = () => {
+    setIsFeedbackModalOpen(false);
+    setFeedbackSubmitted(false);
+  };
 
   const perspectives = [
     { name: 'Core platforms', disabled: false },
@@ -545,6 +591,24 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         {children}
       </Page>
 
+      {/* Feedback Button */}
+      <Button
+        variant="secondary"
+        onClick={() => setIsFeedbackModalOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '96px',
+          right: '24px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          fontWeight: 600,
+        }}
+        aria-label="Give feedback"
+      >
+        Feedback
+      </Button>
+
       {/* Floating Action Button */}
       <Button
         variant="primary"
@@ -669,6 +733,71 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               Close
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Feedback Modal */}
+      <Modal
+        variant={ModalVariant.medium}
+        title="Share Your Feedback"
+        isOpen={isFeedbackModalOpen}
+        onClose={handleFeedbackModalClose}
+      >
+        <div style={{ padding: '16px' }}>
+          {feedbackSubmitted ? (
+            <Alert variant="success" title="Thank you for your feedback!" isInline>
+              Your feedback has been submitted successfully.
+            </Alert>
+          ) : (
+            <Form>
+              <FormGroup label="Name (optional)" fieldId="feedback-name">
+                <TextInput
+                  id="feedback-name"
+                  value={feedbackName}
+                  onChange={(_event, value) => setFeedbackName(value)}
+                  placeholder="Your name"
+                />
+              </FormGroup>
+
+              <FormGroup label="Email (optional)" fieldId="feedback-email">
+                <TextInput
+                  id="feedback-email"
+                  type="email"
+                  value={feedbackEmail}
+                  onChange={(_event, value) => setFeedbackEmail(value)}
+                  placeholder="your.email@example.com"
+                />
+              </FormGroup>
+
+              <FormGroup 
+                label="Feedback" 
+                fieldId="feedback-text"
+                isRequired
+              >
+                <TextArea
+                  id="feedback-text"
+                  value={feedbackText}
+                  onChange={(_event, value) => setFeedbackText(value)}
+                  placeholder="Share your thoughts, suggestions, or report issues..."
+                  rows={6}
+                  isRequired
+                />
+              </FormGroup>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <Button variant="link" onClick={handleFeedbackModalClose}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary" 
+                  onClick={handleFeedbackSubmit}
+                  isDisabled={!feedbackText.trim()}
+                >
+                  Submit Feedback
+                </Button>
+              </div>
+            </Form>
+          )}
         </div>
       </Modal>
     </>
