@@ -125,8 +125,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
   // In single cluster context (when clusterName is provided), skip cluster selection
   // In multi-cluster context (cluster set or no specific cluster), show cluster selection
-  // For identities context, always start with no substeps visible (show main selection first)
-  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(context === 'identities' ? false : !clusterName);
+  // For identities and roles context, always start with no substeps visible (show main selection first)
+  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState((context === 'identities' || context === 'roles') ? false : !clusterName);
   const [showIncludeProjects, setShowIncludeProjects] = React.useState(false);
   const [showSpecifyProjects, setShowSpecifyProjects] = React.useState(false);
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
