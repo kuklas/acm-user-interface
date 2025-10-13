@@ -129,31 +129,86 @@ users:
     </Card>
   );
 
-  const RoleAssignmentsTab = () => (
-    <Card>
-      <CardBody>
-        <EmptyState>
-          <CubesIcon />
-          <Title headingLevel="h2" size="lg">
-            No role assignment created yet
-          </Title>
-          <EmptyStateBody>
-            Description text that allows users to easily understand what this is for and how does it help them achieve their needs.
-          </EmptyStateBody>
-          <EmptyStateActions>
-            <Button variant="primary" onClick={handleCreateRoleAssignment}>
-              Create role assignment
-            </Button>
-          </EmptyStateActions>
-          <EmptyStateBody>
-            <Button component="a" href="#" variant="link">
-              Link to documentation
-            </Button>
-          </EmptyStateBody>
-        </EmptyState>
-      </CardBody>
-    </Card>
-  );
+  const RoleAssignmentsTab = () => {
+    // Mock role assignments data - only for dev-team-alpha
+    const mockRoleAssignments = groupName === 'dev-team-alpha' ? [
+      { id: 1, role: 'kubevirt.io:edit', scope: 'Cluster', resource: 'local-cluster', created: '2024-01-15' },
+      { id: 2, role: 'storage-admin', scope: 'Namespace', resource: 'dev-storage', created: '2024-01-18' },
+      { id: 3, role: 'network-operator', scope: 'Namespace', resource: 'dev-network', created: '2024-01-20' },
+    ] : [];
+
+    if (mockRoleAssignments.length === 0) {
+      return (
+        <Card>
+          <CardBody>
+            <EmptyState>
+              <CubesIcon />
+              <Title headingLevel="h2" size="lg">
+                No role assignment created yet
+              </Title>
+              <EmptyStateBody>
+                Description text that allows users to easily understand what this is for and how does it help them achieve their needs.
+              </EmptyStateBody>
+              <EmptyStateActions>
+                <Button variant="primary" onClick={handleCreateRoleAssignment}>
+                  Create role assignment
+                </Button>
+              </EmptyStateActions>
+              <EmptyStateBody>
+                <Button component="a" href="#" variant="link">
+                  Link to documentation
+                </Button>
+              </EmptyStateBody>
+            </EmptyState>
+          </CardBody>
+        </Card>
+      );
+    }
+
+    return (
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search role assignments"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary" onClick={handleCreateRoleAssignment}>
+                Create role assignment
+              </Button>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        <Table aria-label="Role assignments table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th width={30}>Role</Th>
+              <Th width={20}>Scope</Th>
+              <Th width={30}>Resource</Th>
+              <Th width={20}>Created</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {mockRoleAssignments.map((assignment) => (
+              <Tr key={assignment.id}>
+                <Td dataLabel="Role" width={30}>
+                  <Label color="blue">{assignment.role}</Label>
+                </Td>
+                <Td dataLabel="Scope" width={20}>{assignment.scope}</Td>
+                <Td dataLabel="Resource" width={30}>{assignment.resource}</Td>
+                <Td dataLabel="Created" width={20}>{assignment.created}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
+    );
+  };
 
   const UsersTab = () => {
     const mockUsers = [

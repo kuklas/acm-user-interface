@@ -27,6 +27,7 @@ const mockGroups = [
   { id: 4, name: 'viewers', members: 20, created: '2024-01-20', syncSource: 'Local', lastSynced: null },
   { id: 5, name: 'engineering-team', members: 45, created: '2024-01-05', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
   { id: 6, name: 'qa-team', members: 15, created: '2024-01-08', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
+  { id: 7, name: 'dev-team-alpha', members: 8, created: '2024-01-12', syncSource: 'Local', lastSynced: null },
 ];
 
 export const GroupsTable: React.FunctionComponent = () => {
