@@ -253,7 +253,13 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           
           if (showSpecifyProjects) {
             // From "Specify projects" → validate and go to step 2
-            if (selectedProjects.length === 0) return; // Need at least one project
+            // If multiple clusters selected, it's common projects (single-select)
+            if (selectedClusters.length > 1) {
+              if (selectedCommonProject === null) return; // Need one common project selected
+            } else {
+              // If single cluster, it's multi-select
+              if (selectedProjects.length === 0) return; // Need at least one project
+            }
             setShowSpecifyProjects(false);
             // Fall through to move to step 2
           }
@@ -938,10 +944,12 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       {showSpecifyProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
-            Specify projects
+            {selectedClusters.length > 1 ? 'Specify common projects' : 'Specify projects'}
           </Title>
           <Content component="p" className="pf-v6-u-mb-md">
-            Select specific projects for role assignment
+            {selectedClusters.length > 1 
+              ? 'Find a project name and apply this role to all instances of it on your selected clusters.'
+              : 'Select specific projects for role assignment'}
           </Content>
 
           <Flex className="pf-v6-u-mb-md">
@@ -969,22 +977,24 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 onClear={() => setProjectSearchValue('')}
               />
             </FlexItem>
-            <FlexItem align={{ default: 'alignRight' }}>
-              <ToggleGroup aria-label="Project view toggle">
-                <ToggleGroupItem
-                  text="All"
-                  buttonId="project-view-all"
-                  isSelected={projectViewMode === 'all'}
-                  onChange={() => setProjectViewMode('all')}
-                />
-                <ToggleGroupItem
-                  text={`Selected ${selectedProjects.length}`}
-                  buttonId="project-view-selected"
-                  isSelected={projectViewMode === 'selected'}
-                  onChange={() => setProjectViewMode('selected')}
-                />
-              </ToggleGroup>
-            </FlexItem>
+            {selectedClusters.length === 1 && (
+              <FlexItem align={{ default: 'alignRight' }}>
+                <ToggleGroup aria-label="Project view toggle">
+                  <ToggleGroupItem
+                    text="All"
+                    buttonId="project-view-all"
+                    isSelected={projectViewMode === 'all'}
+                    onChange={() => setProjectViewMode('all')}
+                  />
+                  <ToggleGroupItem
+                    text={`Selected ${selectedProjects.length}`}
+                    buttonId="project-view-selected"
+                    isSelected={projectViewMode === 'selected'}
+                    onChange={() => setProjectViewMode('selected')}
+                  />
+                </ToggleGroup>
+              </FlexItem>
+            )}
           </Flex>
 
           <Table aria-label="Projects table" variant="compact" className="pf-v6-u-mt-md">
@@ -998,13 +1008,26 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <Tbody>
               {filteredProjects.map((project) => (
                 <Tr key={project.id}>
-                  <Td
-                    select={{
-                      rowIndex: project.id,
-                      onSelect: () => toggleProjectSelection(project.id),
-                      isSelected: selectedProjects.includes(project.id),
-                    }}
-                  />
+                  {selectedClusters.length > 1 ? (
+                    // Radio buttons for common projects (multiple clusters)
+                    <Td
+                      select={{
+                        rowIndex: project.id,
+                        onSelect: () => setSelectedCommonProject(project.id),
+                        isSelected: selectedCommonProject === project.id,
+                        variant: 'radio',
+                      }}
+                    />
+                  ) : (
+                    // Checkboxes for single cluster projects
+                    <Td
+                      select={{
+                        rowIndex: project.id,
+                        onSelect: () => toggleProjectSelection(project.id),
+                        isSelected: selectedProjects.includes(project.id),
+                      }}
+                    />
+                  )}
                   <Td dataLabel="Project">{project.name}</Td>
                   <Td dataLabel="Cluster">{project.clusters}</Td>
                 </Tr>
@@ -1558,7 +1581,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           (label === 'Specify cluster sets' && showSpecifyClusterSets) ||
           (label === 'Specify clusters' && showSpecifyClusters) ||
           (label === 'Include projects' && showIncludeProjects) ||
-          (label === 'Specify projects' && showSpecifyProjects);
+          ((label === 'Specify common projects' || label === 'Specify projects') && showSpecifyProjects);
       } else if (currentStep === 2) {
         isSubStepActive = 
           (label === 'Specify clusters' && showSpecifyClusters) ||
@@ -1665,6 +1688,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           return false; // Can always proceed from project scope selection
         }
         if (showSpecifyProjects) {
+          // If multiple clusters selected, it's common projects (radio/single-select)
+          if (selectedClusters.length > 1) {
+            return selectedCommonProject === null;
+          }
+          // If single cluster, it's multi-select checkboxes
           return selectedProjects.length === 0;
         }
         // On main "Apply to all / Assign specific" selection, can always proceed
@@ -1794,7 +1822,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {(hasVisitedSpecifyClusterSets || (currentStep === 1 && showSpecifyClusterSets)) && renderStepIndicator(1, 'Specify cluster sets', true, true)}
                   {(hasVisitedSpecifyClusters || (currentStep === 1 && showSpecifyClusters)) && renderStepIndicator(1, 'Specify clusters', true, true)}
                   {(hasVisitedIncludeProjects || (currentStep === 1 && showIncludeProjects)) && renderStepIndicator(1, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, 'Specify projects', true, false)}
+                  {(hasVisitedSpecifyProjects || (currentStep === 1 && showSpecifyProjects)) && renderStepIndicator(1, selectedClusters.length > 1 ? 'Specify common projects' : 'Specify projects', true, false)}
                   {renderStepIndicator(2, 'Select role', false, true)}
                   {renderStepIndicator(3, 'Review', false, false)}
                 </>
@@ -1859,7 +1887,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 backgroundColor: '#ffffff',
                 flexShrink: 0
               }}>
-                {((context === 'identities' && currentStep > 1) || 
+                {((context === 'identities' && (currentStep > 1 || showSpecifyClusterSets || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
                   (context === 'roles' && currentStep > 1) || 
                   (context === 'clusters' && currentStep > 1)) && (
                   <Button variant="secondary" onClick={handleBack}>
