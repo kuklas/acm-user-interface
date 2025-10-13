@@ -55,109 +55,291 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   // Core platforms navigation routes
   const corePlatformsRoutes: IAppRouteGroup[] = [
     {
-      label: '',
+      label: 'Home',
       routes: [
         {
           element: <></>,
-          label: 'Home',
-          path: '/core/home',
-          title: 'Home',
+          label: 'Overview',
+          path: '/core/home/overview',
+          title: 'Overview',
         },
         {
           element: <></>,
-          label: 'Favorites',
-          path: '/core/favorites',
-          title: 'Favorites',
+          label: 'All projects',
+          path: '/core/home/projects',
+          title: 'All projects',
+        },
+      ],
+    },
+    {
+      label: 'Favorites',
+      routes: [
+        {
+          element: <></>,
+          label: 'Overview',
+          path: '/core/favorites/overview',
+          title: 'Overview',
+        },
+      ],
+    },
+    {
+      label: 'Operators',
+      routes: [
+        {
+          element: <></>,
+          label: 'OperatorHub',
+          path: '/core/operators/hub',
+          title: 'OperatorHub',
         },
         {
           element: <></>,
-          label: 'Operators',
-          path: '/core/operators',
-          title: 'Operators',
+          label: 'Installed Operators',
+          path: '/core/operators/installed',
+          title: 'Installed Operators',
+        },
+      ],
+    },
+    {
+      label: 'Helm',
+      routes: [
+        {
+          element: <></>,
+          label: 'Helm Releases',
+          path: '/core/helm/releases',
+          title: 'Helm Releases',
+        },
+      ],
+    },
+    {
+      label: 'Workloads',
+      routes: [
+        {
+          element: <></>,
+          label: 'Pods',
+          path: '/core/workloads/pods',
+          title: 'Pods',
         },
         {
           element: <></>,
-          label: 'Helm',
-          path: '/core/helm',
-          title: 'Helm',
+          label: 'Deployments',
+          path: '/core/workloads/deployments',
+          title: 'Deployments',
         },
         {
           element: <></>,
-          label: 'Workloads',
-          path: '/core/workloads',
-          title: 'Workloads',
+          label: 'StatefulSets',
+          path: '/core/workloads/statefulsets',
+          title: 'StatefulSets',
+        },
+      ],
+    },
+    {
+      label: 'Virtualization',
+      routes: [
+        {
+          element: <></>,
+          label: 'VirtualMachines',
+          path: '/core/virtualization/vms',
+          title: 'VirtualMachines',
         },
         {
           element: <></>,
-          label: 'Virtualization',
-          path: '/core/virtualization',
-          title: 'Virtualization',
+          label: 'Templates',
+          path: '/core/virtualization/templates',
+          title: 'Templates',
+        },
+      ],
+    },
+    {
+      label: 'Migration',
+      routes: [
+        {
+          element: <></>,
+          label: 'Migrations',
+          path: '/core/migration/migrations',
+          title: 'Migrations',
+        },
+      ],
+    },
+    {
+      label: 'GitOps',
+      routes: [
+        {
+          element: <></>,
+          label: 'Applications',
+          path: '/core/gitops/applications',
+          title: 'Applications',
+        },
+      ],
+    },
+    {
+      label: 'Serverless',
+      routes: [
+        {
+          element: <></>,
+          label: 'Services',
+          path: '/core/serverless/services',
+          title: 'Services',
         },
         {
           element: <></>,
-          label: 'Migration',
-          path: '/core/migration',
-          title: 'Migration',
+          label: 'Revisions',
+          path: '/core/serverless/revisions',
+          title: 'Revisions',
+        },
+      ],
+    },
+    {
+      label: 'Networking',
+      routes: [
+        {
+          element: <></>,
+          label: 'Services',
+          path: '/core/networking/services',
+          title: 'Services',
         },
         {
           element: <></>,
-          label: 'GitOps',
-          path: '/core/gitops',
-          title: 'GitOps',
+          label: 'Routes',
+          path: '/core/networking/routes',
+          title: 'Routes',
         },
         {
           element: <></>,
-          label: 'Serverless',
-          path: '/core/serverless',
-          title: 'Serverless',
+          label: 'Ingresses',
+          path: '/core/networking/ingresses',
+          title: 'Ingresses',
+        },
+      ],
+    },
+    {
+      label: 'Storage',
+      routes: [
+        {
+          element: <></>,
+          label: 'PersistentVolumeClaims',
+          path: '/core/storage/pvcs',
+          title: 'PersistentVolumeClaims',
         },
         {
           element: <></>,
-          label: 'Networking',
-          path: '/core/networking',
-          title: 'Networking',
+          label: 'StorageClasses',
+          path: '/core/storage/classes',
+          title: 'StorageClasses',
         },
+      ],
+    },
+    {
+      label: 'Builds',
+      routes: [
         {
           element: <></>,
-          label: 'Storage',
-          path: '/core/storage',
-          title: 'Storage',
+          label: 'BuildConfigs',
+          path: '/core/builds/configs',
+          title: 'BuildConfigs',
         },
         {
           element: <></>,
           label: 'Builds',
-          path: '/core/builds',
+          path: '/core/builds/builds',
           title: 'Builds',
         },
+      ],
+    },
+    {
+      label: 'Pipelines',
+      routes: [
         {
           element: <></>,
           label: 'Pipelines',
-          path: '/core/pipelines',
+          path: '/core/pipelines/pipelines',
           title: 'Pipelines',
         },
         {
           element: <></>,
-          label: 'Observe',
-          path: '/core/observe',
-          title: 'Observe',
+          label: 'PipelineRuns',
+          path: '/core/pipelines/runs',
+          title: 'PipelineRuns',
+        },
+      ],
+    },
+    {
+      label: 'Observe',
+      routes: [
+        {
+          element: <></>,
+          label: 'Dashboards',
+          path: '/core/observe/dashboards',
+          title: 'Dashboards',
         },
         {
           element: <></>,
-          label: 'Compute',
-          path: '/core/compute',
-          title: 'Compute',
+          label: 'Metrics',
+          path: '/core/observe/metrics',
+          title: 'Metrics',
         },
         {
           element: <></>,
-          label: 'User Management',
-          path: '/core/user-management',
-          title: 'User Management',
+          label: 'Alerts',
+          path: '/core/observe/alerts',
+          title: 'Alerts',
+        },
+      ],
+    },
+    {
+      label: 'Compute',
+      routes: [
+        {
+          element: <></>,
+          label: 'Nodes',
+          path: '/core/compute/nodes',
+          title: 'Nodes',
         },
         {
           element: <></>,
-          label: 'Administration',
-          path: '/core/administration',
-          title: 'Administration',
+          label: 'MachineSets',
+          path: '/core/compute/machinesets',
+          title: 'MachineSets',
+        },
+      ],
+    },
+    {
+      label: 'User Management',
+      routes: [
+        {
+          element: <></>,
+          label: 'Users',
+          path: '/core/user-management/users',
+          title: 'Users',
+        },
+        {
+          element: <></>,
+          label: 'Groups',
+          path: '/core/user-management/groups',
+          title: 'Groups',
+        },
+        {
+          element: <></>,
+          label: 'Roles',
+          path: '/core/user-management/roles',
+          title: 'Roles',
+        },
+      ],
+    },
+    {
+      label: 'Administration',
+      routes: [
+        {
+          element: <></>,
+          label: 'Cluster Settings',
+          path: '/core/administration/settings',
+          title: 'Cluster Settings',
+        },
+        {
+          element: <></>,
+          label: 'Namespaces',
+          path: '/core/administration/namespaces',
+          title: 'Namespaces',
         },
       ],
     },
