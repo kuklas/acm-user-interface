@@ -477,7 +477,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const activeRoutes = 
     activePerspective === 'Core platforms' ? corePlatformsRoutes :
     activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : 
-    routes;
+    routes.filter(route => route.label !== 'Core Platforms');
 
   const Navigation = (
     <Nav id="nav-primary-simple">
