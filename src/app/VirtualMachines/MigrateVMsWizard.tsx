@@ -3,11 +3,13 @@ import {
   Modal,
   ModalVariant,
   Button,
+  Content,
   Form,
   FormGroup,
   TextInput,
   FormSelect,
   FormSelectOption,
+  Title,
 } from '@patternfly/react-core';
 
 interface MigrateVMsWizardProps {
@@ -78,8 +80,10 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
   };
 
   const generalInformationStep = (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>General information</h2>
+    <div>
+      <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+        General information
+      </Title>
       
       <Form>
         <FormGroup label="Name" isRequired>
@@ -122,8 +126,10 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
   const [targetProject, setTargetProject] = React.useState('');
 
   const targetPlacementStep = (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '16px' }}>Target placement</h2>
+    <div>
+      <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-md">
+        Target placement
+      </Title>
       
       <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
         {/* Source Section */}
@@ -420,9 +426,11 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
   };
 
   const migrationReadinessStep = (
-    <div style={{ padding: '24px' }}>
+    <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Migration readiness</h2>
+        <Title headingLevel="h2" size="xl">
+          Migration readiness
+        </Title>
         <Button variant="link" style={{ padding: 0 }}>Run again</Button>
       </div>
       
@@ -536,8 +544,10 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
   );
 
   const reviewStep = (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '24px' }}>Review</h2>
+    <div>
+      <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-lg">
+        Review
+      </Title>
       
       {/* General information section */}
       <div style={{ marginBottom: '32px' }}>
@@ -711,146 +721,216 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
   return (
     <Modal
       variant={ModalVariant.large}
-      title="Migrate virtual machines"
       isOpen={isOpen}
       onClose={handleClose}
+      aria-labelledby="migrate-vms-wizard-title"
+      style={{ 
+        '--pf-v6-c-modal-box--m-body--PaddingTop': '0',
+        '--pf-v6-c-modal-box--m-body--PaddingRight': '0',
+        '--pf-v6-c-modal-box--m-body--PaddingBottom': '0',
+        '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
+      } as React.CSSProperties}
     >
       {showProgress ? progressScreen : (
-        <>
-          <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-            Choose the target location for your VMs, then adjust your migration plan if necessary.
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* Header Section */}
+          <div style={{ 
+            backgroundColor: '#f0f0f0', 
+            padding: '1.5rem', 
+            borderBottom: '1px solid #d2d2d2',
+            flexShrink: 0
+          }}>
+            <Title headingLevel="h1" size="2xl" id="migrate-vms-wizard-title">
+              Migrate virtual machines
+            </Title>
+            <Content component="p" style={{ marginTop: '0.5rem', color: '#6a6e73' }}>
+              Choose the target location for your VMs, then adjust your migration plan if necessary.
+            </Content>
           </div>
-          <div style={{ display: 'flex', minHeight: '400px' }}>
-        <div style={{ width: '200px', borderRight: '1px solid var(--pf-t--global--border--color--default)', paddingRight: '16px', marginRight: '24px' }}>
-          <div
-            onClick={() => setActiveStep(1)}
-            style={{
-              padding: '8px 12px',
-              cursor: 'pointer',
-              backgroundColor: activeStep === 1 ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
-              borderRadius: '4px',
-              marginBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ 
-              marginRight: '8px', 
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: activeStep === 1 ? 'var(--pf-t--global--color--brand--default)' : 'var(--pf-t--global--background--color--secondary--default)',
-              color: activeStep === 1 ? 'white' : 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 'bold'
-            }}>
-              1
-            </span>
-            General information
-          </div>
-          <div
-            onClick={() => setActiveStep(2)}
-            style={{
-              padding: '8px 12px',
-              cursor: 'pointer',
-              backgroundColor: activeStep === 2 ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
-              borderRadius: '4px',
-              marginBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ 
-              marginRight: '8px', 
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: activeStep === 2 ? 'var(--pf-t--global--color--brand--default)' : 'var(--pf-t--global--background--color--secondary--default)',
-              color: activeStep === 2 ? 'white' : 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 'bold'
-            }}>
-              2
-            </span>
-            Target placement
-          </div>
-          <div
-            onClick={() => setActiveStep(3)}
-            style={{
-              padding: '8px 12px',
-              cursor: 'pointer',
-              backgroundColor: activeStep === 3 ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
-              borderRadius: '4px',
-              marginBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ 
-              marginRight: '8px', 
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: activeStep === 3 ? 'var(--pf-t--global--color--brand--default)' : 'var(--pf-t--global--background--color--secondary--default)',
-              color: activeStep === 3 ? 'white' : 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 'bold'
-            }}>
-              3
-            </span>
-            Migration readiness
-          </div>
-          <div
-            onClick={() => setActiveStep(4)}
-            style={{
-              padding: '8px 12px',
-              cursor: 'pointer',
-              backgroundColor: activeStep === 4 ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
-              borderRadius: '4px',
-              marginBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ 
-              marginRight: '8px', 
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: activeStep === 4 ? 'var(--pf-t--global--color--brand--default)' : 'var(--pf-t--global--background--color--secondary--default)',
-              color: activeStep === 4 ? 'white' : 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 'bold'
-            }}>
-              4
-            </span>
-            Review
-          </div>
-        </div>
-        <div style={{ flex: 1 }}>
-          {getCurrentStep()}
-        </div>
-      </div>
+
+          {/* Body with Steps Navigation and Content */}
+          <div style={{ 
+            display: 'flex', 
+            flex: 1, 
+            minHeight: 0, 
+            alignItems: 'stretch', 
+            overflow: 'hidden',
+            margin: 0,
+            padding: 0
+          }}>
+            {/* Left Navigation Panel */}
             <div style={{ 
-              display: 'flex', 
-              gap: '8px', 
-              justifyContent: 'flex-start',
-              borderTop: '1px solid var(--pf-t--global--border--color--default)',
-              paddingTop: '16px',
-              marginTop: '16px'
+              width: '300px', 
+              padding: '1.5rem 1rem',
+              borderRight: '1px solid #d2d2d2',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              flexShrink: 0,
+              margin: 0
             }}>
+              <div
+                onClick={() => setActiveStep(1)}
+                style={{
+                  padding: '0.75rem 0.75rem',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 1 ? '#e7f1fa' : 'transparent',
+                  borderLeft: activeStep === 1 ? '4px solid #0066cc' : '4px solid transparent',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '-1rem',
+                  paddingLeft: 'calc(0.75rem + 4px)',
+                }}
+              >
+                <span style={{ 
+                  marginRight: '12px', 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: activeStep >= 1 ? '#0066cc' : '#d2d2d2',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  1
+                </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: activeStep === 1 ? '600' : '400' }}>
+                  General information
+                </span>
+              </div>
+              <div
+                onClick={() => setActiveStep(2)}
+                style={{
+                  padding: '0.75rem 0.75rem',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 2 ? '#e7f1fa' : 'transparent',
+                  borderLeft: activeStep === 2 ? '4px solid #0066cc' : '4px solid transparent',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '-1rem',
+                  paddingLeft: 'calc(0.75rem + 4px)',
+                }}
+              >
+                <span style={{ 
+                  marginRight: '12px', 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: activeStep >= 2 ? '#0066cc' : '#d2d2d2',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  2
+                </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: activeStep === 2 ? '600' : '400' }}>
+                  Target placement
+                </span>
+              </div>
+              <div
+                onClick={() => setActiveStep(3)}
+                style={{
+                  padding: '0.75rem 0.75rem',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 3 ? '#e7f1fa' : 'transparent',
+                  borderLeft: activeStep === 3 ? '4px solid #0066cc' : '4px solid transparent',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '-1rem',
+                  paddingLeft: 'calc(0.75rem + 4px)',
+                }}
+              >
+                <span style={{ 
+                  marginRight: '12px', 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: activeStep >= 3 ? '#0066cc' : '#d2d2d2',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  3
+                </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: activeStep === 3 ? '600' : '400' }}>
+                  Migration readiness
+                </span>
+              </div>
+              <div
+                onClick={() => setActiveStep(4)}
+                style={{
+                  padding: '0.75rem 0.75rem',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 4 ? '#e7f1fa' : 'transparent',
+                  borderLeft: activeStep === 4 ? '4px solid #0066cc' : '4px solid transparent',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '-1rem',
+                  paddingLeft: 'calc(0.75rem + 4px)',
+                }}
+              >
+                <span style={{ 
+                  marginRight: '12px', 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: activeStep >= 4 ? '#0066cc' : '#d2d2d2',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  4
+                </span>
+                <span style={{ fontSize: '0.875rem', fontWeight: activeStep === 4 ? '600' : '400' }}>
+                  Review
+                </span>
+              </div>
+            </div>
+            
+            {/* Right Content Area with Footer */}
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minHeight: 0, 
+              overflow: 'hidden',
+              margin: 0,
+              padding: 0
+            }}>
+              {/* Content Area - scrollable */}
+              <div style={{ 
+                flex: '1 1 0',
+                padding: '1.5rem', 
+                backgroundColor: '#ffffff',
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}>
+                {getCurrentStep()}
+              </div>
+              
+              {/* Footer with Buttons */}
+              <div style={{ 
+                borderTop: '1px solid #d2d2d2', 
+                padding: '1rem 1.5rem', 
+                backgroundColor: '#ffffff',
+                flexShrink: 0
+              }}>
               <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
                 Back
               </Button>
@@ -868,11 +948,14 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
                   Next
                 </Button>
               )}
+              {' '}
               <Button variant="link" onClick={handleClose}>
                 Cancel
               </Button>
+              </div>
             </div>
-        </>
+          </div>
+        </div>
       )}
     </Modal>
   );
