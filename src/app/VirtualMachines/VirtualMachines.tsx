@@ -106,6 +106,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [selectedTreeNode, setSelectedTreeNode] = React.useState<string | null>(null);
   const searchInputRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const migrateMenuRef = React.useRef<HTMLLIElement>(null);
   
   // Dropdown states
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -980,11 +981,11 @@ const VirtualMachines: React.FunctionComponent = () => {
                       <Divider key="divider-1" />
                       <DropdownItem 
                         key="migrate"
-                        description={isMigrateMenuOpen ? '' : 'Migrate VirtualMachines'}
-                        onClick={(e) => {
-                          e?.stopPropagation();
-                          setIsMigrateMenuOpen(!isMigrateMenuOpen);
-                        }}
+                        ref={migrateMenuRef}
+                        description="Migrate VirtualMachines"
+                        onMouseEnter={() => setIsMigrateMenuOpen(true)}
+                        onMouseLeave={() => setIsMigrateMenuOpen(false)}
+                        style={{ position: 'relative' }}
                       >
                         <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ width: '100%' }}>
                           <FlexItem>Migrate</FlexItem>
@@ -992,59 +993,51 @@ const VirtualMachines: React.FunctionComponent = () => {
                             <AngleRightIcon />
                           </FlexItem>
                         </Flex>
+                        {isMigrateMenuOpen && (
+                          <div 
+                            className="migrate-flyout-menu"
+                            onMouseEnter={() => setIsMigrateMenuOpen(true)}
+                            onMouseLeave={() => setIsMigrateMenuOpen(false)}
+                          >
+                            <Menu>
+                              <MenuContent>
+                                <MenuList>
+                                  <MenuItem
+                                    onClick={() => {
+                                      console.log('Migrate across clusters');
+                                      setIsToolbarActionsOpen(false);
+                                      setIsMigrateMenuOpen(false);
+                                    }}
+                                    description="Migrate VirtualMachines across your clusters"
+                                  >
+                                    Migrate across clusters
+                                  </MenuItem>
+                                  <MenuItem
+                                    onClick={() => {
+                                      console.log('Migrate compute');
+                                      setIsToolbarActionsOpen(false);
+                                      setIsMigrateMenuOpen(false);
+                                    }}
+                                    description="Migrate VirtualMachines to a different node"
+                                  >
+                                    Compute
+                                  </MenuItem>
+                                  <MenuItem
+                                    onClick={() => {
+                                      console.log('Migrate storage');
+                                      setIsToolbarActionsOpen(false);
+                                      setIsMigrateMenuOpen(false);
+                                    }}
+                                    description="Migrate Storage to a different StorageClass"
+                                  >
+                                    Storage
+                                  </MenuItem>
+                                </MenuList>
+                              </MenuContent>
+                            </Menu>
+                          </div>
+                        )}
                       </DropdownItem>
-                      {isMigrateMenuOpen && (
-                        <>
-                          <DropdownItem 
-                            key="migrate-across-clusters"
-                            onClick={() => {
-                              console.log('Migrate across clusters');
-                              setIsToolbarActionsOpen(false);
-                              setIsMigrateMenuOpen(false);
-                            }}
-                            style={{ paddingLeft: '32px' }}
-                          >
-                            <div>
-                              <div>Migrate across clusters</div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                                Migrate VirtualMachines across your clusters
-                              </div>
-                            </div>
-                          </DropdownItem>
-                          <DropdownItem 
-                            key="migrate-compute"
-                            onClick={() => {
-                              console.log('Migrate compute');
-                              setIsToolbarActionsOpen(false);
-                              setIsMigrateMenuOpen(false);
-                            }}
-                            style={{ paddingLeft: '32px' }}
-                          >
-                            <div>
-                              <div>Compute</div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                                Migrate VirtualMachines to a different node
-                              </div>
-                            </div>
-                          </DropdownItem>
-                          <DropdownItem 
-                            key="migrate-storage"
-                            onClick={() => {
-                              console.log('Migrate storage');
-                              setIsToolbarActionsOpen(false);
-                              setIsMigrateMenuOpen(false);
-                            }}
-                            style={{ paddingLeft: '32px' }}
-                          >
-                            <div>
-                              <div>Storage</div>
-                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                                Migrate Storage to a different StorageClass
-                              </div>
-                            </div>
-                          </DropdownItem>
-                        </>
-                      )}
                       <Divider key="divider-2" />
                       <DropdownItem key="edit" onClick={() => console.log('Edit VMs')}>
                         Edit
