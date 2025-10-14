@@ -51,6 +51,7 @@ import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, Sync
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
+import { MigrateVMsWizard } from './MigrateVMsWizard';
 
 // Mock VM search suggestions
 const vmSearchSuggestions = [
@@ -132,6 +133,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   
   // Manage columns modal state
   const [isManageColumnsOpen, setIsManageColumnsOpen] = React.useState(false);
+  const [isMigrateWizardOpen, setIsMigrateWizardOpen] = React.useState(false);
   const [selectedColumns, setSelectedColumns] = React.useState({
     name: true,
     namespace: true,
@@ -1053,6 +1055,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                             <MenuItem
                               onClick={() => {
                                 console.log('Migrate across clusters');
+                                setIsMigrateWizardOpen(true);
                                 setIsToolbarActionsOpen(false);
                                 setIsMigrateMenuOpen(false);
                               }}
@@ -1244,6 +1247,12 @@ const VirtualMachines: React.FunctionComponent = () => {
         </div>
       </div>
     </div>
+
+    <MigrateVMsWizard
+      isOpen={isMigrateWizardOpen}
+      onClose={() => setIsMigrateWizardOpen(false)}
+      selectedVMs={selectedVMs}
+    />
     </>
   );
 };
