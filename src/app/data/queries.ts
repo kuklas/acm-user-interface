@@ -126,6 +126,9 @@ export const getGroupsByType = (type: string) =>
 export const getGroupsForUser = (userId: string) =>
   groups.filter(g => g.userIds.includes(userId));
 
+export const getUsersByIdentityProvider = (identityProviderId: string) =>
+  users.filter(u => u.identityProviderId === identityProviderId);
+
 // ============================================================================
 // SERVICE ACCOUNT QUERIES
 // ============================================================================

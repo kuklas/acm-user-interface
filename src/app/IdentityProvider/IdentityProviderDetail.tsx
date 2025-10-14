@@ -36,6 +36,7 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { getAllIdentityProviders, getUsersByIdentityProvider } from '@app/data';
 
 const IdentityProviderDetail: React.FunctionComponent = () => {
   const { providerName } = useParams<{ providerName: string }>();
@@ -48,22 +49,33 @@ const IdentityProviderDetail: React.FunctionComponent = () => {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
 
-  // Mock data for connected users
-  const mockConnectedUsers = [
-    { id: 1, name: 'John Smith', username: 'jsmith', email: 'jsmith@example.com', lastLogin: '2024-01-15 10:30' },
-    { id: 2, name: 'Sarah Johnson', username: 'sjohnson', email: 'sjohnson@example.com', lastLogin: '2024-01-15 09:15' },
-    { id: 3, name: 'Michael Chen', username: 'mchen', email: 'mchen@example.com', lastLogin: '2024-01-14 16:45' },
-    { id: 4, name: 'Emily Davis', username: 'edavis', email: 'edavis@example.com', lastLogin: '2024-01-14 14:20' },
-    { id: 5, name: 'David Wilson', username: 'dwilson', email: 'dwilson@example.com', lastLogin: '2024-01-13 11:00' },
-    { id: 6, name: 'Anna Martinez', username: 'amartinez', email: 'amartinez@example.com', lastLogin: '2024-01-13 08:30' },
-    { id: 7, name: 'Robert Taylor', username: 'rtaylor', email: 'rtaylor@example.com', lastLogin: '2024-01-12 15:10' },
-    { id: 8, name: 'Lisa Anderson', username: 'landerson', email: 'landerson@example.com', lastLogin: '2024-01-12 13:45' },
-  ];
+  // Get identity provider from centralized database
+  const allProviders = getAllIdentityProviders();
+  const currentProvider = allProviders.find(p => p.name === providerName);
+  
+  // Get users connected through this identity provider
+  const connectedUsersFromDB = currentProvider ? getUsersByIdentityProvider(currentProvider.id) : [];
+  
+  // Transform users from database to component format
+  const mockConnectedUsers = connectedUsersFromDB.map((user, index) => ({
+    id: index + 1,
+    name: `${user.firstName} ${user.lastName}`,
+    username: user.username,
+    email: user.email,
+    lastLogin: new Date(user.lastLogin).toLocaleString('en-US', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }),
+  }));
 
   // Mock data for the identity provider
   const providerData = {
     name: providerName || 'LDAP',
-    type: 'Active directory',
+    type: currentProvider?.type || 'LDAP',
+    description: currentProvider?.description || '',
     url: 'ldap://ldap.example.com:389',
     bindDN: 'cn=admin,dc=example,dc=com',
     baseDN: 'dc=example,dc=com',
@@ -77,7 +89,7 @@ metadata:
 spec:
   identityProviders:
   - name: ${providerName || 'LDAP'}
-    type: LDAP
+    type: ${currentProvider?.type || 'LDAP'}
     mappingMethod: claim
     ldap:
       url: ldap://ldap.example.com:389
@@ -144,7 +156,7 @@ spec:
                 {providerData.name}
               </Title>
               <Content component="p" className="pf-v6-u-color-200">
-                {providerData.type}
+                {providerData.type} - {providerData.description}
               </Content>
             </div>
           </SplitItem>

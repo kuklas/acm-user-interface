@@ -8,7 +8,9 @@ export interface User {
   email: string;
   status: 'Active' | 'Inactive';
   groupIds: string[];
+  identityProviderId: string; // Which identity provider the user authenticates through
   created: string; // ISO date string
+  lastLogin: string; // ISO date string
 }
 
 export interface Group {

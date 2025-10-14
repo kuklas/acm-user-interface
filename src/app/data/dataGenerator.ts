@@ -42,12 +42,17 @@ const statuses = ['Running', 'Running', 'Running', 'Running', 'Stopped', 'Error'
 export function generateDevTeamAlphaUsers(startId: number, count: number): User[] {
   const users: User[] = [];
   const baseDate = new Date('2023-01-15T10:00:00Z');
+  const now = new Date();
   
   for (let i = 0; i < count; i++) {
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
     const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
     const created = new Date(baseDate.getTime() + i * 5 * 60 * 1000).toISOString(); // 5 minutes apart
+    
+    // Random last login within the last 30 days
+    const daysAgo = Math.floor(Math.random() * 30);
+    const lastLogin = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
     
     users.push({
       id: `user-${String(startId + i).padStart(3, '0')}`,
@@ -57,7 +62,9 @@ export function generateDevTeamAlphaUsers(startId: number, count: number): User[
       email: `${username}@petemobile.com`,
       status: 'Active',
       groupIds: ['group-dev-team-alpha'],
+      identityProviderId: 'idp-001', // PeteMobile LDAP
       created,
+      lastLogin,
     });
   }
   
@@ -73,12 +80,23 @@ export function generateGroupUsers(
 ): User[] {
   const users: User[] = [];
   const baseDate = new Date('2023-01-20T10:00:00Z');
+  const now = new Date();
+  
+  // Assign identity providers based on group type
+  const identityProviders = ['idp-001', 'idp-002', 'idp-003']; // LDAP, SAML, OpenID Connect
   
   for (let i = 0; i < count; i++) {
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
     const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
     const created = new Date(baseDate.getTime() + i * 5 * 60 * 1000).toISOString();
+    
+    // Random last login within the last 60 days
+    const daysAgo = Math.floor(Math.random() * 60);
+    const lastLogin = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Distribute users across identity providers
+    const idpIndex = i % identityProviders.length;
     
     users.push({
       id: `user-${String(startId + i).padStart(3, '0')}`,
@@ -88,7 +106,9 @@ export function generateGroupUsers(
       email: `${username}@petemobile.com`,
       status: Math.random() > 0.95 ? 'Inactive' : 'Active', // 5% inactive
       groupIds: [groupId],
+      identityProviderId: identityProviders[idpIndex],
       created,
+      lastLogin,
     });
   }
   
