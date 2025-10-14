@@ -46,7 +46,7 @@ import {
   Form,
   FormGroup,
 } from '@patternfly/react-core';
-import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
@@ -134,6 +134,9 @@ const VirtualMachines: React.FunctionComponent = () => {
   // Manage columns modal state
   const [isManageColumnsOpen, setIsManageColumnsOpen] = React.useState(false);
   const [isMigrateWizardOpen, setIsMigrateWizardOpen] = React.useState(false);
+  const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
+  const [openRowMigrateMenuId, setOpenRowMigrateMenuId] = React.useState<number | null>(null);
+  const [rowMigrateMenuPosition, setRowMigrateMenuPosition] = React.useState<{ top: number; left: number } | null>(null);
   const [selectedColumns, setSelectedColumns] = React.useState({
     name: true,
     namespace: true,
@@ -311,25 +314,18 @@ const VirtualMachines: React.FunctionComponent = () => {
     setPerPage(newPerPage);
   };
   
-  const vmActions = (vm: any): IAction[] => [
-    {
-      title: 'Start',
-      onClick: () => console.log('Start', vm.name),
-    },
-    {
-      title: 'Stop',
-      onClick: () => console.log('Stop', vm.name),
-    },
-    {
-      title: 'Restart',
-      onClick: () => console.log('Restart', vm.name),
-    },
-    { isSeparator: true },
-    {
-      title: 'Delete',
-      onClick: () => console.log('Delete', vm.name),
-    },
-  ];
+  // Per-row actions dropdown handlers
+  const toggleRowMenu = (vmId: number) => {
+    setOpenRowMenuId(openRowMenuId === vmId ? null : vmId);
+    setOpenRowMigrateMenuId(null);
+  };
+
+  const handleRowMigrateVM = (vmId: number) => {
+    setSelectedVMs([vmId]);
+    setIsMigrateWizardOpen(true);
+    setOpenRowMenuId(null);
+    setOpenRowMigrateMenuId(null);
+  };
   
   // Tree view data for sidebar
   // Build tree data from centralized database
@@ -1216,8 +1212,129 @@ const VirtualMachines: React.FunctionComponent = () => {
                         )}
                       </Flex>
                     </Td>
-                    <Td isActionCell>
-                      <ActionsColumn items={vmActions(vm)} />
+                    <Td isActionCell style={{ textAlign: 'right' }}>
+                      <Dropdown
+                        isOpen={openRowMenuId === vm.id}
+                        onSelect={() => {
+                          if (!openRowMigrateMenuId) {
+                            setOpenRowMenuId(null);
+                          }
+                        }}
+                        onOpenChange={(isOpen: boolean) => {
+                          if (!isOpen) {
+                            setOpenRowMenuId(null);
+                            setOpenRowMigrateMenuId(null);
+                          }
+                        }}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle
+                            ref={toggleRef}
+                            aria-label="Row actions menu"
+                            variant="plain"
+                            onClick={() => toggleRowMenu(vm.id)}
+                            isExpanded={openRowMenuId === vm.id}
+                          >
+                            <EllipsisVIcon />
+                          </MenuToggle>
+                        )}
+                        shouldFocusToggleOnSelect
+                      >
+                        <DropdownList>
+                          <DropdownItem key="start" onClick={() => console.log('Start', vm.name)}>
+                            Start
+                          </DropdownItem>
+                          <DropdownItem key="restart" onClick={() => console.log('Restart', vm.name)}>
+                            Restart
+                          </DropdownItem>
+                          <DropdownItem key="pause" onClick={() => console.log('Pause', vm.name)}>
+                            Pause
+                          </DropdownItem>
+                          <Divider key="divider-1" />
+                          <DropdownItem 
+                            key="migrate"
+                            description="Migrate VirtualMachine"
+                            onMouseEnter={(e) => {
+                              const target = e.currentTarget as HTMLElement;
+                              const rect = target.getBoundingClientRect();
+                              setRowMigrateMenuPosition({
+                                top: rect.top,
+                                left: rect.right
+                              });
+                              setOpenRowMigrateMenuId(vm.id);
+                            }}
+                            onMouseLeave={() => {
+                              setTimeout(() => {
+                                const flyout = document.querySelector('.migrate-flyout-menu:hover');
+                                if (!flyout) {
+                                  setOpenRowMigrateMenuId(null);
+                                  setRowMigrateMenuPosition(null);
+                                }
+                              }, 100);
+                            }}
+                            style={{ position: 'relative', overflow: 'visible' }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                              <span>Migrate</span>
+                              <AngleRightIcon />
+                            </div>
+                          </DropdownItem>
+                          <Divider key="divider-2" />
+                          <DropdownItem key="edit" onClick={() => console.log('Edit', vm.name)}>
+                            Edit
+                          </DropdownItem>
+                          <DropdownItem key="view-related" onClick={() => console.log('View related resources', vm.name)}>
+                            View related resources
+                          </DropdownItem>
+                          <DropdownItem key="delete" onClick={() => console.log('Delete', vm.name)}>
+                            Delete
+                          </DropdownItem>
+                        </DropdownList>
+                      </Dropdown>
+                      {openRowMigrateMenuId === vm.id && rowMigrateMenuPosition && (
+                        <div 
+                          className="migrate-flyout-menu"
+                          style={{
+                            position: 'fixed',
+                            top: `${rowMigrateMenuPosition.top}px`,
+                            left: `${rowMigrateMenuPosition.left}px`,
+                            zIndex: 10001,
+                            backgroundColor: 'white',
+                            boxShadow: 'var(--pf-t--global--box-shadow--lg)',
+                            borderRadius: '4px',
+                            minWidth: '300px',
+                          }}
+                          onMouseEnter={() => {
+                            setOpenRowMigrateMenuId(vm.id);
+                          }}
+                          onMouseLeave={() => {
+                            setOpenRowMigrateMenuId(null);
+                            setRowMigrateMenuPosition(null);
+                          }}
+                        >
+                          <Menu>
+                            <MenuContent>
+                              <MenuList>
+                                <MenuItem
+                                  onClick={() => handleRowMigrateVM(vm.id)}
+                                  description="Migrate VirtualMachine across your clusters"
+                                >
+                                  Migrate across clusters
+                                </MenuItem>
+                                <MenuItem
+                                  onClick={() => {
+                                    console.log('Migrate compute', vm.name);
+                                    setOpenRowMenuId(null);
+                                    setOpenRowMigrateMenuId(null);
+                                  }}
+                                  description="Migrate VirtualMachine to a different node"
+                                >
+                                  Migrate compute
+                                </MenuItem>
+                              </MenuList>
+                            </MenuContent>
+                          </Menu>
+                        </div>
+                      )}
                     </Td>
                   </Tr>
                 ))}
