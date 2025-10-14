@@ -157,19 +157,6 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
       title="Migrate virtual machines"
       isOpen={isOpen}
       onClose={handleClose}
-      action={
-        <>
-          <Button key="back" variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
-            Back
-          </Button>
-          <Button key="next" variant="primary" onClick={onNext}>
-            {activeStep === 4 ? 'Finish' : 'Next'}
-          </Button>
-          <Button key="cancel" variant="link" onClick={handleClose}>
-            Cancel
-          </Button>
-        </>
-      }
     >
       <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
         Choose the target location for your VMs, then adjust your migration plan if necessary.
@@ -296,6 +283,24 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
         <div style={{ flex: 1 }}>
           {getCurrentStep()}
         </div>
+      </div>
+      <div style={{ 
+        display: 'flex', 
+        gap: '8px', 
+        justifyContent: 'flex-start',
+        borderTop: '1px solid var(--pf-t--global--border--color--default)',
+        paddingTop: '16px',
+        marginTop: '16px'
+      }}>
+        <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
+          Back
+        </Button>
+        <Button variant="primary" onClick={onNext}>
+          {activeStep === 4 ? 'Finish' : 'Next'}
+        </Button>
+        <Button variant="link" onClick={handleClose}>
+          Cancel
+        </Button>
       </div>
     </Modal>
   );
