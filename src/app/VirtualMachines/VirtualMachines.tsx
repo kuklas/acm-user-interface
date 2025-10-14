@@ -113,6 +113,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [isOSFilterOpen, setIsOSFilterOpen] = React.useState(false);
   const [isMenuToggleOpen, setIsMenuToggleOpen] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+  const [isMigrateMenuOpen, setIsMigrateMenuOpen] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isRefreshDropdownOpen, setIsRefreshDropdownOpen] = React.useState(false);
   
@@ -938,8 +939,17 @@ const VirtualMachines: React.FunctionComponent = () => {
                 <ToolbarItem>
                   <Dropdown
                     isOpen={isActionsOpen}
-                    onSelect={() => setIsActionsOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
+                    onSelect={() => {
+                      if (!isMigrateMenuOpen) {
+                        setIsActionsOpen(false);
+                      }
+                    }}
+                    onOpenChange={(isOpen: boolean) => {
+                      setIsActionsOpen(isOpen);
+                      if (!isOpen) {
+                        setIsMigrateMenuOpen(false);
+                      }
+                    }}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
@@ -953,9 +963,93 @@ const VirtualMachines: React.FunctionComponent = () => {
                     )}
                   >
                     <DropdownList>
-                      <DropdownItem key="start">Start</DropdownItem>
-                      <DropdownItem key="stop">Stop</DropdownItem>
-                      <DropdownItem key="delete">Delete</DropdownItem>
+                      <DropdownItem key="start" onClick={() => console.log('Start VMs')}>
+                        Start
+                      </DropdownItem>
+                      <DropdownItem key="restart" onClick={() => console.log('Restart VMs')}>
+                        Restart
+                      </DropdownItem>
+                      <DropdownItem key="pause" onClick={() => console.log('Pause VMs')}>
+                        Pause
+                      </DropdownItem>
+                      <Divider key="divider-1" />
+                      <DropdownItem 
+                        key="migrate"
+                        description={isMigrateMenuOpen ? '' : 'Migrate VirtualMachines'}
+                        onClick={(e) => {
+                          e?.stopPropagation();
+                          setIsMigrateMenuOpen(!isMigrateMenuOpen);
+                        }}
+                      >
+                        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ width: '100%' }}>
+                          <FlexItem>Migrate</FlexItem>
+                          <FlexItem>
+                            <AngleRightIcon />
+                          </FlexItem>
+                        </Flex>
+                      </DropdownItem>
+                      {isMigrateMenuOpen && (
+                        <>
+                          <DropdownItem 
+                            key="migrate-across-clusters"
+                            onClick={() => {
+                              console.log('Migrate across clusters');
+                              setIsActionsOpen(false);
+                              setIsMigrateMenuOpen(false);
+                            }}
+                            style={{ paddingLeft: '32px' }}
+                          >
+                            <div>
+                              <div>Migrate across clusters</div>
+                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                                Migrate VirtualMachines across your clusters
+                              </div>
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem 
+                            key="migrate-compute"
+                            onClick={() => {
+                              console.log('Migrate compute');
+                              setIsActionsOpen(false);
+                              setIsMigrateMenuOpen(false);
+                            }}
+                            style={{ paddingLeft: '32px' }}
+                          >
+                            <div>
+                              <div>Compute</div>
+                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                                Migrate VirtualMachines to a different node
+                              </div>
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem 
+                            key="migrate-storage"
+                            onClick={() => {
+                              console.log('Migrate storage');
+                              setIsActionsOpen(false);
+                              setIsMigrateMenuOpen(false);
+                            }}
+                            style={{ paddingLeft: '32px' }}
+                          >
+                            <div>
+                              <div>Storage</div>
+                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                                Migrate Storage to a different StorageClass
+                              </div>
+                            </div>
+                          </DropdownItem>
+                        </>
+                      )}
+                      <Divider key="divider-2" />
+                      <DropdownItem key="edit" onClick={() => console.log('Edit VMs')}>
+                        Edit
+                      </DropdownItem>
+                      <DropdownItem key="view-related" onClick={() => console.log('View related resources')}>
+                        View related resources
+                      </DropdownItem>
+                      <DropdownItem key="delete" onClick={() => console.log('Delete VMs')}>
+                        Delete
+                      </DropdownItem>
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
