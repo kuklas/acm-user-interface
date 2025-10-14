@@ -227,17 +227,12 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
               {getCurrentStep()}
             </div>
           </div>
-          <WizardFooter>
-            <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
-              Back
-            </Button>
-            <Button variant="primary" onClick={onNext}>
-              {activeStep === 4 ? 'Finish' : 'Next'}
-            </Button>
-            <Button variant="link" onClick={handleClose}>
-              Cancel
-            </Button>
-          </WizardFooter>
+          <WizardFooter
+            activeStep={activeStep}
+            onNext={onNext}
+            onBack={onBack}
+            onClose={handleClose}
+          />
         </div>
       </Wizard>
     </Modal>
