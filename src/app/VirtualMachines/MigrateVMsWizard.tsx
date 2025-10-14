@@ -3,8 +3,8 @@ import {
   Modal,
   ModalVariant,
   Wizard,
-  WizardStep,
   WizardHeader,
+  WizardFooter,
   Button,
   Form,
   FormGroup,
@@ -108,35 +108,57 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
     </div>
   );
 
-  const steps: WizardStep[] = [
-    {
-      name: 'General information',
-      id: 'general-info',
-      component: generalInformationStep,
-    },
-    {
-      name: 'Target placement',
-      id: 'target-placement',
-      component: targetPlacementStep,
-    },
-    {
-      name: 'Migration readiness',
-      id: 'migration-readiness',
-      component: migrationReadinessStep,
-    },
-    {
-      name: 'Review',
-      id: 'review',
-      component: reviewStep,
-    },
-  ];
+  const [activeStep, setActiveStep] = React.useState(1);
+
+  const onNext = () => {
+    if (activeStep < 4) {
+      setActiveStep(activeStep + 1);
+    } else {
+      handleSave();
+    }
+  };
+
+  const onBack = () => {
+    if (activeStep > 1) {
+      setActiveStep(activeStep - 1);
+    }
+  };
+
+  const getCurrentStep = () => {
+    switch (activeStep) {
+      case 1:
+        return generalInformationStep;
+      case 2:
+        return targetPlacementStep;
+      case 3:
+        return migrationReadinessStep;
+      case 4:
+        return reviewStep;
+      default:
+        return generalInformationStep;
+    }
+  };
+
+  const getStepName = () => {
+    switch (activeStep) {
+      case 1:
+        return 'General information';
+      case 2:
+        return 'Target placement';
+      case 3:
+        return 'Migration readiness';
+      case 4:
+        return 'Review';
+      default:
+        return '';
+    }
+  };
 
   return (
     <Modal
       variant={ModalVariant.large}
       isOpen={isOpen}
       onClose={handleClose}
-      hasNoBodyWrapper
       aria-label="Migrate virtual machines wizard"
     >
       <Wizard
@@ -147,10 +169,77 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
             onClose={handleClose}
           />
         }
-        steps={steps}
         onClose={handleClose}
-        onSave={handleSave}
-      />
+      >
+        <div>
+          <div style={{ display: 'flex', minHeight: '500px' }}>
+            <div style={{ width: '250px', borderRight: '1px solid var(--pf-t--global--border--color--default)', padding: '16px' }}>
+              <div
+                onClick={() => setActiveStep(1)}
+                style={{
+                  padding: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 1 ? 'var(--pf-t--global--background--color--primary--clicked)' : 'transparent',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                }}
+              >
+                <span style={{ marginRight: '8px', fontWeight: 'bold' }}>1</span> General information
+              </div>
+              <div
+                onClick={() => setActiveStep(2)}
+                style={{
+                  padding: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 2 ? 'var(--pf-t--global--background--color--primary--clicked)' : 'transparent',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                }}
+              >
+                <span style={{ marginRight: '8px', fontWeight: 'bold' }}>2</span> Target placement
+              </div>
+              <div
+                onClick={() => setActiveStep(3)}
+                style={{
+                  padding: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 3 ? 'var(--pf-t--global--background--color--primary--clicked)' : 'transparent',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                }}
+              >
+                <span style={{ marginRight: '8px', fontWeight: 'bold' }}>3</span> Migration readiness
+              </div>
+              <div
+                onClick={() => setActiveStep(4)}
+                style={{
+                  padding: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: activeStep === 4 ? 'var(--pf-t--global--background--color--primary--clicked)' : 'transparent',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                }}
+              >
+                <span style={{ marginRight: '8px', fontWeight: 'bold' }}>4</span> Review
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              {getCurrentStep()}
+            </div>
+          </div>
+          <WizardFooter>
+            <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
+              Back
+            </Button>
+            <Button variant="primary" onClick={onNext}>
+              {activeStep === 4 ? 'Finish' : 'Next'}
+            </Button>
+            <Button variant="link" onClick={handleClose}>
+              Cancel
+            </Button>
+          </WizardFooter>
+        </div>
+      </Wizard>
     </Modal>
   );
 };
