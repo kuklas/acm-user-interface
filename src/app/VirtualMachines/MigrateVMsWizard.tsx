@@ -500,9 +500,78 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
 
   const reviewStep = (
     <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>Review</h2>
-      <p>Review your migration plan before proceeding.</p>
-      {/* Placeholder for review content */}
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '24px' }}>Review</h2>
+      
+      {/* General information section */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>General information</h3>
+          <Button variant="link" onClick={() => setActiveStep(1)} style={{ padding: 0 }}>
+            Edit step
+          </Button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px', fontSize: '0.875rem' }}>
+          <div style={{ fontWeight: 'bold' }}>Name</div>
+          <div>test-west-eu</div>
+          <div style={{ fontWeight: 'bold' }}>Migration reason</div>
+          <div>Evacuating</div>
+        </div>
+      </div>
+
+      {/* Placement section */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Placement</h3>
+          <Button variant="link" onClick={() => setActiveStep(2)} style={{ padding: 0 }}>
+            Edit step
+          </Button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 40px 200px 1fr', gap: '12px', fontSize: '0.875rem', alignItems: 'center' }}>
+          <div style={{ fontWeight: 'bold' }}>Source cluster</div>
+          <div>test-west-eu</div>
+          <div style={{ textAlign: 'center', fontSize: '1.2rem', color: 'var(--pf-t--global--text--color--subtle)' }}>→</div>
+          <div style={{ fontWeight: 'bold' }}>Target cluster</div>
+          <div>test-south-eu</div>
+          
+          <div style={{ fontWeight: 'bold' }}>Source project</div>
+          <div>test</div>
+          <div style={{ textAlign: 'center', fontSize: '1.2rem', color: 'var(--pf-t--global--text--color--subtle)' }}>→</div>
+          <div style={{ fontWeight: 'bold' }}>Target project</div>
+          <div>test</div>
+        </div>
+      </div>
+
+      {/* Migration readiness section */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Migration readiness</h3>
+          <Button variant="link" onClick={() => setActiveStep(3)} style={{ padding: 0 }}>
+            Edit step
+          </Button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px', fontSize: '0.875rem' }}>
+          <div style={{ fontWeight: 'bold' }}>Status</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Ready to migrate
+          </div>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div style={{ 
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '16px',
+        border: '1px solid var(--pf-t--global--border--color--default)',
+        borderRadius: '8px',
+        backgroundColor: 'var(--pf-t--global--background--color--primary--default)',
+        marginBottom: '24px'
+      }}>
+        <span style={{ fontSize: '1.25rem', color: 'var(--pf-t--global--icon--color--status--info)' }}>ℹ</span>
+        <span>During migration, VMs will be processed and moved in groups of 5.</span>
+      </div>
     </div>
   );
 
@@ -685,24 +754,35 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
           {getCurrentStep()}
         </div>
       </div>
-      <div style={{ 
-        display: 'flex', 
-        gap: '8px', 
-        justifyContent: 'flex-start',
-        borderTop: '1px solid var(--pf-t--global--border--color--default)',
-        paddingTop: '16px',
-        marginTop: '16px'
-      }}>
-        <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
-          Back
-        </Button>
-        <Button variant="primary" onClick={onNext}>
-          {activeStep === 4 ? 'Finish' : 'Next'}
-        </Button>
-        <Button variant="link" onClick={handleClose}>
-          Cancel
-        </Button>
-      </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              justifyContent: 'flex-start',
+              borderTop: '1px solid var(--pf-t--global--border--color--default)',
+              paddingTop: '16px',
+              marginTop: '16px'
+            }}>
+              <Button variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
+                Back
+              </Button>
+              {activeStep === 4 ? (
+                <>
+                  <Button variant="primary" onClick={handleSave}>
+                    Migrate now
+                  </Button>
+                  <Button variant="secondary" onClick={handleSave}>
+                    Save and migrate later
+                  </Button>
+                </>
+              ) : (
+                <Button variant="primary" onClick={onNext}>
+                  Next
+                </Button>
+              )}
+              <Button variant="link" onClick={handleClose}>
+                Cancel
+              </Button>
+            </div>
     </Modal>
   );
 };
