@@ -106,7 +106,6 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [selectedTreeNode, setSelectedTreeNode] = React.useState<string | null>(null);
   const searchInputRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
-  const migrateMenuRef = React.useRef<HTMLLIElement>(null);
   
   // Dropdown states
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -981,7 +980,6 @@ const VirtualMachines: React.FunctionComponent = () => {
                       <Divider key="divider-1" />
                       <DropdownItem 
                         key="migrate"
-                        ref={migrateMenuRef}
                         description="Migrate VirtualMachines"
                         onMouseEnter={() => setIsMigrateMenuOpen(true)}
                         onMouseLeave={() => setIsMigrateMenuOpen(false)}
