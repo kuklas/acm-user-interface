@@ -406,7 +406,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     return (
       <div className="perspective-selector" style={{ position: 'relative' }}>
         <button
-          onClick={() => setPerspectiveOpen(!perspectiveOpen)}
+            onClick={() => setPerspectiveOpen(!perspectiveOpen)}
           style={{
             width: '100%',
             padding: 'var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md)',
@@ -450,9 +450,9 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               overflow: 'hidden',
             }}
           >
-            {perspectives.map((perspective, index) => (
+          {perspectives.map((perspective, index) => (
               <div
-                key={index}
+              key={index}
                 onClick={() => {
                   if (!perspective.disabled) {
                     setActivePerspective(perspective.name);
@@ -478,14 +478,14 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'var(--pf-t--global--background--color--primary--default)';
                 }}
-              >
-                {perspective.name}
+            >
+              {perspective.name}
               </div>
-            ))}
+          ))}
           </div>
         )}
-      </div>
-    );
+    </div>
+  );
   };
 
   // Select routes based on active perspective
@@ -545,14 +545,14 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
 
   return (
     <>
-      <Page
-        mainContainerId={pageId}
-        masthead={masthead}
-        sidebar={sidebarOpen && Sidebar}
-        skipToContent={PageSkipToContent}
-      >
-        {children}
-      </Page>
+    <Page
+      mainContainerId={pageId}
+      masthead={masthead}
+      sidebar={sidebarOpen && Sidebar}
+      skipToContent={PageSkipToContent}
+    >
+      {children}
+    </Page>
 
       {/* Floating Action Button */}
       <Button

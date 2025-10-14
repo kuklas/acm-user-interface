@@ -29,7 +29,7 @@ import {
   CardBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon } from '@patternfly/react-icons';
+import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon, RedoIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 
 // Mock cluster data using petemobile infrastructure
@@ -251,13 +251,10 @@ const Clusters: React.FunctionComponent = () => {
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   const [searchValue, setSearchValue] = React.useState('');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = React.useState(false);
-  const [isLabelsDropdownOpen, setIsLabelsDropdownOpen] = React.useState(false);
   const [isActionsDropdownOpen, setIsActionsDropdownOpen] = React.useState(false);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [isTerminologyExpanded, setIsTerminologyExpanded] = React.useState(false);
-  const [isRefreshDropdownOpen, setIsRefreshDropdownOpen] = React.useState(false);
-  const [refreshMode, setRefreshMode] = React.useState<'auto' | 'manual'>('auto');
 
   const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
     setActiveTabKey(tabIndex);
@@ -316,146 +313,247 @@ const Clusters: React.FunctionComponent = () => {
     }
   };
 
-  const ClusterListTab = () => (
-    <div className="table-content-card">
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <Checkbox
-              id="select-all-clusters"
-              aria-label="Select all clusters"
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Dropdown
-              isOpen={isFilterDropdownOpen}
-              onSelect={() => setIsFilterDropdownOpen(false)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  variant="plain"
-                  onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  isExpanded={isFilterDropdownOpen}
+  const ClusterListTab = () => {
+    const [filterDropdownOpen, setFilterDropdownOpen] = React.useState(false);
+    const [labelsDropdownOpen, setLabelsDropdownOpen] = React.useState(false);
+    const [actionsDropdownOpen, setActionsDropdownOpen] = React.useState(false);
+    const [refreshDropdownOpen, setRefreshDropdownOpen] = React.useState(false);
+    
+    // Filter states
+    const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+    const [selectedInfrastructures, setSelectedInfrastructures] = React.useState<string[]>([]);
+    const [selectedControlPlanes, setSelectedControlPlanes] = React.useState<string[]>([]);
+    const [selectedEnvironments, setSelectedEnvironments] = React.useState<string[]>([]);
+    const [selectedRegions, setSelectedRegions] = React.useState<string[]>([]);
+    
+    // Refresh state
+    const [refreshMode, setRefreshMode] = React.useState<'auto' | 'manual'>('auto');
+    const [lastUpdated, setLastUpdated] = React.useState(new Date());
+    
+    // Filter clusters based on active filters
+    const filteredClusters = React.useMemo(() => {
+      return mockClusters.filter(cluster => {
+        // Status filter
+        if (selectedStatuses.length > 0 && !selectedStatuses.includes(cluster.status)) {
+          return false;
+        }
+        // Infrastructure filter
+        if (selectedInfrastructures.length > 0 && !selectedInfrastructures.includes(cluster.infrastructure)) {
+          return false;
+        }
+        // Control plane filter
+        if (selectedControlPlanes.length > 0 && !selectedControlPlanes.includes(cluster.controlPlaneType)) {
+          return false;
+        }
+        // Search filter
+        if (searchValue && !cluster.name.toLowerCase().includes(searchValue.toLowerCase())) {
+          return false;
+        }
+        return true;
+      });
+    }, [selectedStatuses, selectedInfrastructures, selectedControlPlanes, searchValue]);
+    
+    const handleStatusToggle = (status: string) => {
+      setSelectedStatuses(prev => 
+        prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+      );
+    };
+    
+    const handleInfrastructureToggle = (infra: string) => {
+      setSelectedInfrastructures(prev => 
+        prev.includes(infra) ? prev.filter(i => i !== infra) : [...prev, infra]
+      );
+    };
+    
+    const handleControlPlaneToggle = (cp: string) => {
+      setSelectedControlPlanes(prev => 
+        prev.includes(cp) ? prev.filter(c => c !== cp) : [...prev, cp]
+      );
+    };
+    
+    const handleEnvironmentToggle = (env: string) => {
+      setSelectedEnvironments(prev => 
+        prev.includes(env) ? prev.filter(e => e !== env) : [...prev, env]
+      );
+    };
+    
+    const handleRegionToggle = (region: string) => {
+      setSelectedRegions(prev => 
+        prev.includes(region) ? prev.filter(r => r !== region) : [...prev, region]
+      );
+    };
+    
+    const clearAllFilters = () => {
+      setSelectedStatuses([]);
+      setSelectedInfrastructures([]);
+      setSelectedControlPlanes([]);
+      setSelectedEnvironments([]);
+      setSelectedRegions([]);
+    };
+    
+    const hasActiveFilters = selectedStatuses.length > 0 || 
+                            selectedInfrastructures.length > 0 || 
+                            selectedControlPlanes.length > 0 ||
+                            selectedEnvironments.length > 0 ||
+                            selectedRegions.length > 0;
+    
+    return (
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent style={{ gap: '8px' }}>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={filterDropdownOpen}
+                onSelect={() => setFilterDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setFilterDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+                    isExpanded={filterDropdownOpen}
+                    variant="default"
+                  >
+                    <FilterIcon />
+                    Filter
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="status">Status</DropdownItem>
+                  <DropdownItem key="infrastructure">Infrastructure</DropdownItem>
+                  <DropdownItem key="control-plane">Control plane type</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={labelsDropdownOpen}
+                onSelect={() => setLabelsDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setLabelsDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setLabelsDropdownOpen(!labelsDropdownOpen)}
+                    isExpanded={labelsDropdownOpen}
+                    variant="default"
+                  >
+                    <FilterIcon />
+                    Labels
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="environment">Environment</DropdownItem>
+                  <DropdownItem key="region">Region</DropdownItem>
+                  <DropdownItem key="version">Version</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary">Create cluster</Button>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="secondary">Import cluster</Button>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={actionsDropdownOpen}
+                onSelect={() => setActionsDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setActionsDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
+                    isExpanded={actionsDropdownOpen}
+                    variant="plain"
+                  >
+                    Actions
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="bulk-edit">Bulk edit</DropdownItem>
+                  <DropdownItem key="bulk-delete">Bulk delete</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Pagination
+                itemCount={filteredClusters.length}
+                perPage={perPage}
+                page={page}
+                onSetPage={onSetPage}
+                onPerPageSelect={onPerPageSelect}
+                variant={PaginationVariant.top}
+                isCompact
+              />
+            </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ whiteSpace: 'nowrap', color: 'var(--pf-t--global--text--color--regular)' }}>
+                  Last updated: {refreshMode === 'auto' ? 'Live' : '13 minutes ago'}
+                </span>
+                <Dropdown
+                  isOpen={refreshDropdownOpen}
+                  onSelect={() => setRefreshDropdownOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setRefreshDropdownOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle 
+                      ref={toggleRef} 
+                      onClick={() => setRefreshDropdownOpen(!refreshDropdownOpen)}
+                      isExpanded={refreshDropdownOpen}
+                      variant="default"
+                      aria-label="Refresh settings"
+                      icon={refreshMode === 'auto' ? <SyncAltIcon /> : <RedoIcon />}
+                    >
+                    </MenuToggle>
+                  )}
+                  popperProps={{ position: 'right' }}
                 >
-                  <FilterIcon />
-                  Filter
-                </MenuToggle>
-              )}
-            >
-              <DropdownList>
-                <DropdownItem key="status">Status</DropdownItem>
-                <DropdownItem key="infrastructure">Infrastructure</DropdownItem>
-                <DropdownItem key="control-plane">Control plane type</DropdownItem>
-              </DropdownList>
-            </Dropdown>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Dropdown
-              isOpen={isLabelsDropdownOpen}
-              onSelect={() => setIsLabelsDropdownOpen(false)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  variant="plain"
-                  onClick={() => setIsLabelsDropdownOpen(!isLabelsDropdownOpen)}
-                  isExpanded={isLabelsDropdownOpen}
-                >
-                  <FilterIcon />
-                  Labels
-                </MenuToggle>
-              )}
-            >
-              <DropdownList>
-                <DropdownItem key="environment">Environment</DropdownItem>
-                <DropdownItem key="region">Region</DropdownItem>
-                <DropdownItem key="version">Version</DropdownItem>
-              </DropdownList>
-            </Dropdown>
-          </ToolbarItem>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Search"
-              value={searchValue}
-              onChange={(_event, value) => setSearchValue(value)}
-              onClear={() => setSearchValue('')}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="primary">Create cluster</Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="secondary">Import cluster</Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Dropdown
-              isOpen={isActionsDropdownOpen}
-              onSelect={() => setIsActionsDropdownOpen(false)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  variant="plain"
-                  onClick={() => setIsActionsDropdownOpen(!isActionsDropdownOpen)}
-                  isExpanded={isActionsDropdownOpen}
-                >
-                  Actions
-                </MenuToggle>
-              )}
-            >
-              <DropdownList>
-                <DropdownItem key="bulk-edit">Bulk edit</DropdownItem>
-                <DropdownItem key="bulk-delete">Bulk delete</DropdownItem>
-              </DropdownList>
-            </Dropdown>
-          </ToolbarItem>
-          <ToolbarItem align={{ default: 'alignEnd' }}>
-            <Dropdown
-              isOpen={isRefreshDropdownOpen}
-              onSelect={() => setIsRefreshDropdownOpen(false)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  onClick={() => setIsRefreshDropdownOpen(!isRefreshDropdownOpen)}
-                  isExpanded={isRefreshDropdownOpen}
-                  icon={<SyncAltIcon />}
-                >
-                  {refreshMode === 'auto' ? 'Auto refresh' : 'Manual refresh'}
-                </MenuToggle>
-              )}
-            >
-              <DropdownList>
-                <DropdownItem
-                  key="manual"
-                  description="New data only adds when you click to refresh the page."
-                  onClick={() => setRefreshMode('manual')}
-                >
-                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                    <FlexItem>Manual refresh</FlexItem>
-                    {refreshMode === 'manual' && (
-                      <FlexItem>
-                        <CheckIcon color="var(--pf-t--global--icon--color--brand--default)" />
-                      </FlexItem>
-                    )}
-                  </Flex>
-                </DropdownItem>
-                <DropdownItem
-                  key="auto"
-                  description="Keeps your data updated automatically. This setting changes to manual refresh after 10 minutes of inactivity."
-                  onClick={() => setRefreshMode('auto')}
-                >
-                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                    <FlexItem>Auto refresh</FlexItem>
-                    {refreshMode === 'auto' && (
-                      <FlexItem>
-                        <CheckIcon color="var(--pf-t--global--icon--color--brand--default)" />
-                      </FlexItem>
-                    )}
-                  </Flex>
-                </DropdownItem>
-              </DropdownList>
-            </Dropdown>
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
+                  <DropdownList>
+                    <DropdownItem 
+                      key="manual"
+                      onClick={() => setRefreshMode('manual')}
+                      description="New data only adds when you click to refresh the page."
+                    >
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <FlexItem>
+                          <RedoIcon />
+                        </FlexItem>
+                        <FlexItem>Manual refresh</FlexItem>
+                      </Flex>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="auto"
+                      onClick={() => setRefreshMode('auto')}
+                      description="Keeps your data updated automatically. This setting changes to manual refresh after 10 minutes of inactivity."
+                    >
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <FlexItem>
+                          <SyncAltIcon />
+                        </FlexItem>
+                        <FlexItem>Auto refresh</FlexItem>
+                        {refreshMode === 'auto' && (
+                          <FlexItem>
+                            <CheckIcon color="var(--pf-t--global--color--brand--default)" />
+                          </FlexItem>
+                        )}
+                      </Flex>
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </div>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
 
       <Table aria-label="Clusters table">
         <Thead>
@@ -480,7 +578,7 @@ const Clusters: React.FunctionComponent = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {mockClusters.slice(0, 10).map((cluster) => (
+          {filteredClusters.slice((page - 1) * perPage, page * perPage).map((cluster) => (
             <Tr key={cluster.id}>
               <Td>
                 <Checkbox
@@ -553,7 +651,7 @@ const Clusters: React.FunctionComponent = () => {
         <ToolbarContent>
           <ToolbarItem align={{ default: 'alignEnd' }}>
             <Pagination
-              itemCount={mockClusters.length}
+              itemCount={filteredClusters.length}
               perPage={perPage}
               page={page}
               onSetPage={onSetPage}
@@ -565,7 +663,8 @@ const Clusters: React.FunctionComponent = () => {
         </ToolbarContent>
       </Toolbar>
     </div>
-  );
+    );
+  };
 
   const ClusterSetsTab = () => (
     <div>

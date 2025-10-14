@@ -368,8 +368,7 @@ body,
   border-radius: 8px !important;
   border: 1px solid #e0e0e0 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
+  overflow: visible !important;
   margin: 0 !important;
 }
 
@@ -378,6 +377,15 @@ body,
   padding: 24px !important;
   background-color: #ffffff !important;
   border-bottom: 1px solid #e0e0e0 !important;
+  overflow: visible !important;
+}
+
+.table-content-card .pf-v6-c-toolbar__content {
+  overflow: visible !important;
+}
+
+.table-content-card .pf-v6-c-toolbar__item {
+  overflow: visible !important;
 }
 
 /* Style table within the card - no margins, fits perfectly */
