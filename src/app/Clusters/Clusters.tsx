@@ -29,7 +29,7 @@ import {
   CardBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon } from '@patternfly/react-icons';
+import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 
 // Mock cluster data using petemobile infrastructure
@@ -256,6 +256,8 @@ const Clusters: React.FunctionComponent = () => {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [isTerminologyExpanded, setIsTerminologyExpanded] = React.useState(false);
+  const [isRefreshDropdownOpen, setIsRefreshDropdownOpen] = React.useState(false);
+  const [refreshMode, setRefreshMode] = React.useState<'auto' | 'manual'>('auto');
 
   const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
     setActiveTabKey(tabIndex);
@@ -405,12 +407,52 @@ const Clusters: React.FunctionComponent = () => {
               </DropdownList>
             </Dropdown>
           </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="plain" aria-label="Refresh">
-              <Icon>
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </Icon>
-            </Button>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Dropdown
+              isOpen={isRefreshDropdownOpen}
+              onSelect={() => setIsRefreshDropdownOpen(false)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsRefreshDropdownOpen(!isRefreshDropdownOpen)}
+                  isExpanded={isRefreshDropdownOpen}
+                  icon={<SyncAltIcon />}
+                >
+                  {refreshMode === 'auto' ? 'Auto refresh' : 'Manual refresh'}
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem
+                  key="manual"
+                  description="New data only adds when you click to refresh the page."
+                  onClick={() => setRefreshMode('manual')}
+                >
+                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                    <FlexItem>Manual refresh</FlexItem>
+                    {refreshMode === 'manual' && (
+                      <FlexItem>
+                        <CheckIcon color="var(--pf-t--global--icon--color--brand--default)" />
+                      </FlexItem>
+                    )}
+                  </Flex>
+                </DropdownItem>
+                <DropdownItem
+                  key="auto"
+                  description="Keeps your data updated automatically. This setting changes to manual refresh after 10 minutes of inactivity."
+                  onClick={() => setRefreshMode('auto')}
+                >
+                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                    <FlexItem>Auto refresh</FlexItem>
+                    {refreshMode === 'auto' && (
+                      <FlexItem>
+                        <CheckIcon color="var(--pf-t--global--icon--color--brand--default)" />
+                      </FlexItem>
+                    )}
+                  </Flex>
+                </DropdownItem>
+              </DropdownList>
+            </Dropdown>
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
