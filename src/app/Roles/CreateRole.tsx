@@ -35,6 +35,8 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
+  ExpandableSection,
+  Radio,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, MinusCircleIcon } from '@patternfly/react-icons';
@@ -66,14 +68,54 @@ const CreateRole: React.FunctionComponent = () => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = React.useState(false);
   const [templateSearch, setTemplateSearch] = React.useState('');
   
-  // Navigation access control
-  const [navigationAccess, setNavigationAccess] = React.useState({
-    overview: true,
-    infrastructure: true,
-    applications: true,
-    userManagement: true,
-    observability: true,
-    settings: true,
+  // Navigation access control - perspectives and their pages
+  interface PerspectiveAccess {
+    mode: 'bundle' | 'specific';
+    pages: Record<string, boolean>;
+  }
+
+  const [navigationAccess, setNavigationAccess] = React.useState<Record<string, PerspectiveAccess>>({
+    'Fleet Management': {
+      mode: 'bundle',
+      pages: {
+        'Overview': true,
+        'Clusters': true,
+        'Automation': true,
+        'Host inventory': true,
+        'Identities': true,
+        'Identity providers': true,
+        'Roles': true,
+      }
+    },
+    'Fleet Virtualization': {
+      mode: 'bundle',
+      pages: {
+        'Overview': true,
+        'Catalog': true,
+        'Virtual machines': true,
+        'Virtual machine templates': true,
+        'Disks': true,
+        'Network interfaces': true,
+        'Snapshots': true,
+        'Migrations': true,
+        'Events': true,
+      }
+    },
+    'Core Platforms': {
+      mode: 'bundle',
+      pages: {
+        'Overview': true,
+        'Projects': true,
+        'Workloads': true,
+        'Networking': true,
+        'Storage': true,
+        'Builds': true,
+        'Pipelines': true,
+        'Identities': true,
+        'Identity providers': true,
+        'Roles': true,
+      }
+    },
   });
 
   const allVerbs = [
@@ -240,7 +282,17 @@ const CreateRole: React.FunctionComponent = () => {
     }));
 
     const navigationAccessAnnotations = Object.entries(navigationAccess)
-      .map(([key, value]) => `    acm.io/nav-${key}: "${value}"`)
+      .flatMap(([perspective, access]) => {
+        const perspectiveKey = perspective.toLowerCase().replace(/\s+/g, '-');
+        if (access.mode === 'bundle') {
+          return [`    acm.io/nav-${perspectiveKey}: "bundle"`];
+        } else {
+          const enabledPages = Object.entries(access.pages)
+            .filter(([_, enabled]) => enabled)
+            .map(([page, _]) => page);
+          return [`    acm.io/nav-${perspectiveKey}: "${enabledPages.join(',')}"`];
+        }
+      })
       .join('\n');
 
     return `apiVersion: rbac.authorization.k8s.io/v1
@@ -576,65 +628,85 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
 
                 <FormGroup label="Navigation Access" fieldId="navigation-access">
                   <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-                    Control which navigation sections are visible to users with this role. Unselected sections will be hidden from the navigation menu.
+                    Control which perspectives and pages are visible to users with this role. You can grant access to entire perspectives or select specific pages within each perspective.
                   </Content>
                   
-                  <Grid hasGutter span={6}>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="Overview"
-                        id="nav-overview"
-                        isChecked={navigationAccess.overview}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, overview: !navigationAccess.overview })}
-                        description="Dashboard and home page"
-                      />
-                    </GridItem>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="Infrastructure"
-                        id="nav-infrastructure"
-                        isChecked={navigationAccess.infrastructure}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, infrastructure: !navigationAccess.infrastructure })}
-                        description="Clusters, automation, and host inventory"
-                      />
-                    </GridItem>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="Applications"
-                        id="nav-applications"
-                        isChecked={navigationAccess.applications}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, applications: !navigationAccess.applications })}
-                        description="Application deployments and management"
-                      />
-                    </GridItem>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="User Management"
-                        id="nav-user-management"
-                        isChecked={navigationAccess.userManagement}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, userManagement: !navigationAccess.userManagement })}
-                        description="Identities, roles, and providers"
-                      />
-                    </GridItem>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="Observability"
-                        id="nav-observability"
-                        isChecked={navigationAccess.observability}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, observability: !navigationAccess.observability })}
-                        description="Monitoring, logs, and metrics"
-                      />
-                    </GridItem>
-                    <GridItem span={6}>
-                      <Checkbox
-                        label="Settings"
-                        id="nav-settings"
-                        isChecked={navigationAccess.settings}
-                        onChange={() => setNavigationAccess({ ...navigationAccess, settings: !navigationAccess.settings })}
-                        description="System settings and preferences"
-                      />
-                    </GridItem>
-                  </Grid>
+                  {Object.entries(navigationAccess).map(([perspective, access]) => (
+                    <ExpandableSection
+                      key={perspective}
+                      toggleText={perspective}
+                      style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
+                    >
+                      <div style={{ paddingLeft: 'var(--pf-t--global--spacer--md)', paddingTop: 'var(--pf-t--global--spacer--sm)' }}>
+                        <Radio
+                          id={`${perspective}-bundle`}
+                          name={`${perspective}-mode`}
+                          label="Grant access to entire perspective (bundle)"
+                          description="Users will have access to all pages within this perspective"
+                          isChecked={access.mode === 'bundle'}
+                          onChange={() => {
+                            setNavigationAccess({
+                              ...navigationAccess,
+                              [perspective]: { ...access, mode: 'bundle' }
+                            });
+                          }}
+                          style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
+                        />
+                        
+                        <Radio
+                          id={`${perspective}-specific`}
+                          name={`${perspective}-mode`}
+                          label="Select specific pages"
+                          description="Choose which individual pages users can access"
+                          isChecked={access.mode === 'specific'}
+                          onChange={() => {
+                            setNavigationAccess({
+                              ...navigationAccess,
+                              [perspective]: { ...access, mode: 'specific' }
+                            });
+                          }}
+                          style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+                        />
+                        
+                        {access.mode === 'specific' && (
+                          <div style={{ 
+                            paddingLeft: 'var(--pf-t--global--spacer--xl)', 
+                            marginTop: 'var(--pf-t--global--spacer--md)',
+                            borderLeft: '2px solid var(--pf-t--global--border--color--default)',
+                            paddingTop: 'var(--pf-t--global--spacer--sm)',
+                            paddingBottom: 'var(--pf-t--global--spacer--sm)',
+                          }}>
+                            <Content component="p" className="pf-v6-u-font-size-sm pf-v6-u-font-weight-bold" style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                              Select pages:
+                            </Content>
+                            <Grid hasGutter span={6}>
+                              {Object.keys(access.pages).map(page => (
+                                <GridItem span={6} key={page}>
+                                  <Checkbox
+                                    id={`${perspective}-${page}`}
+                                    label={page}
+                                    isChecked={access.pages[page]}
+                                    onChange={(_event, checked) => {
+                                      setNavigationAccess({
+                                        ...navigationAccess,
+                                        [perspective]: {
+                                          ...access,
+                                          pages: {
+                                            ...access.pages,
+                                            [page]: checked
+                                          }
+                                        }
+                                      });
+                                    }}
+                                  />
+                                </GridItem>
+                              ))}
+                            </Grid>
+                          </div>
+                        )}
+                      </div>
+                    </ExpandableSection>
+                  ))}
                 </FormGroup>
 
                 <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
