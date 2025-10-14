@@ -232,7 +232,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                   isSelected: isAllSelected,
                 }}
               />
-              <Th width={25}>Name</Th>
+              <Th width={25}>Identity provider</Th>
               <Th width={15}>Type</Th>
               <Th width={15}>Status</Th>
               <Th width={15}>Connected Users</Th>
@@ -249,7 +249,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                     isSelected: selectedProviders.has(provider.id),
                   }}
                 />
-                <Td dataLabel="Name" width={25} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Identity provider" width={25} style={{ textAlign: 'left' }}>
                   <Button
                     variant="link"
                     isInline
