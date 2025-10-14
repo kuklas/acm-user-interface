@@ -38,9 +38,16 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   ExpandableSection,
+  Split,
+  SplitItem,
+  Modal,
+  ModalVariant,
+  Alert,
+  Form,
+  FormGroup,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 
@@ -55,16 +62,16 @@ const vmSearchSuggestions = [
 
 // Mock VM data
 const mockVMs = [
-  { id: 1, name: 'vm-1', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 2, name: 'vm-2', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 3, name: 'vm-3', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 4, name: 'vm-4', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 5, name: 'vm-5', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 6, name: 'vm-6', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 7, name: 'vm-7', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 8, name: 'vm-8', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 9, name: 'vm-9', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 10, name: 'vm-10', status: 'Running', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 1, name: 'vm-1', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 2, name: 'vm-2', status: 'Running', os: 'CentOS Stream 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 3, name: 'vm-3', status: 'Stopped', os: 'Fedora 39', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 4, name: 'vm-4', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 5, name: 'vm-5', status: 'Running', os: 'Ubuntu 22.04', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 6, name: 'vm-6', status: 'Stopped', os: 'CentOS Stream 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 7, name: 'vm-7', status: 'Running', os: 'RHEL 8', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 8, name: 'vm-8', status: 'Running', os: 'Fedora 39', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 9, name: 'vm-9', status: 'Error', os: 'Ubuntu 22.04', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
+  { id: 10, name: 'vm-10', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
 ];
 
 const VirtualMachines: React.FunctionComponent = () => {
@@ -85,16 +92,39 @@ const VirtualMachines: React.FunctionComponent = () => {
   
   // Dropdown states
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = React.useState(false);
+  const [isOSFilterOpen, setIsOSFilterOpen] = React.useState(false);
   const [isMenuToggleOpen, setIsMenuToggleOpen] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isRefreshDropdownOpen, setIsRefreshDropdownOpen] = React.useState(false);
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = React.useState<string>('All');
+  const [osFilter, setOSFilter] = React.useState<string>('All');
   
   // Refresh state
   const [refreshMode, setRefreshMode] = React.useState<'auto' | 'manual'>('auto');
   const [lastUpdated, setLastUpdated] = React.useState(new Date());
   
   const [selectedCluster, setSelectedCluster] = React.useState('test');
+  
+  // Manage columns modal state
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = React.useState(false);
+  const [selectedColumns, setSelectedColumns] = React.useState({
+    name: true,
+    namespace: true,
+    status: true,
+    conditions: true,
+    node: true,
+    ipAddress: true,
+    created: false,
+    memory: false,
+    cpu: false,
+    network: false,
+    deletionProtection: false,
+    storageClass: false,
+  });
   
   // Resize handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -152,6 +182,51 @@ const VirtualMachines: React.FunctionComponent = () => {
       setSelectedVMs([]);
     }
   };
+
+  // Filter VMs based on status and OS filters
+  const filteredVMs = React.useMemo(() => {
+    return mockVMs.filter(vm => {
+      const matchesStatus = statusFilter === 'All' || vm.status === statusFilter;
+      const matchesOS = osFilter === 'All' || vm.os === osFilter;
+      const matchesSearch = !searchValue || vm.name.toLowerCase().includes(searchValue.toLowerCase());
+      return matchesStatus && matchesOS && matchesSearch;
+    });
+  }, [statusFilter, osFilter, searchValue]);
+
+  // Get unique statuses and operating systems for filter options
+  const availableStatuses = ['All', ...Array.from(new Set(mockVMs.map(vm => vm.status)))];
+  const availableOSs = ['All', ...Array.from(new Set(mockVMs.map(vm => vm.os)))];
+
+  // Manage columns handlers
+  const handleToggleColumn = (column: string) => {
+    setSelectedColumns({
+      ...selectedColumns,
+      [column]: !selectedColumns[column as keyof typeof selectedColumns],
+    });
+  };
+
+  const handleRestoreDefaultColumns = () => {
+    setSelectedColumns({
+      name: true,
+      namespace: true,
+      status: true,
+      conditions: true,
+      node: true,
+      ipAddress: true,
+      created: false,
+      memory: false,
+      cpu: false,
+      network: false,
+      deletionProtection: false,
+      storageClass: false,
+    });
+  };
+
+  const handleSaveColumns = () => {
+    setIsManageColumnsOpen(false);
+    // In a real app, you would save these preferences
+  };
+
   
   const handleSelectVM = (vmId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -192,46 +267,97 @@ const VirtualMachines: React.FunctionComponent = () => {
   // Tree view data for sidebar
   const treeData: TreeViewDataItem[] = [
     {
-      name: 'Clusters',
-      id: 'clusters',
+      name: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ServerIcon />
+          <span>All clusters</span>
+        </span>
+      ),
+      id: 'all-clusters',
       children: [
         {
-          name: 'local-cluster',
-          id: 'local-cluster',
+          name: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ServerIcon />
+              <span>virt-hub</span>
+            </span>
+          ),
+          id: 'virt-hub',
           children: [
             {
-              name: 'test',
-              id: 'test',
-              icon: <Checkbox id="checkbox-test" isChecked={selectedCluster === 'test'} />,
+              name: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ProjectDiagramIcon />
+                    <span>default</span>
+                  </span>
+                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>3</Label>
+                </div>
+              ),
+              id: 'virt-hub-default',
               children: [
-                { name: 'vm-1', id: 'vm-1' },
-                { name: 'vm-2', id: 'vm-2' },
-                { name: 'vm-3', id: 'vm-3' },
-                { name: 'vm-4', id: 'vm-4' },
-                { name: 'vm-5', id: 'vm-5' },
+                {
+                  name: 'example-1',
+                  id: 'example-1',
+                },
+                {
+                  name: 'fedora-jade-pike-13',
+                  id: 'fedora-jade-pike-13',
+                },
+                {
+                  name: 'rhel-10-lavender-butterfly-16',
+                  id: 'rhel-10-lavender-butterfly-16',
+                },
               ],
-            },
-            {
-              name: 'prod',
-              id: 'prod',
-            },
-            {
-              name: 'dev',
-              id: 'dev',
             },
           ],
         },
         {
-          name: 'Ronens Cluster',
-          id: 'ronens-cluster',
-        },
-        {
-          name: 'Christians Cluster',
-          id: 'christians-cluster',
-        },
-        {
-          name: 'Fabians Cluster',
-          id: 'fabians-cluster',
+          name: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ServerIcon />
+              <span>virt-spoke</span>
+            </span>
+          ),
+          id: 'virt-spoke',
+          children: [
+            {
+              name: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ProjectDiagramIcon />
+                    <span>default</span>
+                  </span>
+                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>1</Label>
+                </div>
+              ),
+              id: 'virt-spoke-default',
+              children: [
+                {
+                  name: 'rhel-8-jade-louse-14',
+                  id: 'rhel-8-jade-louse-14',
+                },
+              ],
+            },
+            {
+              name: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ProjectDiagramIcon />
+                    <span>openshift</span>
+                  </span>
+                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>1</Label>
+                </div>
+              ),
+              id: 'virt-spoke-openshift',
+              children: [
+                {
+                  name: 'kcormier-rhel8-template',
+                  id: 'kcormier-rhel8-template',
+                },
+              ],
+            },
+          ],
         },
       ],
     },
@@ -246,21 +372,21 @@ const VirtualMachines: React.FunctionComponent = () => {
       <div style={{ marginBottom: '16px' }}>
         <Switch
           id="show-vms-only"
-          label="Only show objects with virtual machines"
+          label="Show only projects with VirtualMachines"
           isChecked={showOnlyWithVMs}
           onChange={(_event, checked) => setShowOnlyWithVMs(checked)}
         />
       </div>
-      
+
       <Divider style={{ margin: '16px 0' }} />
-      
+
       <TreeView
         data={treeData}
         defaultAllExpanded
         hasGuides
       />
       
-      <div 
+      <div
         className="sidebar-resize-handle"
         onMouseDown={handleMouseDown}
         style={{
@@ -268,38 +394,167 @@ const VirtualMachines: React.FunctionComponent = () => {
           right: 0,
           top: 0,
           bottom: 0,
-          width: '4px',
+          width: '5px',
           cursor: 'col-resize',
-          backgroundColor: isResizing ? 'var(--pf-t--global--color--brand--default)' : 'transparent',
-          transition: 'background-color 0.2s',
         }}
       >
         <div
+          className="resize-grip"
           style={{
             position: 'absolute',
-            right: '-12px',
+            right: '-2px',
             top: '50%',
             transform: 'translateY(-50%)',
-            width: '24px',
-            height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'var(--pf-t--global--background--color--primary--default)',
-            border: '1px solid var(--pf-t--global--border--color--default)',
-            borderRadius: '0 4px 4px 0',
+            width: '4px',
+            height: '60px',
             cursor: 'col-resize',
           }}
-        >
-          <AngleLeftIcon style={{ fontSize: '12px' }} />
-        </div>
+        />
       </div>
     </div>
   );
   
   return (
-    <div className="vm-page">
-      <div className="vm-header">
+    <>
+      <Modal
+        variant={ModalVariant.medium}
+        title="Manage columns"
+        isOpen={isManageColumnsOpen}
+        onClose={() => setIsManageColumnsOpen(false)}
+      >
+        <div style={{ padding: '24px' }}>
+          <Content component="p" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+            Selected columns will appear in the table.
+          </Content>
+
+          <Alert
+            variant="info"
+            isInline
+            title={
+              <div>
+                <div>You can select up to 8 columns</div>
+                <div style={{ marginTop: '4px' }}>The namespace column is only shown when in "All projects"</div>
+              </div>
+            }
+            style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}
+          />
+
+          <Grid hasGutter span={6}>
+          <GridItem span={6}>
+            <Title headingLevel="h3" size="md" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+              Default VirtualMachine columns
+            </Title>
+            <Form>
+              <Checkbox
+                id="column-name"
+                label="Name"
+                isChecked={selectedColumns.name}
+                onChange={() => handleToggleColumn('name')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-namespace"
+                label="Namespace"
+                isChecked={selectedColumns.namespace}
+                onChange={() => handleToggleColumn('namespace')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-status"
+                label="Status"
+                isChecked={selectedColumns.status}
+                onChange={() => handleToggleColumn('status')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-conditions"
+                label="Conditions"
+                isChecked={selectedColumns.conditions}
+                onChange={() => handleToggleColumn('conditions')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-node"
+                label="Node"
+                isChecked={selectedColumns.node}
+                onChange={() => handleToggleColumn('node')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-ipAddress"
+                label="IP address"
+                isChecked={selectedColumns.ipAddress}
+                onChange={() => handleToggleColumn('ipAddress')}
+              />
+            </Form>
+          </GridItem>
+
+          <GridItem span={6}>
+            <Title headingLevel="h3" size="md" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+              Additional columns
+            </Title>
+            <Form>
+              <Checkbox
+                id="column-created"
+                label="Created"
+                isChecked={selectedColumns.created}
+                onChange={() => handleToggleColumn('created')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-memory"
+                label="Memory"
+                isChecked={selectedColumns.memory}
+                onChange={() => handleToggleColumn('memory')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-cpu"
+                label="CPU"
+                isChecked={selectedColumns.cpu}
+                onChange={() => handleToggleColumn('cpu')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-network"
+                label="Network"
+                isChecked={selectedColumns.network}
+                onChange={() => handleToggleColumn('network')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-deletionProtection"
+                label="Deletion protection"
+                isChecked={selectedColumns.deletionProtection}
+                onChange={() => handleToggleColumn('deletionProtection')}
+                style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
+              />
+              <Checkbox
+                id="column-storageClass"
+                label="Storage class"
+                isChecked={selectedColumns.storageClass}
+                onChange={() => handleToggleColumn('storageClass')}
+              />
+            </Form>
+          </GridItem>
+        </Grid>
+
+        <div style={{ marginTop: 'var(--pf-t--global--spacer--lg)', display: 'flex', gap: 'var(--pf-t--global--spacer--sm)' }}>
+          <Button key="save" variant="primary" onClick={handleSaveColumns}>
+            Save
+          </Button>
+          <Button key="restore" variant="secondary" onClick={handleRestoreDefaultColumns}>
+            Restore default columns
+          </Button>
+          <Button key="cancel" variant="link" onClick={() => setIsManageColumnsOpen(false)}>
+            Cancel
+          </Button>
+        </div>
+        </div>
+      </Modal>
+
+      <div className="vm-page">
+        <div className="vm-header">
         <div style={{ padding: '24px' }}>
           <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsLg' }} flexWrap={{ default: 'nowrap' }}>
             <FlexItem>
@@ -464,7 +719,7 @@ const VirtualMachines: React.FunctionComponent = () => {
         <Button
           variant="plain"
           className="sidebar-toggle"
-          style={{ left: isSidebarCollapsed ? '0' : `${sidebarWidth}px` }}
+          style={{ left: isSidebarCollapsed ? '-14px' : `${sidebarWidth - 14}px` }}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -574,46 +829,63 @@ const VirtualMachines: React.FunctionComponent = () => {
                 </ToolbarItem>
                 <ToolbarItem>
                   <Dropdown
-                    isOpen={isFilterOpen}
-                    onSelect={() => setIsFilterOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+                    isOpen={isStatusFilterOpen}
+                    onSelect={() => setIsStatusFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsStatusFilterOpen(isOpen)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
-                        onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        isExpanded={isFilterOpen}
+                        onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
+                        isExpanded={isStatusFilterOpen}
                         variant="default"
                       >
-                        <FilterIcon style={{ marginRight: '8px' }} />
-                        Filter
+                        Status: {statusFilter}
                       </MenuToggle>
                     )}
                   >
                     <DropdownList>
-                      <DropdownItem key="status">Status</DropdownItem>
-                      <DropdownItem key="labels">Labels</DropdownItem>
+                      {availableStatuses.map(status => (
+                        <DropdownItem 
+                          key={status}
+                          onClick={() => {
+                            setStatusFilter(status);
+                            setIsStatusFilterOpen(false);
+                          }}
+                        >
+                          {status}
+                        </DropdownItem>
+                      ))}
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
                 <ToolbarItem>
                   <Dropdown
-                    isOpen={isMenuToggleOpen}
-                    onSelect={() => setIsMenuToggleOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsMenuToggleOpen(isOpen)}
+                    isOpen={isOSFilterOpen}
+                    onSelect={() => setIsOSFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsOSFilterOpen(isOpen)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
-                        onClick={() => setIsMenuToggleOpen(!isMenuToggleOpen)}
-                        isExpanded={isMenuToggleOpen}
+                        onClick={() => setIsOSFilterOpen(!isOSFilterOpen)}
+                        isExpanded={isOSFilterOpen}
                         variant="default"
                       >
-                        Menu toggle
+                        Operating system: {osFilter}
                       </MenuToggle>
                     )}
                   >
                     <DropdownList>
-                      <DropdownItem key="option1">Option 1</DropdownItem>
-                      <DropdownItem key="option2">Option 2</DropdownItem>
+                      {availableOSs.map(os => (
+                        <DropdownItem 
+                          key={os}
+                          onClick={() => {
+                            setOSFilter(os);
+                            setIsOSFilterOpen(false);
+                          }}
+                        >
+                          {os}
+                        </DropdownItem>
+                      ))}
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
@@ -625,7 +897,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                     onClear={() => setSearchValue('')}
                   />
                 </ToolbarItem>
-                <ToolbarItem align={{ default: 'alignEnd' }}>
+                <ToolbarItem>
                   <Dropdown
                     isOpen={isActionsOpen}
                     onSelect={() => setIsActionsOpen(false)}
@@ -635,7 +907,8 @@ const VirtualMachines: React.FunctionComponent = () => {
                         ref={toggleRef} 
                         onClick={() => setIsActionsOpen(!isActionsOpen)}
                         isExpanded={isActionsOpen}
-                        variant="plain"
+                        variant="secondary"
+                        isDisabled={selectedVMs.length === 0}
                       >
                         Actions
                       </MenuToggle>
@@ -649,18 +922,26 @@ const VirtualMachines: React.FunctionComponent = () => {
                   </Dropdown>
                 </ToolbarItem>
                 <ToolbarItem>
-                  <Pagination
-                    itemCount={mockVMs.length}
-                    perPage={perPage}
-                    page={page}
-                    onSetPage={onSetPage}
-                    onPerPageSelect={onPerPageSelect}
-                    variant={PaginationVariant.top}
-                    isCompact
-                  />
+                  <Button
+                    variant="plain"
+                    aria-label="Manage columns"
+                    style={{ marginLeft: '8px' }}
+                    onClick={() => setIsManageColumnsOpen(true)}
+                  >
+                    <ColumnsIcon />
+                  </Button>
                 </ToolbarItem>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Pagination
+                      itemCount={filteredVMs.length}
+                      perPage={perPage}
+                      page={page}
+                      onSetPage={onSetPage}
+                      onPerPageSelect={onPerPageSelect}
+                      variant={PaginationVariant.top}
+                      isCompact
+                    />
                     <span style={{ whiteSpace: 'nowrap', color: 'var(--pf-t--global--text--color--regular)' }}>
                       Last updated: {refreshMode === 'auto' ? 'Live' : '13 minutes ago'}
                     </span>
@@ -733,7 +1014,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {mockVMs.slice((page - 1) * perPage, page * perPage).map((vm) => (
+                {filteredVMs.slice((page - 1) * perPage, page * perPage).map((vm) => (
                   <Tr key={vm.id}>
                     <Td>
                       <Checkbox
@@ -745,7 +1026,9 @@ const VirtualMachines: React.FunctionComponent = () => {
                     </Td>
                     <Td dataLabel="Name">{vm.name}</Td>
                     <Td dataLabel="Status">
-                      <Label color="green">{vm.status}</Label>
+                      <Label color={vm.status === 'Running' ? 'green' : vm.status === 'Error' ? 'red' : 'grey'}>
+                        {vm.status}
+                      </Label>
                     </Td>
                     <Td dataLabel="CPU usage">{vm.cpu}</Td>
                     <Td dataLabel="Memory usage">{vm.memory}</Td>
@@ -777,7 +1060,7 @@ const VirtualMachines: React.FunctionComponent = () => {
               <ToolbarContent>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <Pagination
-                    itemCount={500}
+                    itemCount={filteredVMs.length}
                     perPage={perPage}
                     page={page}
                     onSetPage={onSetPage}
@@ -796,6 +1079,7 @@ const VirtualMachines: React.FunctionComponent = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
