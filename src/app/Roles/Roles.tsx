@@ -241,7 +241,7 @@ const Roles: React.FunctionComponent = () => {
                   columnIndex: 0 
                 }}
               >
-                Role Name
+                Role
               </Th>
               <Th width={15}>Type</Th>
               <Th width={25}>Resources</Th>
@@ -259,7 +259,7 @@ const Roles: React.FunctionComponent = () => {
                     isSelected: selectedRoles.has(role.id),
                   }}
                 />
-                <Td dataLabel="Role Name" width={30} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Role" width={30} style={{ textAlign: 'left' }}>
                   <Button 
                     variant="link" 
                     isInline 
