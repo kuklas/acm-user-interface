@@ -135,7 +135,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                   <MenuToggle
                     ref={toggleRef}
-                    variant="plain"
+                    variant="default"
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     isExpanded={isFilterOpen}
                   >
