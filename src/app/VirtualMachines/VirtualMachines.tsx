@@ -1334,6 +1334,16 @@ const VirtualMachines: React.FunctionComponent = () => {
                                 >
                                   Migrate compute
                                 </MenuItem>
+                                <MenuItem
+                                  onClick={() => {
+                                    console.log('Migrate storage', vm.name);
+                                    setOpenRowMenuId(null);
+                                    setOpenRowMigrateMenuId(null);
+                                  }}
+                                  description="Migrate VirtualMachine storage"
+                                >
+                                  Migrate storage
+                                </MenuItem>
                               </MenuList>
                             </MenuContent>
                           </Menu>
