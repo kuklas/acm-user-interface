@@ -12,6 +12,7 @@ import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDe
 import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
 import { Projects } from '@app/Projects/Projects';
 import { ProjectDetail } from '@app/Projects/ProjectDetail';
+import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -40,6 +41,11 @@ export interface IAppRouteGroup {
 export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 
 const routes: AppRouteConfig[] = [
+  {
+    element: <VirtualMachines />,
+    path: '/virtualization/virtual-machines',
+    title: 'Virtual machines',
+  },
   {
     label: 'Home',
     routes: [

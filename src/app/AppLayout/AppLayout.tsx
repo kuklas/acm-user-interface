@@ -39,6 +39,7 @@ import {
   TabTitleText,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
+import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import {
   BarsIcon,
   CaretDownIcon,
@@ -254,7 +255,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           title: 'Catalog',
         },
         {
-          element: <></>,
+          element: <VirtualMachines />,
           label: 'Virtual machines',
           path: '/virtualization/virtual-machines',
           title: 'Virtual machines',
