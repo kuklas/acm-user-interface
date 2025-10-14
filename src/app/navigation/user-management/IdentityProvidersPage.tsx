@@ -2,7 +2,11 @@ import React from 'react';
 import { Title } from '@patternfly/react-core';
 import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
 
-export const IdentityProvidersPage: React.FunctionComponent = () => {
+interface IdentityProvidersPageProps {
+  showClustersColumn?: boolean;
+}
+
+export const IdentityProvidersPage: React.FunctionComponent<IdentityProvidersPageProps> = ({ showClustersColumn = true }) => {
   return (
     <div className="identity-providers-page-container">
       <div className="page-header-section">
@@ -12,7 +16,7 @@ export const IdentityProvidersPage: React.FunctionComponent = () => {
       </div>
       
       <div className="page-content-section">
-        <IdentityProvider showClustersColumn={true} />
+        <IdentityProvider showClustersColumn={showClustersColumn} />
       </div>
     </div>
   );

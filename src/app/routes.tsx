@@ -213,6 +213,16 @@ const routes: AppRouteConfig[] = [
       },
     ],
   },
+  {
+    label: 'Core Platforms User Management',
+    routes: [
+      {
+        element: <IdentityProvidersPage showClustersColumn={false} />,
+        path: '/core/user-management/identity-providers',
+        title: 'ACM | Identity Providers',
+      },
+    ],
+  },
 ];
 
 const flattenedRoutes: IAppRoute[] = routes.reduce(
