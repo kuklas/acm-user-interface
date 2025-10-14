@@ -12,6 +12,8 @@ import {
   DropdownList,
   DropdownItem,
   Checkbox,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EllipsisVIcon } from '@patternfly/react-icons';
@@ -60,6 +62,10 @@ const Identities: React.FunctionComponent = () => {
   const [openGroupActionMenuId, setOpenGroupActionMenuId] = React.useState<number | null>(null);
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
   const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
+  const [usersPage, setUsersPage] = React.useState(1);
+  const [usersPerPage, setUsersPerPage] = React.useState(10);
+  const [groupsPage, setGroupsPage] = React.useState(1);
+  const [groupsPerPage, setGroupsPerPage] = React.useState(10);
 
   React.useEffect(() => {
     console.log('[Identities] openUserActionMenuId state changed to:', openUserActionMenuId);
@@ -136,7 +142,10 @@ const Identities: React.FunctionComponent = () => {
     }
   };
 
-  const UsersTable = () => (
+  const UsersTable = () => {
+    const paginatedUsers = mockUsers.slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage);
+    
+    return (
     <>
       <div className="table-content-card">
         <Toolbar>
@@ -178,6 +187,20 @@ const Identities: React.FunctionComponent = () => {
                 onClear={() => setSearchValue('')}
               />
             </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={mockUsers.length}
+                perPage={usersPerPage}
+                page={usersPage}
+                onSetPage={(_event, pageNumber) => setUsersPage(pageNumber)}
+                onPerPageSelect={(_event, perPage) => {
+                  setUsersPerPage(perPage);
+                  setUsersPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
+              />
+            </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Users table" variant="compact">
@@ -186,9 +209,16 @@ const Identities: React.FunctionComponent = () => {
               <Th>
                 <Checkbox
                   id="select-all-users"
-                  isChecked={selectedUsers.length === mockUsers.length && mockUsers.length > 0}
-                  onChange={(event, checked) => handleSelectAllUsers(checked)}
-                  aria-label="Select all users"
+                  isChecked={paginatedUsers.length > 0 && paginatedUsers.every(user => selectedUsers.includes(user.id))}
+                  onChange={(event, checked) => {
+                    if (checked) {
+                      setSelectedUsers(Array.from(new Set([...selectedUsers, ...paginatedUsers.map(u => u.id)])));
+                    } else {
+                      const pageUserIds = paginatedUsers.map(u => u.id);
+                      setSelectedUsers(selectedUsers.filter(id => !pageUserIds.includes(id)));
+                    }
+                  }}
+                  aria-label="Select all users on page"
                   style={{ transform: 'scale(0.7)', border: '2px solid red' }}
                 />
               </Th>
@@ -199,7 +229,7 @@ const Identities: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {mockUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <Tr key={user.id}>
                 <Td>
                   <Checkbox
@@ -268,11 +298,28 @@ const Identities: React.FunctionComponent = () => {
             ))}
           </Tbody>
         </Table>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={mockUsers.length}
+            perPage={usersPerPage}
+            page={usersPage}
+            onSetPage={(_event, pageNumber) => setUsersPage(pageNumber)}
+            onPerPageSelect={(_event, perPage) => {
+              setUsersPerPage(perPage);
+              setUsersPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
       </div>
     </>
-  );
+    );
+  };
 
-  const GroupsTable = () => (
+  const GroupsTable = () => {
+    const paginatedGroups = mockGroups.slice((groupsPage - 1) * groupsPerPage, groupsPage * groupsPerPage);
+    
+    return (
     <>
       <div className="table-content-card">
         <Toolbar>
@@ -283,6 +330,20 @@ const Identities: React.FunctionComponent = () => {
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={mockGroups.length}
+                perPage={groupsPerPage}
+                page={groupsPage}
+                onSetPage={(_event, pageNumber) => setGroupsPage(pageNumber)}
+                onPerPageSelect={(_event, perPage) => {
+                  setGroupsPerPage(perPage);
+                  setGroupsPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
               />
             </ToolbarItem>
           </ToolbarContent>
@@ -297,7 +358,7 @@ const Identities: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {mockGroups.map((group) => (
+            {paginatedGroups.map((group) => (
               <Tr key={group.id}>
                 <Td dataLabel="Group Name">
                   <Button
@@ -346,9 +407,23 @@ const Identities: React.FunctionComponent = () => {
             ))}
           </Tbody>
         </Table>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={mockGroups.length}
+            perPage={groupsPerPage}
+            page={groupsPage}
+            onSetPage={(_event, pageNumber) => setGroupsPage(pageNumber)}
+            onPerPageSelect={(_event, perPage) => {
+              setGroupsPerPage(perPage);
+              setGroupsPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
       </div>
     </>
-  );
+    );
+  };
 
   const ServiceAccountsTable = () => (
     <>

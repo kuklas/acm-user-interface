@@ -11,6 +11,8 @@ import {
   DropdownList,
   DropdownItem,
   Checkbox,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { getAllServiceAccounts } from '@app/data';
@@ -32,6 +34,10 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
   const [filterType, setFilterType] = React.useState('Service account');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [selectedServiceAccounts, setSelectedServiceAccounts] = React.useState<number[]>([]);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+
+  const paginatedServiceAccounts = mockServiceAccounts.slice((page - 1) * perPage, page * perPage);
 
   const handleServiceAccountSelect = (saId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -93,6 +99,20 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
           <ToolbarItem>
             <Button variant="primary">Create service account</Button>
           </ToolbarItem>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Pagination
+              itemCount={mockServiceAccounts.length}
+              perPage={perPage}
+              page={page}
+              onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+              onPerPageSelect={(_event, newPerPage) => {
+                setPerPage(newPerPage);
+                setPage(1);
+              }}
+              variant={PaginationVariant.top}
+              isCompact
+            />
+          </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
       <Table aria-label="Service accounts table" variant="compact">
@@ -101,9 +121,16 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
             <Th>
               <Checkbox
                 id="select-all-service-accounts"
-                isChecked={selectedServiceAccounts.length === mockServiceAccounts.length && mockServiceAccounts.length > 0}
-                onChange={(event, checked) => handleSelectAllServiceAccounts(checked)}
-                aria-label="Select all service accounts"
+                isChecked={paginatedServiceAccounts.length > 0 && paginatedServiceAccounts.every(sa => selectedServiceAccounts.includes(sa.id))}
+                onChange={(event, checked) => {
+                  if (checked) {
+                    setSelectedServiceAccounts(Array.from(new Set([...selectedServiceAccounts, ...paginatedServiceAccounts.map(sa => sa.id)])));
+                  } else {
+                    const pageSaIds = paginatedServiceAccounts.map(sa => sa.id);
+                    setSelectedServiceAccounts(selectedServiceAccounts.filter(id => !pageSaIds.includes(id)));
+                  }
+                }}
+                aria-label="Select all service accounts on page"
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
@@ -114,7 +141,7 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {mockServiceAccounts.map((sa) => (
+          {paginatedServiceAccounts.map((sa) => (
             <Tr key={sa.id}>
               <Td>
                 <Checkbox
@@ -141,6 +168,19 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
           ))}
         </Tbody>
       </Table>
+      <div style={{ padding: '16px' }}>
+        <Pagination
+          itemCount={mockServiceAccounts.length}
+          perPage={perPage}
+          page={page}
+          onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+          onPerPageSelect={(_event, newPerPage) => {
+            setPerPage(newPerPage);
+            setPage(1);
+          }}
+          variant={PaginationVariant.bottom}
+        />
+      </div>
     </div>
   );
 };

@@ -20,6 +20,8 @@ import {
   MenuToggleElement,
   Split,
   SplitItem,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
@@ -57,6 +59,10 @@ const IdentityProvider: React.FunctionComponent = () => {
   const [selectedProviders, setSelectedProviders] = React.useState<Set<number>>(new Set());
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [isAddProviderOpen, setIsAddProviderOpen] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+
+  const paginatedProviders = mockIdentityProviders.slice((page - 1) * perPage, page * perPage);
 
   const providerTypes = ['OAuth', 'OIDC', 'LDAP', 'SAML'];
 
@@ -93,15 +99,17 @@ const IdentityProvider: React.FunctionComponent = () => {
     handleModalClose();
   };
 
-  const isAllSelected = selectedProviders.size === mockIdentityProviders.length && mockIdentityProviders.length > 0;
-  const isPartiallySelected = selectedProviders.size > 0 && selectedProviders.size < mockIdentityProviders.length;
+  const isAllSelected = paginatedProviders.length > 0 && paginatedProviders.every(provider => selectedProviders.has(provider.id));
+  const isPartiallySelected = selectedProviders.size > 0 && !isAllSelected;
 
   const handleSelectAll = (isSelecting: boolean) => {
+    const newSelected = new Set(selectedProviders);
     if (isSelecting) {
-      setSelectedProviders(new Set(mockIdentityProviders.map(provider => provider.id)));
+      paginatedProviders.forEach(provider => newSelected.add(provider.id));
     } else {
-      setSelectedProviders(new Set());
+      paginatedProviders.forEach(provider => newSelected.delete(provider.id));
     }
+    setSelectedProviders(newSelected);
   };
 
   const handleSelectProvider = (providerId: number, isSelecting: boolean) => {
@@ -199,6 +207,20 @@ const IdentityProvider: React.FunctionComponent = () => {
                 </DropdownList>
               </Dropdown>
             </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={mockIdentityProviders.length}
+                perPage={perPage}
+                page={page}
+                onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+                onPerPageSelect={(_event, newPerPage) => {
+                  setPerPage(newPerPage);
+                  setPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
+              />
+            </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Identity providers table" variant="compact">
@@ -218,7 +240,7 @@ const IdentityProvider: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {mockIdentityProviders.map((provider) => (
+            {paginatedProviders.map((provider) => (
               <Tr key={provider.id}>
                 <Td
                   select={{
@@ -266,6 +288,19 @@ const IdentityProvider: React.FunctionComponent = () => {
             ))}
           </Tbody>
         </Table>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={mockIdentityProviders.length}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+            onPerPageSelect={(_event, newPerPage) => {
+              setPerPage(newPerPage);
+              setPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
       </div>
 
       <Modal

@@ -21,6 +21,8 @@ import {
   DropdownItem,
   MenuToggle,
   MenuToggleElement,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EllipsisVIcon } from '@patternfly/react-icons';
@@ -60,6 +62,8 @@ const Roles: React.FunctionComponent = () => {
   }>({ index: 0, direction: 'asc' });
   const [selectedRoles, setSelectedRoles] = React.useState<Set<number>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = React.useState<number | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
 
   const availablePermissions = ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch'];
 
@@ -108,15 +112,19 @@ const Roles: React.FunctionComponent = () => {
     return sorted;
   }, [sortBy, typeFilter]);
 
-  const isAllSelected = selectedRoles.size === sortedRoles.length && sortedRoles.length > 0;
-  const isPartiallySelected = selectedRoles.size > 0 && selectedRoles.size < sortedRoles.length;
+  const paginatedRoles = sortedRoles.slice((page - 1) * perPage, page * perPage);
+
+  const isAllSelected = paginatedRoles.length > 0 && paginatedRoles.every(role => selectedRoles.has(role.id));
+  const isPartiallySelected = selectedRoles.size > 0 && !isAllSelected;
 
   const handleSelectAll = (isSelecting: boolean) => {
+    const newSelected = new Set(selectedRoles);
     if (isSelecting) {
-      setSelectedRoles(new Set(sortedRoles.map(role => role.id)));
+      paginatedRoles.forEach(role => newSelected.add(role.id));
     } else {
-      setSelectedRoles(new Set());
+      paginatedRoles.forEach(role => newSelected.delete(role.id));
     }
+    setSelectedRoles(newSelected);
   };
 
   const handleSelectRole = (roleId: number, isSelecting: boolean) => {
@@ -200,6 +208,20 @@ const Roles: React.FunctionComponent = () => {
                 Delete role
               </Button>
             </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={sortedRoles.length}
+                perPage={perPage}
+                page={page}
+                onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+                onPerPageSelect={(_event, newPerPage) => {
+                  setPerPage(newPerPage);
+                  setPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
+              />
+            </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Roles table" variant="compact">
@@ -228,7 +250,7 @@ const Roles: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {sortedRoles.map((role) => (
+            {paginatedRoles.map((role) => (
               <Tr key={role.id}>
                 <Td
                   select={{
@@ -303,6 +325,19 @@ const Roles: React.FunctionComponent = () => {
             ))}
           </Tbody>
         </Table>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={sortedRoles.length}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+            onPerPageSelect={(_event, newPerPage) => {
+              setPerPage(newPerPage);
+              setPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
       </div>
 
       <Modal

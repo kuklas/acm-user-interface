@@ -14,6 +14,8 @@ import {
   Label,
   Tooltip,
   Icon,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/react-icons';
@@ -42,6 +44,10 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
   const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+
+  const paginatedGroups = mockGroups.slice((page - 1) * perPage, page * perPage);
 
   const handleGroupSelect = (groupId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -170,6 +176,20 @@ export const GroupsTable: React.FunctionComponent = () => {
               </DropdownList>
             </Dropdown>
           </ToolbarItem>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Pagination
+              itemCount={mockGroups.length}
+              perPage={perPage}
+              page={page}
+              onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+              onPerPageSelect={(_event, newPerPage) => {
+                setPerPage(newPerPage);
+                setPage(1);
+              }}
+              variant={PaginationVariant.top}
+              isCompact
+            />
+          </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
       <Table aria-label="Groups table" variant="compact">
@@ -178,9 +198,16 @@ export const GroupsTable: React.FunctionComponent = () => {
             <Th>
               <Checkbox
                 id="select-all-groups"
-                isChecked={selectedGroups.length === mockGroups.length && mockGroups.length > 0}
-                onChange={(event, checked) => handleSelectAllGroups(checked)}
-                aria-label="Select all groups"
+                isChecked={paginatedGroups.length > 0 && paginatedGroups.every(group => selectedGroups.includes(group.id))}
+                onChange={(event, checked) => {
+                  if (checked) {
+                    setSelectedGroups(Array.from(new Set([...selectedGroups, ...paginatedGroups.map(g => g.id)])));
+                  } else {
+                    const pageGroupIds = paginatedGroups.map(g => g.id);
+                    setSelectedGroups(selectedGroups.filter(id => !pageGroupIds.includes(id)));
+                  }
+                }}
+                aria-label="Select all groups on page"
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
@@ -193,7 +220,7 @@ export const GroupsTable: React.FunctionComponent = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {mockGroups.map((group) => (
+          {paginatedGroups.map((group) => (
             <Tr key={group.id}>
               <Td>
                 <Checkbox
@@ -274,6 +301,19 @@ export const GroupsTable: React.FunctionComponent = () => {
           ))}
         </Tbody>
       </Table>
+      <div style={{ padding: '16px' }}>
+        <Pagination
+          itemCount={mockGroups.length}
+          perPage={perPage}
+          page={page}
+          onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+          onPerPageSelect={(_event, newPerPage) => {
+            setPerPage(newPerPage);
+            setPage(1);
+          }}
+          variant={PaginationVariant.bottom}
+        />
+      </div>
     </div>
   );
 };

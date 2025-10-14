@@ -150,6 +150,10 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [userSearchValue, setUserSearchValue] = React.useState('');
   const [isUserFilterOpen, setIsUserFilterOpen] = React.useState(false);
   const [userFilterType, setUserFilterType] = React.useState('User');
+  const [usersPage, setUsersPage] = React.useState(1);
+  const [usersPerPage, setUsersPerPage] = React.useState(10);
+  const [groupsPage, setGroupsPage] = React.useState(1);
+  const [groupsPerPage, setGroupsPerPage] = React.useState(10);
   
   // Step 2: Select resources
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
@@ -797,13 +801,17 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </ToolbarItem>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <Pagination
-                    itemCount={mockUsers.length}
-                    perPage={10}
-                    page={1}
-                    onSetPage={() => {}}
+                    itemCount={mockUsers.filter((user) => user.name.toLowerCase().includes(userSearchValue.toLowerCase())).length}
+                    perPage={usersPerPage}
+                    page={usersPage}
+                    onSetPage={(_event, pageNumber) => setUsersPage(pageNumber)}
                     widgetId="users-pagination"
-                    onPerPageSelect={() => {}}
+                    onPerPageSelect={(_event, perPage) => {
+                      setUsersPerPage(perPage);
+                      setUsersPage(1);
+                    }}
                     variant={PaginationVariant.top}
+                    isCompact
                   />
                 </ToolbarItem>
               </ToolbarContent>
@@ -820,6 +828,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               <Tbody>
                 {mockUsers
                   .filter((user) => user.name.toLowerCase().includes(userSearchValue.toLowerCase()))
+                  .slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage)
                   .map((user) => (
                     <Tr key={user.id}>
                       <Td>
@@ -844,12 +853,15 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               <ToolbarContent>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <Pagination
-                    itemCount={mockUsers.length}
-                    perPage={10}
-                    page={1}
-                    onSetPage={() => {}}
+                    itemCount={mockUsers.filter((user) => user.name.toLowerCase().includes(userSearchValue.toLowerCase())).length}
+                    perPage={usersPerPage}
+                    page={usersPage}
+                    onSetPage={(_event, pageNumber) => setUsersPage(pageNumber)}
                     widgetId="users-bottom-pagination"
-                    onPerPageSelect={() => {}}
+                    onPerPageSelect={(_event, perPage) => {
+                      setUsersPerPage(perPage);
+                      setUsersPage(1);
+                    }}
                     variant={PaginationVariant.bottom}
                   />
                 </ToolbarItem>
@@ -894,13 +906,17 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </ToolbarItem>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <Pagination
-                    itemCount={mockGroups.length}
-                    perPage={10}
-                    page={1}
-                    onSetPage={() => {}}
+                    itemCount={mockGroups.filter((group) => group.name.toLowerCase().includes(userSearchValue.toLowerCase())).length}
+                    perPage={groupsPerPage}
+                    page={groupsPage}
+                    onSetPage={(_event, pageNumber) => setGroupsPage(pageNumber)}
                     widgetId="groups-pagination"
-                    onPerPageSelect={() => {}}
+                    onPerPageSelect={(_event, perPage) => {
+                      setGroupsPerPage(perPage);
+                      setGroupsPage(1);
+                    }}
                     variant={PaginationVariant.top}
+                    isCompact
                   />
                 </ToolbarItem>
               </ToolbarContent>
@@ -917,6 +933,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               <Tbody>
                 {mockGroups
                   .filter((group) => group.name.toLowerCase().includes(userSearchValue.toLowerCase()))
+                  .slice((groupsPage - 1) * groupsPerPage, groupsPage * groupsPerPage)
                   .map((group) => (
                     <Tr key={group.id}>
                       <Td>
@@ -938,12 +955,15 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               <ToolbarContent>
                 <ToolbarItem align={{ default: 'alignEnd' }}>
                   <Pagination
-                    itemCount={mockGroups.length}
-                    perPage={10}
-                    page={1}
-                    onSetPage={() => {}}
+                    itemCount={mockGroups.filter((group) => group.name.toLowerCase().includes(userSearchValue.toLowerCase())).length}
+                    perPage={groupsPerPage}
+                    page={groupsPage}
+                    onSetPage={(_event, pageNumber) => setGroupsPage(pageNumber)}
                     widgetId="groups-bottom-pagination"
-                    onPerPageSelect={() => {}}
+                    onPerPageSelect={(_event, perPage) => {
+                      setGroupsPerPage(perPage);
+                      setGroupsPage(1);
+                    }}
                     variant={PaginationVariant.bottom}
                   />
                 </ToolbarItem>
