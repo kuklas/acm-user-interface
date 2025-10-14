@@ -48,7 +48,11 @@ const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
   };
 });
 
-const IdentityProvider: React.FunctionComponent = () => {
+interface IdentityProviderProps {
+  showClustersColumn?: boolean;
+}
+
+const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ showClustersColumn = true }) => {
   useDocumentTitle('ACM RBAC | Identity Provider');
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
@@ -233,11 +237,11 @@ const IdentityProvider: React.FunctionComponent = () => {
                   isSelected: isAllSelected,
                 }}
               />
-              <Th width={25}>Identity provider</Th>
-              <Th width={15}>Type</Th>
-              <Th width={15}>Status</Th>
-              <Th width={15}>Connected Users</Th>
-              <Th width={30}>Clusters</Th>
+              <Th width={showClustersColumn ? 25 : 30}>Identity provider</Th>
+              <Th width={showClustersColumn ? 15 : 20}>Type</Th>
+              <Th width={showClustersColumn ? 15 : 20}>Status</Th>
+              <Th width={showClustersColumn ? 15 : 30}>Connected Users</Th>
+              {showClustersColumn && <Th width={30}>Clusters</Th>}
             </Tr>
           </Thead>
           <Tbody>
@@ -250,7 +254,7 @@ const IdentityProvider: React.FunctionComponent = () => {
                     isSelected: selectedProviders.has(provider.id),
                   }}
                 />
-                <Td dataLabel="Identity provider" width={25} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Identity provider" width={showClustersColumn ? 25 : 30} style={{ textAlign: 'left' }}>
                   <Button
                     variant="link"
                     isInline
@@ -260,31 +264,33 @@ const IdentityProvider: React.FunctionComponent = () => {
                     {provider.name}
                   </Button>
                 </Td>
-                <Td dataLabel="Type" width={15}>
+                <Td dataLabel="Type" width={showClustersColumn ? 15 : 20}>
                   <Label color="blue">{provider.type}</Label>
                 </Td>
-                <Td dataLabel="Status" width={15}>
+                <Td dataLabel="Status" width={showClustersColumn ? 15 : 20}>
                   <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
                 </Td>
-                <Td dataLabel="Connected Users" width={15}>{provider.users}</Td>
-                <Td dataLabel="Clusters" width={30}>
-                  {provider.clusters.length > 0 ? (
-                    <Split hasGutter>
-                      {provider.clusters.slice(0, 2).map((cluster, index) => (
-                        <SplitItem key={index}>
-                          <Label isCompact color="blue">{cluster}</Label>
-                        </SplitItem>
-                      ))}
-                      {provider.clusters.length > 2 && (
-                        <SplitItem>
-                          <Label isCompact>+{provider.clusters.length - 2} more</Label>
-                        </SplitItem>
-                      )}
-                    </Split>
-                  ) : (
-                    <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>No clusters</span>
-                  )}
-                </Td>
+                <Td dataLabel="Connected Users" width={showClustersColumn ? 15 : 30}>{provider.users}</Td>
+                {showClustersColumn && (
+                  <Td dataLabel="Clusters" width={30}>
+                    {provider.clusters.length > 0 ? (
+                      <Split hasGutter>
+                        {provider.clusters.slice(0, 2).map((cluster, index) => (
+                          <SplitItem key={index}>
+                            <Label isCompact color="blue">{cluster}</Label>
+                          </SplitItem>
+                        ))}
+                        {provider.clusters.length > 2 && (
+                          <SplitItem>
+                            <Label isCompact>+{provider.clusters.length - 2} more</Label>
+                          </SplitItem>
+                        )}
+                      </Split>
+                    ) : (
+                      <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>No clusters</span>
+                    )}
+                  </Td>
+                )}
               </Tr>
             ))}
           </Tbody>

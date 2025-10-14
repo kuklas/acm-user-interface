@@ -12,7 +12,7 @@ export const IdentityProvidersPage: React.FunctionComponent = () => {
       </div>
       
       <div className="page-content-section">
-        <IdentityProvider />
+        <IdentityProvider showClustersColumn={true} />
       </div>
     </div>
   );

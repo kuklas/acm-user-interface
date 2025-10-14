@@ -40,7 +40,7 @@ import {
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
-import { CoreIdentityProvider } from '@app/CorePlatforms/CoreIdentityProvider';
+import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
 import {
   BarsIcon,
   CaretDownIcon,
@@ -220,7 +220,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: 'User Management',
       routes: [
         { element: <></>, label: 'Identities', path: '/user-management/identities', title: 'Identities' },
-        { element: <CoreIdentityProvider />, label: 'Identity providers', path: '/core/user-management/identity-providers', title: 'Identity providers' },
+        { element: <IdentityProvider showClustersColumn={false} />, label: 'Identity providers', path: '/user-management/identity-providers', title: 'Identity providers' },
         { element: <></>, label: 'Roles', path: '/user-management/roles', title: 'Roles' },
       ],
     },
@@ -300,7 +300,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           title: 'Roles',
         },
         {
-          element: <></>,
+          element: <IdentityProvider showClustersColumn={true} />,
           label: 'Identity providers',
           path: '/user-management/identity-providers',
           title: 'Identity providers',
