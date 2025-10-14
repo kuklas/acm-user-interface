@@ -23,20 +23,57 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
 }) => {
   const [migrationName, setMigrationName] = React.useState('');
   const [migrationReason, setMigrationReason] = React.useState('not-stated');
+  const [showProgress, setShowProgress] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showProgress && progress < 100) {
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            return 100;
+          }
+          // Increment by random amount between 1-5% every 200ms
+          return Math.min(prev + Math.random() * 5 + 1, 100);
+        });
+      }, 200);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showProgress, progress]);
 
   const handleClose = () => {
     // Reset form
     setMigrationName('');
     setMigrationReason('not-stated');
+    setShowProgress(false);
+    setProgress(0);
     onClose();
   };
 
-  const handleSave = () => {
+  const handleMigrateNow = () => {
     console.log('Migration plan created:', {
       name: migrationName,
       reason: migrationReason,
       vms: selectedVMs,
     });
+    setShowProgress(true);
+    setProgress(0);
+  };
+
+  const handleSave = () => {
+    console.log('Migration plan saved for later:', {
+      name: migrationName,
+      reason: migrationReason,
+      vms: selectedVMs,
+    });
+    handleClose();
+  };
+
+  const handleCancelMigration = () => {
+    console.log('Migration cancelled');
     handleClose();
   };
 
@@ -621,6 +658,56 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
     }
   };
 
+  const progressScreen = (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      minHeight: '400px',
+      padding: '48px'
+    }}>
+      <div style={{ fontSize: '3rem', marginBottom: '24px' }}>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--pf-t--global--icon--color--subtle)' }}>
+          <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+        </svg>
+      </div>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '24px' }}>
+        Migration in progress
+      </h2>
+      <div style={{ width: '100%', maxWidth: '500px', marginBottom: '8px' }}>
+        <div style={{ 
+          width: '100%', 
+          height: '24px', 
+          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
+          <div style={{ 
+            width: `${progress}%`, 
+            height: '100%', 
+            backgroundColor: 'var(--pf-t--global--color--brand--default)',
+            transition: 'width 0.2s ease-in-out'
+          }}></div>
+        </div>
+      </div>
+      <div style={{ marginBottom: '24px', fontSize: '0.875rem', fontWeight: 'bold' }}>
+        {Math.round(progress)}%
+      </div>
+      <div style={{ marginBottom: '32px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+        The migration will continue if you close this popup
+      </div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <Button variant="primary">View migration plan</Button>
+        <Button variant="secondary" onClick={handleClose}>Close</Button>
+      </div>
+      <Button variant="link" onClick={handleCancelMigration} style={{ color: 'var(--pf-t--global--color--status--danger--default)' }}>
+        Cancel migration process
+      </Button>
+    </div>
+  );
+
   return (
     <Modal
       variant={ModalVariant.large}
@@ -628,10 +715,12 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
       isOpen={isOpen}
       onClose={handleClose}
     >
-      <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-        Choose the target location for your VMs, then adjust your migration plan if necessary.
-      </div>
-      <div style={{ display: 'flex', minHeight: '400px' }}>
+      {showProgress ? progressScreen : (
+        <>
+          <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+            Choose the target location for your VMs, then adjust your migration plan if necessary.
+          </div>
+          <div style={{ display: 'flex', minHeight: '400px' }}>
         <div style={{ width: '200px', borderRight: '1px solid var(--pf-t--global--border--color--default)', paddingRight: '16px', marginRight: '24px' }}>
           <div
             onClick={() => setActiveStep(1)}
@@ -767,7 +856,7 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
               </Button>
               {activeStep === 4 ? (
                 <>
-                  <Button variant="primary" onClick={handleSave}>
+                  <Button variant="primary" onClick={handleMigrateNow}>
                     Migrate now
                   </Button>
                   <Button variant="secondary" onClick={handleSave}>
@@ -783,6 +872,8 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
                 Cancel
               </Button>
             </div>
+        </>
+      )}
     </Modal>
   );
 };
