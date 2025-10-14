@@ -1,0 +1,782 @@
+// Mock Database - Single Source of Truth for all application data
+
+import {
+  ClusterSet,
+  Cluster,
+  Namespace,
+} from './schemas/infrastructure';
+import {
+  VirtualMachine,
+  InstanceType,
+  Template,
+} from './schemas/virtualization';
+import {
+  User,
+  Group,
+  ServiceAccount,
+  IdentityProvider,
+} from './schemas/identity';
+import {
+  Role,
+  RoleBinding,
+} from './schemas/access';
+
+// ============================================================================
+// CLUSTER SETS
+// ============================================================================
+
+export const clusterSets: ClusterSet[] = [
+  {
+    id: 'cs-na-prod',
+    name: 'petemobile-na-prod',
+    description: 'North America Production Clusters',
+    region: 'North America',
+    type: 'production',
+    clusterIds: ['cluster-us-west-prod-01', 'cluster-us-east-prod-02', 'cluster-na-edge-ny-01'],
+  },
+  {
+    id: 'cs-eu-prod',
+    name: 'petemobile-eu-prod',
+    description: 'Europe Production Clusters',
+    region: 'Europe',
+    type: 'production',
+    clusterIds: ['cluster-eu-west-prod-01', 'cluster-eu-east-prod-02', 'cluster-eu-edge-berlin-01'],
+  },
+  {
+    id: 'cs-sa-prod',
+    name: 'petemobile-sa-prod',
+    description: 'South America Production Clusters',
+    region: 'South America',
+    type: 'production',
+    clusterIds: [
+      'cluster-sa-prod-brazil-01',
+      'cluster-sa-prod-argentina-02',
+      'cluster-sa-prod-chile-03',
+      'cluster-sa-prod-colombia-04',
+      'cluster-sa-prod-peru-05',
+    ],
+  },
+  {
+    id: 'cs-apac-prod',
+    name: 'petemobile-apac-prod',
+    description: 'Asia-Pacific Production Clusters',
+    region: 'Asia-Pacific',
+    type: 'production',
+    clusterIds: [
+      'cluster-apac-prod-japan-01',
+      'cluster-apac-prod-korea-02',
+      'cluster-apac-prod-australia-03',
+      'cluster-apac-prod-singapore-04',
+      'cluster-apac-prod-india-05',
+    ],
+  },
+  {
+    id: 'cs-dev',
+    name: 'petemobile-dev-clusters',
+    description: 'Development and QA Clusters',
+    region: 'North America',
+    type: 'development',
+    clusterIds: ['cluster-dev-team-a', 'cluster-dev-team-b', 'cluster-qa-env'],
+  },
+];
+
+// ============================================================================
+// CLUSTERS
+// ============================================================================
+
+export const clusters: Cluster[] = [
+  // North America Production
+  {
+    id: 'cluster-us-west-prod-01',
+    name: 'us-west-prod-01',
+    clusterSetId: 'cs-na-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'North America',
+    location: 'US West',
+    nodes: 45,
+    namespaceIds: ['ns-core-ntwk-usw01', 'ns-5g-api-prod-usw01', 'ns-data-analytics-usw01'],
+  },
+  {
+    id: 'cluster-us-east-prod-02',
+    name: 'us-east-prod-02',
+    clusterSetId: 'cs-na-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'North America',
+    location: 'US East',
+    nodes: 52,
+    namespaceIds: ['ns-core-billing-use02', 'ns-security-ops-use02', 'ns-log-viewer-use02'],
+  },
+  {
+    id: 'cluster-na-edge-ny-01',
+    name: 'na-edge-ny-01',
+    clusterSetId: 'cs-na-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'North America',
+    location: 'New York Edge',
+    nodes: 18,
+    namespaceIds: ['ns-edge-core-app-ny01', 'ns-location-services-ny01'],
+  },
+
+  // Europe Production
+  {
+    id: 'cluster-eu-west-prod-01',
+    name: 'eu-west-prod-01',
+    clusterSetId: 'cs-eu-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Europe',
+    location: 'EU West',
+    nodes: 48,
+    namespaceIds: ['ns-core-ntwk-euw01', 'ns-eu-5g-api-euw01', 'ns-data-analytics-euw01'],
+  },
+  {
+    id: 'cluster-eu-east-prod-02',
+    name: 'eu-east-prod-02',
+    clusterSetId: 'cs-eu-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Europe',
+    location: 'EU East',
+    nodes: 44,
+    namespaceIds: ['ns-core-billing-eue02', 'ns-security-ops-eue02', 'ns-log-viewer-eue02'],
+  },
+  {
+    id: 'cluster-eu-edge-berlin-01',
+    name: 'eu-edge-berlin-01',
+    clusterSetId: 'cs-eu-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Europe',
+    location: 'Berlin Edge',
+    nodes: 20,
+    namespaceIds: ['ns-edge-core-app-ber01', 'ns-location-services-ber01'],
+  },
+
+  // South America Production
+  {
+    id: 'cluster-sa-prod-brazil-01',
+    name: 'sa-prod-brazil-01',
+    clusterSetId: 'cs-sa-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'South America',
+    location: 'Brazil',
+    nodes: 38,
+    namespaceIds: ['ns-core-network-sa-br01', 'ns-billing-api-br01', 'ns-customer-data-br01', 'ns-monitor-tools-br01', 'ns-db-service-br01'],
+  },
+  {
+    id: 'cluster-sa-prod-argentina-02',
+    name: 'sa-prod-argentina-02',
+    clusterSetId: 'cs-sa-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'South America',
+    location: 'Argentina',
+    nodes: 35,
+    namespaceIds: ['ns-core-network-sa-ar02', 'ns-billing-api-ar02', 'ns-customer-data-ar02', 'ns-monitor-tools-ar02', 'ns-db-service-ar02'],
+  },
+  {
+    id: 'cluster-sa-prod-chile-03',
+    name: 'sa-prod-chile-03',
+    clusterSetId: 'cs-sa-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'South America',
+    location: 'Chile',
+    nodes: 32,
+    namespaceIds: ['ns-core-network-sa-cl03', 'ns-billing-api-cl03', 'ns-customer-data-cl03', 'ns-monitor-tools-cl03', 'ns-db-service-cl03'],
+  },
+  {
+    id: 'cluster-sa-prod-colombia-04',
+    name: 'sa-prod-colombia-04',
+    clusterSetId: 'cs-sa-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'South America',
+    location: 'Colombia',
+    nodes: 30,
+    namespaceIds: ['ns-core-network-sa-co04', 'ns-billing-api-co04', 'ns-customer-data-co04', 'ns-monitor-tools-co04', 'ns-db-service-co04'],
+  },
+  {
+    id: 'cluster-sa-prod-peru-05',
+    name: 'sa-prod-peru-05',
+    clusterSetId: 'cs-sa-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'South America',
+    location: 'Peru',
+    nodes: 28,
+    namespaceIds: ['ns-core-network-sa-pe05', 'ns-billing-api-pe05', 'ns-customer-data-pe05', 'ns-monitor-tools-pe05', 'ns-db-service-pe05'],
+  },
+
+  // Asia-Pacific Production
+  {
+    id: 'cluster-apac-prod-japan-01',
+    name: 'apac-prod-japan-01',
+    clusterSetId: 'cs-apac-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Asia-Pacific',
+    location: 'Japan',
+    nodes: 50,
+    namespaceIds: ['ns-core-network-apac-jp01', 'ns-billing-api-apac-jp01', 'ns-customer-data-jp01', 'ns-monitor-tools-jp01', 'ns-db-service-jp01'],
+  },
+  {
+    id: 'cluster-apac-prod-korea-02',
+    name: 'apac-prod-korea-02',
+    clusterSetId: 'cs-apac-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Asia-Pacific',
+    location: 'Korea',
+    nodes: 46,
+    namespaceIds: ['ns-core-network-apac-kr02', 'ns-billing-api-apac-kr02', 'ns-customer-data-kr02', 'ns-monitor-tools-kr02', 'ns-db-service-kr02'],
+  },
+  {
+    id: 'cluster-apac-prod-australia-03',
+    name: 'apac-prod-australia-03',
+    clusterSetId: 'cs-apac-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Asia-Pacific',
+    location: 'Australia',
+    nodes: 42,
+    namespaceIds: ['ns-core-network-apac-au03', 'ns-billing-api-apac-au03', 'ns-customer-data-au03', 'ns-monitor-tools-au03', 'ns-db-service-au03'],
+  },
+  {
+    id: 'cluster-apac-prod-singapore-04',
+    name: 'apac-prod-singapore-04',
+    clusterSetId: 'cs-apac-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Asia-Pacific',
+    location: 'Singapore',
+    nodes: 48,
+    namespaceIds: ['ns-core-network-apac-sg04', 'ns-billing-api-apac-sg04', 'ns-customer-data-sg04', 'ns-monitor-tools-sg04', 'ns-db-service-sg04'],
+  },
+  {
+    id: 'cluster-apac-prod-india-05',
+    name: 'apac-prod-india-05',
+    clusterSetId: 'cs-apac-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'Asia-Pacific',
+    location: 'India',
+    nodes: 44,
+    namespaceIds: ['ns-core-network-apac-in05', 'ns-billing-api-apac-in05', 'ns-customer-data-in05', 'ns-monitor-tools-in05', 'ns-db-service-in05'],
+  },
+
+  // Development Clusters
+  {
+    id: 'cluster-dev-team-a',
+    name: 'dev-team-a-cluster',
+    clusterSetId: 'cs-dev',
+    status: 'Ready',
+    kubernetesVersion: '1.29.0',
+    region: 'North America',
+    location: 'US East Dev',
+    nodes: 12,
+    namespaceIds: ['ns-project-starlight-dev', 'ns-project-starfleet-dev', 'ns-project-pegasus-dev'],
+  },
+  {
+    id: 'cluster-dev-team-b',
+    name: 'dev-team-b-cluster',
+    clusterSetId: 'cs-dev',
+    status: 'Ready',
+    kubernetesVersion: '1.29.0',
+    region: 'North America',
+    location: 'US East Dev',
+    nodes: 12,
+    namespaceIds: ['ns-project-starlight-dev-b', 'ns-project-quasar-dev', 'ns-project-falcon-dev'],
+  },
+  {
+    id: 'cluster-qa-env',
+    name: 'qa-env-cluster',
+    clusterSetId: 'cs-dev',
+    status: 'Ready',
+    kubernetesVersion: '1.28.3',
+    region: 'North America',
+    location: 'US East QA',
+    nodes: 15,
+    namespaceIds: ['ns-qa-testing', 'ns-qa-performance'],
+  },
+];
+
+// Note: Due to size constraints, I'm creating a representative sample of namespaces and VMs
+// In a real implementation, you'd generate these programmatically or use a data generator
+
+export const namespaces: Namespace[] = [
+  // US West Prod 01 namespaces
+  { id: 'ns-core-ntwk-usw01', name: 'core-ntwk', clusterId: 'cluster-us-west-prod-01', type: 'infrastructure', labels: { env: 'prod', region: 'us-west' } },
+  { id: 'ns-5g-api-prod-usw01', name: '5g-api-prod', clusterId: 'cluster-us-west-prod-01', type: 'application', labels: { env: 'prod', app: '5g' } },
+  { id: 'ns-data-analytics-usw01', name: 'data-analytics', clusterId: 'cluster-us-west-prod-01', type: 'application', labels: { env: 'prod', app: 'analytics' } },
+  
+  // US East Prod 02 namespaces
+  { id: 'ns-core-billing-use02', name: 'core-billing', clusterId: 'cluster-us-east-prod-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-security-ops-use02', name: 'security-ops', clusterId: 'cluster-us-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security' } },
+  { id: 'ns-log-viewer-use02', name: 'log-viewer', clusterId: 'cluster-us-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'logging' } },
+  
+  // NA Edge NY 01 namespaces
+  { id: 'ns-edge-core-app-ny01', name: 'edge-core-app', clusterId: 'cluster-na-edge-ny-01', type: 'application', labels: { env: 'prod', type: 'edge' } },
+  { id: 'ns-location-services-ny01', name: 'location-services', clusterId: 'cluster-na-edge-ny-01', type: 'application', labels: { env: 'prod', app: 'location' } },
+  
+  // EU West Prod 01 namespaces
+  { id: 'ns-core-ntwk-euw01', name: 'core-ntwk', clusterId: 'cluster-eu-west-prod-01', type: 'infrastructure', labels: { env: 'prod', region: 'eu-west' } },
+  { id: 'ns-eu-5g-api-euw01', name: 'eu-5g-api', clusterId: 'cluster-eu-west-prod-01', type: 'application', labels: { env: 'prod', app: '5g' } },
+  { id: 'ns-data-analytics-euw01', name: 'data-analytics', clusterId: 'cluster-eu-west-prod-01', type: 'application', labels: { env: 'prod', app: 'analytics' } },
+  
+  // EU East Prod 02 namespaces
+  { id: 'ns-core-billing-eue02', name: 'core-billing', clusterId: 'cluster-eu-east-prod-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-security-ops-eue02', name: 'security-ops', clusterId: 'cluster-eu-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security' } },
+  { id: 'ns-log-viewer-eue02', name: 'log-viewer', clusterId: 'cluster-eu-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'logging' } },
+  
+  // EU Edge Berlin 01 namespaces
+  { id: 'ns-edge-core-app-ber01', name: 'edge-core-app', clusterId: 'cluster-eu-edge-berlin-01', type: 'application', labels: { env: 'prod', type: 'edge' } },
+  { id: 'ns-location-services-ber01', name: 'location-services', clusterId: 'cluster-eu-edge-berlin-01', type: 'application', labels: { env: 'prod', app: 'location' } },
+  
+  // SA Brazil 01 namespaces
+  { id: 'ns-core-network-sa-br01', name: 'core-network-sa', clusterId: 'cluster-sa-prod-brazil-01', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
+  { id: 'ns-billing-api-br01', name: 'billing-api', clusterId: 'cluster-sa-prod-brazil-01', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-br01', name: 'customer-data', clusterId: 'cluster-sa-prod-brazil-01', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-br01', name: 'monitor-tools', clusterId: 'cluster-sa-prod-brazil-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-br01', name: 'db-service', clusterId: 'cluster-sa-prod-brazil-01', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // SA Argentina 02 namespaces
+  { id: 'ns-core-network-sa-ar02', name: 'core-network-sa', clusterId: 'cluster-sa-prod-argentina-02', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
+  { id: 'ns-billing-api-ar02', name: 'billing-api', clusterId: 'cluster-sa-prod-argentina-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-ar02', name: 'customer-data', clusterId: 'cluster-sa-prod-argentina-02', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-ar02', name: 'monitor-tools', clusterId: 'cluster-sa-prod-argentina-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-ar02', name: 'db-service', clusterId: 'cluster-sa-prod-argentina-02', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // SA Chile 03 namespaces
+  { id: 'ns-core-network-sa-cl03', name: 'core-network-sa', clusterId: 'cluster-sa-prod-chile-03', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
+  { id: 'ns-billing-api-cl03', name: 'billing-api', clusterId: 'cluster-sa-prod-chile-03', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-cl03', name: 'customer-data', clusterId: 'cluster-sa-prod-chile-03', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-cl03', name: 'monitor-tools', clusterId: 'cluster-sa-prod-chile-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-cl03', name: 'db-service', clusterId: 'cluster-sa-prod-chile-03', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // SA Colombia 04 namespaces
+  { id: 'ns-core-network-sa-co04', name: 'core-network-sa', clusterId: 'cluster-sa-prod-colombia-04', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
+  { id: 'ns-billing-api-co04', name: 'billing-api', clusterId: 'cluster-sa-prod-colombia-04', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-co04', name: 'customer-data', clusterId: 'cluster-sa-prod-colombia-04', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-co04', name: 'monitor-tools', clusterId: 'cluster-sa-prod-colombia-04', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-co04', name: 'db-service', clusterId: 'cluster-sa-prod-colombia-04', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // SA Peru 05 namespaces
+  { id: 'ns-core-network-sa-pe05', name: 'core-network-sa', clusterId: 'cluster-sa-prod-peru-05', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
+  { id: 'ns-billing-api-pe05', name: 'billing-api', clusterId: 'cluster-sa-prod-peru-05', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-pe05', name: 'customer-data', clusterId: 'cluster-sa-prod-peru-05', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-pe05', name: 'monitor-tools', clusterId: 'cluster-sa-prod-peru-05', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-pe05', name: 'db-service', clusterId: 'cluster-sa-prod-peru-05', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // APAC Japan 01 namespaces
+  { id: 'ns-core-network-apac-jp01', name: 'core-network-apac', clusterId: 'cluster-apac-prod-japan-01', type: 'infrastructure', labels: { env: 'prod', region: 'apac' } },
+  { id: 'ns-billing-api-apac-jp01', name: 'billing-api-apac', clusterId: 'cluster-apac-prod-japan-01', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-jp01', name: 'customer-data', clusterId: 'cluster-apac-prod-japan-01', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-jp01', name: 'monitor-tools', clusterId: 'cluster-apac-prod-japan-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-jp01', name: 'db-service', clusterId: 'cluster-apac-prod-japan-01', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // APAC Korea 02 namespaces
+  { id: 'ns-core-network-apac-kr02', name: 'core-network-apac', clusterId: 'cluster-apac-prod-korea-02', type: 'infrastructure', labels: { env: 'prod', region: 'apac' } },
+  { id: 'ns-billing-api-apac-kr02', name: 'billing-api-apac', clusterId: 'cluster-apac-prod-korea-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-kr02', name: 'customer-data', clusterId: 'cluster-apac-prod-korea-02', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-kr02', name: 'monitor-tools', clusterId: 'cluster-apac-prod-korea-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-kr02', name: 'db-service', clusterId: 'cluster-apac-prod-korea-02', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // APAC Australia 03 namespaces
+  { id: 'ns-core-network-apac-au03', name: 'core-network-apac', clusterId: 'cluster-apac-prod-australia-03', type: 'infrastructure', labels: { env: 'prod', region: 'apac' } },
+  { id: 'ns-billing-api-apac-au03', name: 'billing-api-apac', clusterId: 'cluster-apac-prod-australia-03', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-au03', name: 'customer-data', clusterId: 'cluster-apac-prod-australia-03', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-au03', name: 'monitor-tools', clusterId: 'cluster-apac-prod-australia-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-au03', name: 'db-service', clusterId: 'cluster-apac-prod-australia-03', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // APAC Singapore 04 namespaces
+  { id: 'ns-core-network-apac-sg04', name: 'core-network-apac', clusterId: 'cluster-apac-prod-singapore-04', type: 'infrastructure', labels: { env: 'prod', region: 'apac' } },
+  { id: 'ns-billing-api-apac-sg04', name: 'billing-api-apac', clusterId: 'cluster-apac-prod-singapore-04', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-sg04', name: 'customer-data', clusterId: 'cluster-apac-prod-singapore-04', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-sg04', name: 'monitor-tools', clusterId: 'cluster-apac-prod-singapore-04', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-sg04', name: 'db-service', clusterId: 'cluster-apac-prod-singapore-04', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // APAC India 05 namespaces
+  { id: 'ns-core-network-apac-in05', name: 'core-network-apac', clusterId: 'cluster-apac-prod-india-05', type: 'infrastructure', labels: { env: 'prod', region: 'apac' } },
+  { id: 'ns-billing-api-apac-in05', name: 'billing-api-apac', clusterId: 'cluster-apac-prod-india-05', type: 'application', labels: { env: 'prod', app: 'billing' } },
+  { id: 'ns-customer-data-in05', name: 'customer-data', clusterId: 'cluster-apac-prod-india-05', type: 'database', labels: { env: 'prod', app: 'data' } },
+  { id: 'ns-monitor-tools-in05', name: 'monitor-tools', clusterId: 'cluster-apac-prod-india-05', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-db-service-in05', name: 'db-service', clusterId: 'cluster-apac-prod-india-05', type: 'database', labels: { env: 'prod', app: 'database' } },
+  
+  // Dev Team A namespaces
+  { id: 'ns-project-starlight-dev', name: 'project-starlight-dev', clusterId: 'cluster-dev-team-a', type: 'development', labels: { env: 'dev', team: 'team-a' } },
+  { id: 'ns-project-starfleet-dev', name: 'project-starfleet-dev', clusterId: 'cluster-dev-team-a', type: 'development', labels: { env: 'dev', team: 'team-a' } },
+  { id: 'ns-project-pegasus-dev', name: 'project-pegasus-dev', clusterId: 'cluster-dev-team-a', type: 'development', labels: { env: 'dev', team: 'team-a' } },
+  
+  // Dev Team B namespaces
+  { id: 'ns-project-starlight-dev-b', name: 'project-starlight-dev', clusterId: 'cluster-dev-team-b', type: 'development', labels: { env: 'dev', team: 'team-b' } },
+  { id: 'ns-project-quasar-dev', name: 'project-quasar-dev', clusterId: 'cluster-dev-team-b', type: 'development', labels: { env: 'dev', team: 'team-b' } },
+  { id: 'ns-project-falcon-dev', name: 'project-falcon-dev', clusterId: 'cluster-dev-team-b', type: 'development', labels: { env: 'dev', team: 'team-b' } },
+  
+  // QA namespaces
+  { id: 'ns-qa-testing', name: 'qa-testing-ns', clusterId: 'cluster-qa-env', type: 'qa', labels: { env: 'qa', type: 'testing' } },
+  { id: 'ns-qa-performance', name: 'qa-performance-ns', clusterId: 'cluster-qa-env', type: 'qa', labels: { env: 'qa', type: 'performance' } },
+];
+
+// Sample Virtual Machines (representative set - in production, you'd generate 15,000)
+export const virtualMachines: VirtualMachine[] = [
+  // US West Prod 01 VMs
+  { id: 'vm-usw01-001', name: 'ntwk-gateway-001', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-core-ntwk-usw01', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', ipAddress: '10.1.1.10', node: 'node-usw01-01', created: '2024-01-15T10:00:00Z' },
+  { id: 'vm-usw01-002', name: 'ntwk-router-002', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-core-ntwk-usw01', status: 'Running', os: 'RHEL 9', cpu: 8, memory: '32 GiB', storage: '200 GiB', ipAddress: '10.1.1.11', node: 'node-usw01-02', created: '2024-01-15T10:05:00Z' },
+  { id: 'vm-usw01-003', name: '5g-api-server-001', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-5g-api-prod-usw01', status: 'Running', os: 'RHEL 8', cpu: 8, memory: '32 GiB', storage: '150 GiB', ipAddress: '10.1.2.10', node: 'node-usw01-03', created: '2024-01-16T09:00:00Z' },
+  { id: 'vm-usw01-004', name: '5g-api-server-002', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-5g-api-prod-usw01', status: 'Running', os: 'RHEL 8', cpu: 8, memory: '32 GiB', storage: '150 GiB', ipAddress: '10.1.2.11', node: 'node-usw01-04', created: '2024-01-16T09:05:00Z' },
+  { id: 'vm-usw01-005', name: 'analytics-worker-001', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-data-analytics-usw01', status: 'Running', os: 'Ubuntu 22.04', cpu: 16, memory: '64 GiB', storage: '500 GiB', ipAddress: '10.1.3.10', node: 'node-usw01-05', created: '2024-01-17T08:00:00Z' },
+  
+  // Dev Team A VMs
+  { id: 'vm-dev-a-001', name: 'starlight-app-001', clusterId: 'cluster-dev-team-a', namespaceId: 'ns-project-starlight-dev', status: 'Running', os: 'Fedora 39', cpu: 2, memory: '8 GiB', storage: '50 GiB', ipAddress: '10.100.1.10', node: 'node-dev-a-01', created: '2024-02-01T10:00:00Z' },
+  { id: 'vm-dev-a-002', name: 'starlight-db-001', clusterId: 'cluster-dev-team-a', namespaceId: 'ns-project-starlight-dev', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', ipAddress: '10.100.1.11', node: 'node-dev-a-02', created: '2024-02-01T10:05:00Z' },
+  { id: 'vm-dev-a-003', name: 'starfleet-api-001', clusterId: 'cluster-dev-team-a', namespaceId: 'ns-project-starfleet-dev', status: 'Stopped', os: 'Fedora 38', cpu: 2, memory: '8 GiB', storage: '50 GiB', ipAddress: '10.100.2.10', node: 'node-dev-a-03', created: '2024-02-02T09:00:00Z' },
+  { id: 'vm-dev-a-004', name: 'pegasus-service-001', clusterId: 'cluster-dev-team-a', namespaceId: 'ns-project-pegasus-dev', status: 'Error', os: 'RHEL 8', cpu: 4, memory: '16 GiB', storage: '75 GiB', ipAddress: '10.100.3.10', node: 'node-dev-a-04', created: '2024-02-03T08:00:00Z' },
+  
+  // Add more VMs as needed...
+];
+
+// ============================================================================
+// USERS
+// ============================================================================
+
+export const users: User[] = [
+  // Dev Team Alpha (60 users)
+  { id: 'user-001', username: 'walter.kovacs', firstName: 'Walter', lastName: 'Kovacs', email: 'walter.kovacs@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:00:00Z' },
+  { id: 'user-002', username: 'sarah.chen', firstName: 'Sarah', lastName: 'Chen', email: 'sarah.chen@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:05:00Z' },
+  { id: 'user-003', username: 'michael.rodriguez', firstName: 'Michael', lastName: 'Rodriguez', email: 'michael.rodriguez@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:10:00Z' },
+  { id: 'user-004', username: 'emily.johnson', firstName: 'Emily', lastName: 'Johnson', email: 'emily.johnson@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:15:00Z' },
+  { id: 'user-005', username: 'david.kim', firstName: 'David', lastName: 'Kim', email: 'david.kim@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:20:00Z' },
+  // ... (Add 55 more dev-team-alpha users - I'll show a few more as examples)
+  { id: 'user-006', username: 'jessica.martinez', firstName: 'Jessica', lastName: 'Martinez', email: 'jessica.martinez@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:25:00Z' },
+  { id: 'user-007', username: 'james.wilson', firstName: 'James', lastName: 'Wilson', email: 'james.wilson@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:30:00Z' },
+  { id: 'user-008', username: 'amanda.taylor', firstName: 'Amanda', lastName: 'Taylor', email: 'amanda.taylor@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], created: '2023-01-15T10:35:00Z' },
+  // ... continuing to 60 total
+  
+  // Manager Project Starlight (5 users)
+  { id: 'user-061', username: 'rachel.morrison', firstName: 'Rachel', lastName: 'Morrison', email: 'rachel.morrison@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], created: '2023-02-01T09:00:00Z' },
+  { id: 'user-062', username: 'thomas.anderson', firstName: 'Thomas', lastName: 'Anderson', email: 'thomas.anderson@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], created: '2023-02-01T09:05:00Z' },
+  { id: 'user-063', username: 'lisa.patel', firstName: 'Lisa', lastName: 'Patel', email: 'lisa.patel@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], created: '2023-02-01T09:10:00Z' },
+  { id: 'user-064', username: 'robert.zhang', firstName: 'Robert', lastName: 'Zhang', email: 'robert.zhang@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], created: '2023-02-01T09:15:00Z' },
+  { id: 'user-065', username: 'michelle.garcia', firstName: 'Michelle', lastName: 'Garcia', email: 'michelle.garcia@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], created: '2023-02-01T09:20:00Z' },
+  
+  // Network Ops Team (20 users)
+  { id: 'user-066', username: 'alex.thompson', firstName: 'Alex', lastName: 'Thompson', email: 'alex.thompson@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], created: '2023-01-20T10:00:00Z' },
+  { id: 'user-067', username: 'olivia.brown', firstName: 'Olivia', lastName: 'Brown', email: 'olivia.brown@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], created: '2023-01-20T10:05:00Z' },
+  // ... (Add 18 more network-ops users)
+  
+  // Add more users for other groups...
+];
+
+// Note: For brevity, I'm showing a sample. In production, you'd generate all 400 users
+
+// ============================================================================
+// GROUPS
+// ============================================================================
+
+export const groups: Group[] = [
+  {
+    id: 'group-dev-team-alpha',
+    name: 'dev-team-alpha',
+    description: 'Development Team Alpha - Primary application development team',
+    type: 'team',
+    userIds: [
+      'user-001', 'user-002', 'user-003', 'user-004', 'user-005', 'user-006', 'user-007', 'user-008',
+      // ... (60 total user IDs)
+    ],
+  },
+  {
+    id: 'group-manager-project-starlight',
+    name: 'manager-project-starlight',
+    description: 'Project Starlight Management Team',
+    type: 'project',
+    userIds: ['user-061', 'user-062', 'user-063', 'user-064', 'user-065'],
+  },
+  {
+    id: 'group-network-ops',
+    name: 'network-ops-team',
+    description: 'Network Operations Team - Manages core network infrastructure',
+    type: 'team',
+    userIds: ['user-066', 'user-067' /* ... 18 more */],
+  },
+  {
+    id: 'group-billing-api',
+    name: 'billing-api-team',
+    description: 'Billing API Development and Maintenance Team',
+    type: 'team',
+    userIds: [/* 15 user IDs */],
+  },
+  {
+    id: 'group-5g-platform',
+    name: '5g-platform-developers',
+    description: '5G Platform Development Team',
+    type: 'team',
+    userIds: [/* 25 user IDs */],
+  },
+  {
+    id: 'group-security-ops',
+    name: 'security-ops-team',
+    description: 'Security Operations Team',
+    type: 'team',
+    userIds: [/* 12 user IDs */],
+  },
+  {
+    id: 'group-database-admins',
+    name: 'database-admins',
+    description: 'Database Administration Team',
+    type: 'team',
+    userIds: [/* 8 user IDs */],
+  },
+  {
+    id: 'group-monitoring',
+    name: 'monitoring-team',
+    description: 'Infrastructure Monitoring Team',
+    type: 'team',
+    userIds: [/* 10 user IDs */],
+  },
+  {
+    id: 'group-edge-platform',
+    name: 'edge-platform-team',
+    description: 'Edge Computing Platform Team',
+    type: 'team',
+    userIds: [/* 18 user IDs */],
+  },
+  {
+    id: 'group-qa-testing',
+    name: 'qa-testing-team',
+    description: 'Quality Assurance and Testing Team',
+    type: 'team',
+    userIds: [/* 15 user IDs */],
+  },
+  {
+    id: 'group-sa-region-ops',
+    name: 'sa-region-ops',
+    description: 'South America Regional Operations',
+    type: 'regional',
+    userIds: [/* 10 user IDs */],
+  },
+  {
+    id: 'group-apac-region-ops',
+    name: 'apac-region-ops',
+    description: 'Asia-Pacific Regional Operations',
+    type: 'regional',
+    userIds: [/* 10 user IDs */],
+  },
+  {
+    id: 'group-eu-region-ops',
+    name: 'eu-region-ops',
+    description: 'Europe Regional Operations',
+    type: 'regional',
+    userIds: [/* 10 user IDs */],
+  },
+];
+
+// ============================================================================
+// SERVICE ACCOUNTS
+// ============================================================================
+
+export const serviceAccounts: ServiceAccount[] = [
+  { id: 'sa-001', name: 'ci-cd-automation', namespace: 'default', description: 'CI/CD Pipeline Automation Service Account', created: '2023-01-10T10:00:00Z' },
+  { id: 'sa-002', name: 'monitoring-agent', namespace: 'kube-system', description: 'Monitoring and Metrics Collection Agent', created: '2023-01-10T10:05:00Z' },
+  { id: 'sa-003', name: 'backup-service', namespace: 'kube-system', description: 'Automated Backup Service Account', created: '2023-01-10T10:10:00Z' },
+  { id: 'sa-004', name: 'log-aggregator', namespace: 'kube-system', description: 'Log Aggregation and Forwarding Service', created: '2023-01-10T10:15:00Z' },
+  { id: 'sa-005', name: 'metrics-collector', namespace: 'kube-system', description: 'Metrics Collection Service Account', created: '2023-01-10T10:20:00Z' },
+  { id: 'sa-006', name: 'network-policy-controller', namespace: 'kube-system', description: 'Network Policy Controller Service Account', created: '2023-01-10T10:25:00Z' },
+  { id: 'sa-007', name: 'ingress-controller', namespace: 'kube-system', description: 'Ingress Controller Service Account', created: '2023-01-10T10:30:00Z' },
+  { id: 'sa-008', name: 'storage-provisioner', namespace: 'kube-system', description: 'Dynamic Storage Provisioner', created: '2023-01-10T10:35:00Z' },
+];
+
+// ============================================================================
+// IDENTITY PROVIDERS
+// ============================================================================
+
+export const identityProviders: IdentityProvider[] = [
+  { id: 'idp-001', name: 'PeteMobile LDAP', type: 'LDAP', status: 'Active', description: 'Corporate LDAP Directory' },
+  { id: 'idp-002', name: 'PeteMobile SSO', type: 'SAML', status: 'Active', description: 'Enterprise Single Sign-On' },
+  { id: 'idp-003', name: 'GitHub Enterprise', type: 'GitHub', status: 'Active', description: 'GitHub Enterprise Authentication' },
+  { id: 'idp-004', name: 'Google Workspace', type: 'Google', status: 'Inactive', description: 'Google Workspace Integration (Legacy)' },
+];
+
+// ============================================================================
+// ROLES
+// ============================================================================
+
+export const roles: Role[] = [
+  // Default KubeVirt Roles
+  {
+    id: 'role-kubevirt-admin',
+    name: 'kubevirt-admin',
+    type: 'default',
+    category: 'kubevirt',
+    description: 'Full administrative access to KubeVirt resources',
+    permissions: ['virtualmachines.*', 'virtualmachineinstances.*', 'templates.*', 'instancetypes.*'],
+  },
+  {
+    id: 'role-kubevirt-edit',
+    name: 'kubevirt-edit',
+    type: 'default',
+    category: 'kubevirt',
+    description: 'Edit access to KubeVirt resources',
+    permissions: ['virtualmachines.create', 'virtualmachines.update', 'virtualmachines.delete', 'virtualmachines.start', 'virtualmachines.stop'],
+  },
+  {
+    id: 'role-kubevirt-view',
+    name: 'kubevirt-view',
+    type: 'default',
+    category: 'kubevirt',
+    description: 'Read-only access to KubeVirt resources',
+    permissions: ['virtualmachines.get', 'virtualmachines.list', 'virtualmachineinstances.get', 'virtualmachineinstances.list'],
+  },
+  {
+    id: 'role-virtualmachine-admin',
+    name: 'virtualmachine-admin',
+    type: 'default',
+    category: 'kubevirt',
+    description: 'Full administrative access to virtual machines',
+    permissions: ['virtualmachines.*'],
+  },
+  {
+    id: 'role-virtualmachine-editor',
+    name: 'virtualmachine-editor',
+    type: 'default',
+    category: 'kubevirt',
+    description: 'Edit virtual machines',
+    permissions: ['virtualmachines.create', 'virtualmachines.update', 'virtualmachines.start', 'virtualmachines.stop'],
+  },
+  
+  // Custom Roles
+  {
+    id: 'role-starlight-developer',
+    name: 'starlight-project-developer',
+    type: 'custom',
+    category: 'application',
+    description: 'Developer access for Project Starlight',
+    permissions: ['virtualmachines.create', 'virtualmachines.update', 'virtualmachines.start', 'virtualmachines.stop', 'pods.create', 'pods.delete'],
+    created: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'role-billing-api-operator',
+    name: 'billing-api-operator',
+    type: 'custom',
+    category: 'application',
+    description: 'Operator access for billing API services',
+    permissions: ['virtualmachines.get', 'virtualmachines.list', 'virtualmachines.restart', 'services.get', 'services.list'],
+    created: '2024-01-20T10:00:00Z',
+  },
+  {
+    id: 'role-network-infra-admin',
+    name: 'network-infrastructure-admin',
+    type: 'custom',
+    category: 'namespace',
+    description: 'Administrative access to network infrastructure',
+    permissions: ['virtualmachines.*', 'networkpolicies.*', 'services.*', 'ingresses.*'],
+    created: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'role-5g-platform-maintainer',
+    name: '5g-platform-maintainer',
+    type: 'custom',
+    category: 'application',
+    description: 'Maintenance access for 5G platform services',
+    permissions: ['virtualmachines.get', 'virtualmachines.list', 'virtualmachines.update', 'virtualmachines.restart'],
+    created: '2024-01-18T10:00:00Z',
+  },
+  {
+    id: 'role-edge-compute-operator',
+    name: 'edge-compute-operator',
+    type: 'custom',
+    category: 'cluster',
+    description: 'Operator access for edge computing clusters',
+    permissions: ['virtualmachines.*', 'nodes.get', 'nodes.list', 'pods.get', 'pods.list'],
+    created: '2024-01-25T10:00:00Z',
+  },
+  {
+    id: 'role-database-admin',
+    name: 'database-admin',
+    type: 'custom',
+    category: 'namespace',
+    description: 'Administrative access to database virtual machines',
+    permissions: ['virtualmachines.*', 'persistentvolumeclaims.*', 'secrets.*'],
+    created: '2024-01-12T10:00:00Z',
+  },
+];
+
+// ============================================================================
+// ROLE BINDINGS (Sample)
+// ============================================================================
+
+export const roleBindings: RoleBinding[] = [
+  // Dev Team Alpha has starlight-project-developer role on dev cluster
+  {
+    id: 'rb-001',
+    roleId: 'role-starlight-developer',
+    subjectType: 'group',
+    subjectId: 'group-dev-team-alpha',
+    scope: 'namespace',
+    scopeId: 'ns-project-starlight-dev',
+  },
+  // Manager Project Starlight has kubevirt-admin on starlight namespace
+  {
+    id: 'rb-002',
+    roleId: 'role-kubevirt-admin',
+    subjectType: 'group',
+    subjectId: 'group-manager-project-starlight',
+    scope: 'namespace',
+    scopeId: 'ns-project-starlight-dev',
+  },
+  // Network Ops has network-infrastructure-admin on all core-ntwk namespaces
+  {
+    id: 'rb-003',
+    roleId: 'role-network-infra-admin',
+    subjectType: 'group',
+    subjectId: 'group-network-ops',
+    scope: 'clusterSet',
+    scopeId: 'cs-na-prod',
+  },
+  // Add more role bindings as needed
+];
+
+// ============================================================================
+// INSTANCE TYPES & TEMPLATES
+// ============================================================================
+
+export const instanceTypes: InstanceType[] = [
+  { id: 'it-small', name: 'small', cpu: 2, memory: '4 GiB', description: 'Small instance for development and testing' },
+  { id: 'it-medium', name: 'medium', cpu: 4, memory: '16 GiB', description: 'Medium instance for general workloads' },
+  { id: 'it-large', name: 'large', cpu: 8, memory: '32 GiB', description: 'Large instance for demanding applications' },
+  { id: 'it-xlarge', name: 'xlarge', cpu: 16, memory: '64 GiB', description: 'Extra large instance for compute-intensive workloads' },
+];
+
+export const templates: Template[] = [
+  { id: 'tpl-rhel9', name: 'rhel-9-server', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', description: 'Red Hat Enterprise Linux 9 Server' },
+  { id: 'tpl-rhel8', name: 'rhel-8-server', os: 'RHEL 8', cpu: 4, memory: '16 GiB', storage: '100 GiB', description: 'Red Hat Enterprise Linux 8 Server' },
+  { id: 'tpl-fedora39', name: 'fedora-39-workstation', os: 'Fedora 39', cpu: 2, memory: '8 GiB', storage: '50 GiB', description: 'Fedora 39 Workstation' },
+  { id: 'tpl-ubuntu2204', name: 'ubuntu-22-04-server', os: 'Ubuntu 22.04', cpu: 4, memory: '16 GiB', storage: '80 GiB', description: 'Ubuntu 22.04 LTS Server' },
+  { id: 'tpl-windows2022', name: 'windows-server-2022', os: 'Windows Server 2022', cpu: 8, memory: '32 GiB', storage: '200 GiB', description: 'Windows Server 2022 Standard' },
+];
+
+// ============================================================================
+// EXPORT ALL DATA
+// ============================================================================
+
+export const mockDatabase = {
+  clusterSets,
+  clusters,
+  namespaces,
+  virtualMachines,
+  users,
+  groups,
+  serviceAccounts,
+  identityProviders,
+  roles,
+  roleBindings,
+  instanceTypes,
+  templates,
+};
+
+export default mockDatabase;
+
