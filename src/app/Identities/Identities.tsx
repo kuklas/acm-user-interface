@@ -151,37 +151,8 @@ const Identities: React.FunctionComponent = () => {
         <Toolbar>
           <ToolbarContent>
             <ToolbarItem>
-              <Dropdown
-                isOpen={isFilterOpen}
-                onSelect={() => setIsFilterOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle 
-                    ref={toggleRef} 
-                    onClick={() => setIsFilterOpen(!isFilterOpen)} 
-                    isExpanded={isFilterOpen}
-                    variant="default"
-                  >
-                    {filterType}
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  <DropdownItem value="User" onClick={() => setFilterType('User')}>
-                    User
-                  </DropdownItem>
-                  <DropdownItem value="Service account" onClick={() => setFilterType('Service account')}>
-                    Service account
-                  </DropdownItem>
-                  <DropdownItem value="Group" onClick={() => setFilterType('Group')}>
-                    Group
-                  </DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </ToolbarItem>
-            <ToolbarItem>
               <SearchInput
-                placeholder="Search for a user"
+                placeholder="Search users"
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
@@ -206,40 +177,15 @@ const Identities: React.FunctionComponent = () => {
         <Table aria-label="Users table" variant="compact">
           <Thead>
             <Tr>
-              <Th>
-                <Checkbox
-                  id="select-all-users"
-                  isChecked={paginatedUsers.length > 0 && paginatedUsers.every(user => selectedUsers.includes(user.id))}
-                  onChange={(event, checked) => {
-                    if (checked) {
-                      setSelectedUsers(Array.from(new Set([...selectedUsers, ...paginatedUsers.map(u => u.id)])));
-                    } else {
-                      const pageUserIds = paginatedUsers.map(u => u.id);
-                      setSelectedUsers(selectedUsers.filter(id => !pageUserIds.includes(id)));
-                    }
-                  }}
-                  aria-label="Select all users on page"
-                  style={{ transform: 'scale(0.7)', border: '2px solid red' }}
-                />
-              </Th>
               <Th>Name</Th>
               <Th>Identity provider</Th>
               <Th>Created</Th>
-              <Th width={10}></Th>
+              <Th></Th>
             </Tr>
           </Thead>
           <Tbody>
             {paginatedUsers.map((user) => (
               <Tr key={user.id}>
-                <Td>
-                  <Checkbox
-                    id={`select-user-${user.id}`}
-                    isChecked={selectedUsers.includes(user.id)}
-                    onChange={(event, checked) => handleUserSelect(user.id, checked)}
-                    aria-label={`Select ${user.name}`}
-                    style={{ transform: 'scale(0.7)', border: '2px solid red' }}
-                  />
-                </Td>
                 <Td dataLabel="Name">
                   <Button
                     variant="link"
@@ -252,15 +198,11 @@ const Identities: React.FunctionComponent = () => {
                 </Td>
                 <Td dataLabel="Identity provider">{user.identityProvider}</Td>
                 <Td dataLabel="Created">{user.created}</Td>
-                <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
+                <Td dataLabel="Actions" style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openUserActionMenuId === user.id}
-                    onSelect={() => {
-                      console.log('[Identities] Dropdown onSelect called');
-                      setOpenUserActionMenuId(null);
-                    }}
+                    onSelect={() => setOpenUserActionMenuId(null)}
                     onOpenChange={(isOpen: boolean) => {
-                      console.log('[Identities] Dropdown onOpenChange called, isOpen:', isOpen);
                       if (!isOpen) {
                         setOpenUserActionMenuId(null);
                       }
@@ -270,10 +212,7 @@ const Identities: React.FunctionComponent = () => {
                         ref={toggleRef}
                         aria-label="Actions menu"
                         variant="plain"
-                        onClick={() => {
-                          console.log('[Identities] MenuToggle onClick for user:', user.id);
-                          toggleUserActionMenu(user.id);
-                        }}
+                        onClick={() => toggleUserActionMenu(user.id)}
                         isExpanded={openUserActionMenuId === user.id}
                       >
                         <EllipsisVIcon />
@@ -284,10 +223,7 @@ const Identities: React.FunctionComponent = () => {
                     <DropdownList>
                       <DropdownItem
                         key="impersonate"
-                        onClick={() => {
-                          console.log('[Identities] Impersonate clicked for user:', user.name);
-                          handleImpersonateUser(user.name);
-                        }}
+                        onClick={() => handleImpersonateUser(user.name)}
                       >
                         Impersonate
                       </DropdownItem>
