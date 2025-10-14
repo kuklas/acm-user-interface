@@ -81,11 +81,108 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
     </div>
   );
 
+  const [targetCluster, setTargetCluster] = React.useState('');
+  const [targetProject, setTargetProject] = React.useState('');
+
   const targetPlacementStep = (
     <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>Target placement</h2>
-      <p>Select the target cluster and namespace for your virtual machines.</p>
-      {/* Placeholder for target placement content */}
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '16px' }}>Target placement</h2>
+      
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+        {/* Source Section */}
+        <div style={{ 
+          flex: 1, 
+          border: '1px solid var(--pf-t--global--border--color--default)', 
+          borderRadius: '8px',
+          padding: '16px',
+          backgroundColor: 'var(--pf-t--global--background--color--secondary--default)'
+        }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '16px' }}>Source</h3>
+          
+          <FormGroup label="Cluster">
+            <TextInput
+              type="text"
+              value="test-west-eu"
+              isDisabled
+              aria-label="Source cluster"
+            />
+          </FormGroup>
+
+          <FormGroup label="Project">
+            <TextInput
+              type="text"
+              value="test"
+              isDisabled
+              aria-label="Source project"
+            />
+          </FormGroup>
+        </div>
+
+        {/* Arrow */}
+        <div style={{ fontSize: '2rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+          →
+        </div>
+
+        {/* Target Section */}
+        <div style={{ 
+          flex: 1, 
+          border: '1px solid var(--pf-t--global--border--color--default)', 
+          borderRadius: '8px',
+          padding: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>Target *</h3>
+            <Button 
+              variant="link" 
+              onClick={() => {
+                setTargetCluster('');
+                setTargetProject('');
+              }}
+              style={{ padding: 0, fontSize: '0.875rem' }}
+            >
+              Clear all
+            </Button>
+          </div>
+          
+          <FormGroup label="Cluster">
+            <FormSelect
+              value={targetCluster}
+              onChange={(_event, value) => {
+                setTargetCluster(value as string);
+                setTargetProject(''); // Reset project when cluster changes
+              }}
+              aria-label="Target cluster"
+            >
+              <FormSelectOption value="" label="Select Cluster" />
+              <FormSelectOption value="test-south-eu" label="test-south-eu" />
+              <FormSelectOption value="test-north-eu" label="test-north-eu" />
+              <FormSelectOption value="test-central-eu" label="test-central-eu" />
+            </FormSelect>
+          </FormGroup>
+
+          <FormGroup label="Project">
+            <FormSelect
+              value={targetProject}
+              onChange={(_event, value) => setTargetProject(value as string)}
+              isDisabled={!targetCluster}
+              aria-label="Target project"
+            >
+              <FormSelectOption 
+                value="" 
+                label={targetCluster ? "Select project" : "To select a project, pick a cluster"} 
+              />
+              {targetCluster && (
+                <>
+                  <FormSelectOption value="test" label="test" />
+                  <FormSelectOption value="production" label="production" />
+                  <FormSelectOption value="staging" label="staging" />
+                  <FormSelectOption value="development" label="development" />
+                </>
+              )}
+            </FormSelect>
+          </FormGroup>
+        </div>
+      </div>
     </div>
   );
 
