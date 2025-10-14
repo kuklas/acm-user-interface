@@ -280,6 +280,10 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       ],
     },
     {
+      label: '',
+      routes: [],
+    },
+    {
       label: 'User management',
       routes: [
         {
@@ -290,15 +294,15 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
         },
         {
           element: <></>,
-          label: 'Identity providers',
-          path: '/user-management/identity-providers',
-          title: 'Identity providers',
-        },
-        {
-          element: <></>,
           label: 'Roles',
           path: '/user-management/roles',
           title: 'Roles',
+        },
+        {
+          element: <></>,
+          label: 'Identity providers',
+          path: '/user-management/identity-providers',
+          title: 'Identity providers',
         },
       ],
     },
