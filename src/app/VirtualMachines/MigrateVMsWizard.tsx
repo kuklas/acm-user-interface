@@ -186,11 +186,315 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
     </div>
   );
 
+  const [selectedCheck, setSelectedCheck] = React.useState<string>('network');
+
+  const renderCheckDetail = () => {
+    switch (selectedCheck) {
+      case 'network':
+        return (
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>Network mapping</h3>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Source network</div>
+                <div>network1</div>
+              </div>
+              <div style={{ fontSize: '1.5rem', color: 'var(--pf-t--global--text--color--subtle)' }}>→</div>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Target network</div>
+                <div>network1</div>
+              </div>
+              <Button variant="link" style={{ marginLeft: 'auto', padding: 0 }}>
+                Edit
+              </Button>
+            </div>
+          </div>
+        );
+      case 'storage':
+        return (
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>Storage mapping</h3>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Source storage</div>
+                <div>storage1</div>
+              </div>
+              <div style={{ fontSize: '1.5rem', color: 'var(--pf-t--global--text--color--subtle)' }}>→</div>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Target storage</div>
+                <div>storage1</div>
+              </div>
+              <Button variant="link" style={{ marginLeft: 'auto', padding: 0 }}>
+                Edit
+              </Button>
+            </div>
+          </div>
+        );
+      case 'compute':
+        return (
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>Compute compatibility</h3>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Source cluster compute</div>
+                <div>Compute1</div>
+              </div>
+              <div style={{ fontSize: '1.5rem', color: 'var(--pf-t--global--text--color--subtle)' }}>→</div>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Target cluster compute</div>
+                <div>Compute1</div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'version':
+        return (
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '24px' }}>Version compatibility</h3>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>OpenShift version</div>
+              <div style={{ display: 'flex', gap: '48px' }}>
+                <div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '0.875rem' }}>Source cluster</div>
+                  <div>4.20</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '0.875rem' }}>Target cluster</div>
+                  <div>4.20</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Virtualization operator version</div>
+              <div style={{ display: 'flex', gap: '48px' }}>
+                <div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '0.875rm' }}>Source cluster</div>
+                  <div>4.19</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '0.875rem' }}>Target cluster</div>
+                  <div>4.19</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'resource':
+        return (
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '24px' }}>Resource capacity</h3>
+            <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--pf-t--global--border--color--default)' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ 
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  backgroundColor: 'var(--pf-t--global--color--brand--default)',
+                  borderRadius: '2px'
+                }}></span>
+                Source size
+              </div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                <div>Storage XXX GB</div>
+                <div>Memory XXX GB</div>
+                <div>CPU XXX cores</div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: '16px' }}>Target cluster capacity (test-south-eu)</div>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 'bold' }}>Storage: 238 GB</span>
+                </div>
+                <div style={{ 
+                  width: '100%', 
+                  height: '20px', 
+                  backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                  marginBottom: '4px'
+                }}>
+                  <div style={{ 
+                    width: '46%', 
+                    height: '100%', 
+                    backgroundColor: 'var(--pf-t--global--color--brand--default)'
+                  }}></div>
+                </div>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem' }}>
+                  <span>■ 111 GB used</span>
+                  <span>□ 121 GB free</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 'bold' }}>Memory: 40 GB</span>
+                </div>
+                <div style={{ 
+                  width: '100%', 
+                  height: '20px', 
+                  backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                  marginBottom: '4px'
+                }}>
+                  <div style={{ 
+                    width: '75%', 
+                    height: '100%', 
+                    backgroundColor: 'var(--pf-t--global--color--brand--default)'
+                  }}></div>
+                </div>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem' }}>
+                  <span>■ 30 GB used</span>
+                  <span>□ 10 GB free</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 'bold' }}>CPU: 15 cores</span>
+                </div>
+                <div style={{ 
+                  width: '100%', 
+                  height: '20px', 
+                  backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                  marginBottom: '4px'
+                }}>
+                  <div style={{ 
+                    width: '66%', 
+                    height: '100%', 
+                    backgroundColor: 'var(--pf-t--global--color--brand--default)'
+                  }}></div>
+                </div>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem' }}>
+                  <span>■ 10 cores</span>
+                  <span>□ 5 cores</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   const migrationReadinessStep = (
     <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>Migration readiness</h2>
-      <p>Review the migration readiness checks for your virtual machines.</p>
-      {/* Placeholder for migration readiness content */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Migration readiness</h2>
+        <Button variant="link" style={{ padding: 0 }}>Run again</Button>
+      </div>
+      
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '8px', 
+        padding: '12px 16px',
+        backgroundColor: 'var(--pf-t--global--background--color--secondary--default)',
+        borderRadius: '8px',
+        marginBottom: '24px'
+      }}>
+        <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+        <span style={{ fontWeight: 'bold' }}>Ready to migrate</span>
+        <span style={{ marginLeft: 'auto', fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+          5 successful checks
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: '24px', borderTop: '1px solid var(--pf-t--global--border--color--default)', paddingTop: '24px' }}>
+        {/* Left sidebar with checks */}
+        <div style={{ width: '200px', borderRight: '1px solid var(--pf-t--global--border--color--default)', paddingRight: '16px' }}>
+          <div
+            onClick={() => setSelectedCheck('network')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: selectedCheck === 'network' ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Network mapping
+          </div>
+          <div
+            onClick={() => setSelectedCheck('storage')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: selectedCheck === 'storage' ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Storage mapping
+          </div>
+          <div
+            onClick={() => setSelectedCheck('compute')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: selectedCheck === 'compute' ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Compute compatibility
+          </div>
+          <div
+            onClick={() => setSelectedCheck('version')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: selectedCheck === 'version' ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Version compatibility
+          </div>
+          <div
+            onClick={() => setSelectedCheck('resource')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: selectedCheck === 'resource' ? 'var(--pf-t--global--background--color--action--plain--clicked)' : 'transparent',
+              borderRadius: '4px',
+              marginBottom: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span style={{ color: 'var(--pf-t--global--icon--color--status--success)' }}>✓</span>
+            Resource capacity
+          </div>
+        </div>
+
+        {/* Right panel with details */}
+        <div style={{ flex: 1 }}>
+          {renderCheckDetail()}
+        </div>
+      </div>
     </div>
   );
 
