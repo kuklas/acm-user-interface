@@ -760,6 +760,196 @@ export const templates: Template[] = [
 ];
 
 // ============================================================================
+// GENERATE ADDITIONAL DATA
+// ============================================================================
+
+import {
+  generateDevTeamAlphaUsers,
+  generateGroupUsers,
+  generateVirtualMachines,
+} from './dataGenerator';
+
+// Complete dev-team-alpha to 60 users (currently have 8, need 52 more)
+const additionalDevTeamAlphaUsers = generateDevTeamAlphaUsers(9, 52);
+users.push(...additionalDevTeamAlphaUsers);
+
+// Update dev-team-alpha group with all user IDs
+const devTeamAlphaGroup = groups.find(g => g.id === 'group-dev-team-alpha');
+if (devTeamAlphaGroup) {
+  devTeamAlphaGroup.userIds = users
+    .filter(u => u.groupIds.includes('group-dev-team-alpha'))
+    .map(u => u.id);
+}
+
+// Generate users for network-ops-team (20 users)
+const networkOpsUsers = generateGroupUsers('group-network-ops', 'network-ops-team', 66 + 52, 18); // Start after dev-team users
+users.push(...networkOpsUsers);
+const networkOpsGroup = groups.find(g => g.id === 'group-network-ops');
+if (networkOpsGroup) {
+  networkOpsGroup.userIds.push(...networkOpsUsers.map(u => u.id));
+}
+
+// Generate users for billing-api-team (15 users)
+const billingApiUsers = generateGroupUsers('group-billing-api', 'billing-api-team', 136, 15);
+users.push(...billingApiUsers);
+const billingApiGroup = groups.find(g => g.id === 'group-billing-api');
+if (billingApiGroup) {
+  billingApiGroup.userIds = billingApiUsers.map(u => u.id);
+}
+
+// Generate users for 5g-platform-developers (25 users)
+const fivegPlatformUsers = generateGroupUsers('group-5g-platform', '5g-platform-developers', 151, 25);
+users.push(...fivegPlatformUsers);
+const fivegPlatformGroup = groups.find(g => g.id === 'group-5g-platform');
+if (fivegPlatformGroup) {
+  fivegPlatformGroup.userIds = fivegPlatformUsers.map(u => u.id);
+}
+
+// Generate users for security-ops-team (12 users)
+const securityOpsUsers = generateGroupUsers('group-security-ops', 'security-ops-team', 176, 12);
+users.push(...securityOpsUsers);
+const securityOpsGroup = groups.find(g => g.id === 'group-security-ops');
+if (securityOpsGroup) {
+  securityOpsGroup.userIds = securityOpsUsers.map(u => u.id);
+}
+
+// Generate users for database-admins (8 users)
+const databaseAdminUsers = generateGroupUsers('group-database-admins', 'database-admins', 188, 8);
+users.push(...databaseAdminUsers);
+const databaseAdminsGroup = groups.find(g => g.id === 'group-database-admins');
+if (databaseAdminsGroup) {
+  databaseAdminsGroup.userIds = databaseAdminUsers.map(u => u.id);
+}
+
+// Generate users for monitoring-team (10 users)
+const monitoringUsers = generateGroupUsers('group-monitoring', 'monitoring-team', 196, 10);
+users.push(...monitoringUsers);
+const monitoringGroup = groups.find(g => g.id === 'group-monitoring');
+if (monitoringGroup) {
+  monitoringGroup.userIds = monitoringUsers.map(u => u.id);
+}
+
+// Generate users for edge-platform-team (18 users)
+const edgePlatformUsers = generateGroupUsers('group-edge-platform', 'edge-platform-team', 206, 18);
+users.push(...edgePlatformUsers);
+const edgePlatformGroup = groups.find(g => g.id === 'group-edge-platform');
+if (edgePlatformGroup) {
+  edgePlatformGroup.userIds = edgePlatformUsers.map(u => u.id);
+}
+
+// Generate users for qa-testing-team (15 users)
+const qaTestingUsers = generateGroupUsers('group-qa-testing', 'qa-testing-team', 224, 15);
+users.push(...qaTestingUsers);
+const qaTestingGroup = groups.find(g => g.id === 'group-qa-testing');
+if (qaTestingGroup) {
+  qaTestingGroup.userIds = qaTestingUsers.map(u => u.id);
+}
+
+// Generate users for regional ops (10 each)
+const saRegionOpsUsers = generateGroupUsers('group-sa-region-ops', 'sa-region-ops', 239, 10);
+users.push(...saRegionOpsUsers);
+const saRegionOpsGroup = groups.find(g => g.id === 'group-sa-region-ops');
+if (saRegionOpsGroup) {
+  saRegionOpsGroup.userIds = saRegionOpsUsers.map(u => u.id);
+}
+
+const apacRegionOpsUsers = generateGroupUsers('group-apac-region-ops', 'apac-region-ops', 249, 10);
+users.push(...apacRegionOpsUsers);
+const apacRegionOpsGroup = groups.find(g => g.id === 'group-apac-region-ops');
+if (apacRegionOpsGroup) {
+  apacRegionOpsGroup.userIds = apacRegionOpsUsers.map(u => u.id);
+}
+
+const euRegionOpsUsers = generateGroupUsers('group-eu-region-ops', 'eu-region-ops', 259, 10);
+users.push(...euRegionOpsUsers);
+const euRegionOpsGroup = groups.find(g => g.id === 'group-eu-region-ops');
+if (euRegionOpsGroup) {
+  euRegionOpsGroup.userIds = euRegionOpsUsers.map(u => u.id);
+}
+
+// Generate Virtual Machines for each cluster (~80-100 VMs per cluster)
+// This will give us ~1,500-2,000 VMs total (scalable to 15,000 if needed)
+
+// US West Prod 01 - Add more VMs (currently has 5, add 75 more)
+const usWestVMs = generateVirtualMachines('cluster-us-west-prod-01', 'ns-core-ntwk-usw01', 6, 75);
+virtualMachines.push(...usWestVMs);
+
+// US East Prod 02 - Add VMs
+const usEastVMs = generateVirtualMachines('cluster-us-east-prod-02', 'ns-core-billing-use02', 1, 80);
+virtualMachines.push(...usEastVMs);
+
+// EU West Prod 01 - Add VMs
+const euWestVMs = generateVirtualMachines('cluster-eu-west-prod-01', 'ns-core-ntwk-euw01', 1, 85);
+virtualMachines.push(...euWestVMs);
+
+// EU East Prod 02 - Add VMs
+const euEastVMs = generateVirtualMachines('cluster-eu-east-prod-02', 'ns-core-billing-eue02', 1, 80);
+virtualMachines.push(...euEastVMs);
+
+// SA Brazil 01 - Add VMs
+const saBrazilVMs = generateVirtualMachines('cluster-sa-prod-brazil-01', 'ns-core-network-sa-br01', 1, 70);
+virtualMachines.push(...saBrazilVMs);
+
+// SA Argentina 02 - Add VMs
+const saArgentinaVMs = generateVirtualMachines('cluster-sa-prod-argentina-02', 'ns-core-network-sa-ar02', 1, 65);
+virtualMachines.push(...saArgentinaVMs);
+
+// SA Chile 03 - Add VMs
+const saChileVMs = generateVirtualMachines('cluster-sa-prod-chile-03', 'ns-core-network-sa-cl03', 1, 60);
+virtualMachines.push(...saChileVMs);
+
+// SA Colombia 04 - Add VMs
+const saColombiaVMs = generateVirtualMachines('cluster-sa-prod-colombia-04', 'ns-core-network-sa-co04', 1, 55);
+virtualMachines.push(...saColombiaVMs);
+
+// SA Peru 05 - Add VMs
+const saPeruVMs = generateVirtualMachines('cluster-sa-prod-peru-05', 'ns-core-network-sa-pe05', 1, 50);
+virtualMachines.push(...saPeruVMs);
+
+// APAC Japan 01 - Add VMs
+const apacJapanVMs = generateVirtualMachines('cluster-apac-prod-japan-01', 'ns-core-network-apac-jp01', 1, 90);
+virtualMachines.push(...apacJapanVMs);
+
+// APAC Korea 02 - Add VMs
+const apacKoreaVMs = generateVirtualMachines('cluster-apac-prod-korea-02', 'ns-core-network-apac-kr02', 1, 85);
+virtualMachines.push(...apacKoreaVMs);
+
+// APAC Australia 03 - Add VMs
+const apacAustraliaVMs = generateVirtualMachines('cluster-apac-prod-australia-03', 'ns-core-network-apac-au03', 1, 80);
+virtualMachines.push(...apacAustraliaVMs);
+
+// APAC Singapore 04 - Add VMs
+const apacSingaporeVMs = generateVirtualMachines('cluster-apac-prod-singapore-04', 'ns-core-network-apac-sg04', 1, 85);
+virtualMachines.push(...apacSingaporeVMs);
+
+// APAC India 05 - Add VMs
+const apacIndiaVMs = generateVirtualMachines('cluster-apac-prod-india-05', 'ns-core-network-apac-in05', 1, 80);
+virtualMachines.push(...apacIndiaVMs);
+
+// NA Edge NY 01 - Add VMs
+const naEdgeNYVMs = generateVirtualMachines('cluster-na-edge-ny-01', 'ns-edge-core-app-ny01', 1, 40);
+virtualMachines.push(...naEdgeNYVMs);
+
+// EU Edge Berlin 01 - Add VMs
+const euEdgeBerlinVMs = generateVirtualMachines('cluster-eu-edge-berlin-01', 'ns-edge-core-app-ber01', 1, 40);
+virtualMachines.push(...euEdgeBerlinVMs);
+
+// Dev Team A - Add more VMs (currently has 4, add 16 more)
+const devTeamAVMs = generateVirtualMachines('cluster-dev-team-a', 'ns-project-starlight-dev', 5, 16);
+virtualMachines.push(...devTeamAVMs);
+
+// Dev Team B - Add VMs
+const devTeamBVMs = generateVirtualMachines('cluster-dev-team-b', 'ns-project-starlight-dev-b', 1, 18);
+virtualMachines.push(...devTeamBVMs);
+
+// QA Env - Add VMs
+const qaEnvVMs = generateVirtualMachines('cluster-qa-env', 'ns-qa-testing', 1, 25);
+virtualMachines.push(...qaEnvVMs);
+
+// Total VMs: ~1,300+ (can be scaled to 15,000 by generating more per cluster)
+// Total Users: ~270+ (can be scaled to 400+ by adding more groups/users)
+
+// ============================================================================
 // EXPORT ALL DATA
 // ============================================================================
 
