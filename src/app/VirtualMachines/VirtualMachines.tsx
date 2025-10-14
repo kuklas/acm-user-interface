@@ -113,6 +113,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [isOSFilterOpen, setIsOSFilterOpen] = React.useState(false);
   const [isMenuToggleOpen, setIsMenuToggleOpen] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+  const [isToolbarActionsOpen, setIsToolbarActionsOpen] = React.useState(false);
   const [isMigrateMenuOpen, setIsMigrateMenuOpen] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isRefreshDropdownOpen, setIsRefreshDropdownOpen] = React.useState(false);
@@ -938,14 +939,15 @@ const VirtualMachines: React.FunctionComponent = () => {
                 </ToolbarItem>
                 <ToolbarItem>
                   <Dropdown
-                    isOpen={isActionsOpen}
+                    isOpen={isToolbarActionsOpen}
                     onSelect={() => {
                       if (!isMigrateMenuOpen) {
-                        setIsActionsOpen(false);
+                        setIsToolbarActionsOpen(false);
                       }
                     }}
                     onOpenChange={(isOpen: boolean) => {
-                      setIsActionsOpen(isOpen);
+                      console.log('[Toolbar Actions] onOpenChange:', isOpen);
+                      setIsToolbarActionsOpen(isOpen);
                       if (!isOpen) {
                         setIsMigrateMenuOpen(false);
                       }
@@ -953,8 +955,11 @@ const VirtualMachines: React.FunctionComponent = () => {
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
-                        onClick={() => setIsActionsOpen(!isActionsOpen)}
-                        isExpanded={isActionsOpen}
+                        onClick={() => {
+                          console.log('[Toolbar Actions] Toggle clicked, current state:', isToolbarActionsOpen, 'selected VMs:', selectedVMs.length);
+                          setIsToolbarActionsOpen(!isToolbarActionsOpen);
+                        }}
+                        isExpanded={isToolbarActionsOpen}
                         variant="secondary"
                         isDisabled={selectedVMs.length === 0}
                       >
@@ -994,7 +999,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                             key="migrate-across-clusters"
                             onClick={() => {
                               console.log('Migrate across clusters');
-                              setIsActionsOpen(false);
+                              setIsToolbarActionsOpen(false);
                               setIsMigrateMenuOpen(false);
                             }}
                             style={{ paddingLeft: '32px' }}
@@ -1010,7 +1015,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                             key="migrate-compute"
                             onClick={() => {
                               console.log('Migrate compute');
-                              setIsActionsOpen(false);
+                              setIsToolbarActionsOpen(false);
                               setIsMigrateMenuOpen(false);
                             }}
                             style={{ paddingLeft: '32px' }}
@@ -1026,7 +1031,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                             key="migrate-storage"
                             onClick={() => {
                               console.log('Migrate storage');
-                              setIsActionsOpen(false);
+                              setIsToolbarActionsOpen(false);
                               setIsMigrateMenuOpen(false);
                             }}
                             style={{ paddingLeft: '32px' }}
