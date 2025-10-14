@@ -207,7 +207,6 @@ body.resizing-sidebar * {
 
 .migrate-flyout-menu .pf-v6-c-menu {
   box-shadow: var(--pf-t--global--box-shadow--lg);
-  border: 1px solid var(--pf-t--global--border--color--default);
   border-radius: 4px;
   background-color: var(--pf-t--global--background--color--primary--default);
 }

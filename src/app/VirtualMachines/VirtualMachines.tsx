@@ -1034,7 +1034,6 @@ const VirtualMachines: React.FunctionComponent = () => {
                         zIndex: 10001,
                         backgroundColor: 'white',
                         boxShadow: 'var(--pf-t--global--box-shadow--lg)',
-                        border: '1px solid var(--pf-t--global--border--color--default)',
                         borderRadius: '4px',
                         minWidth: '300px',
                       }}
