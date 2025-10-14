@@ -110,7 +110,7 @@ export const UsersTable: React.FunctionComponent = () => {
       <Table aria-label="Users table" variant="compact">
         <Thead>
           <Tr>
-            <Th>Name</Th>
+            <Th>User</Th>
             <Th>Identity provider</Th>
             <Th>Created</Th>
             <Th></Th>
@@ -119,7 +119,7 @@ export const UsersTable: React.FunctionComponent = () => {
         <Tbody>
           {paginatedUsers.map((user) => (
             <Tr key={user.id}>
-              <Td dataLabel="Name">
+              <Td dataLabel="User">
                 <Button
                   variant="link"
                   isInline

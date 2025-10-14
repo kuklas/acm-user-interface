@@ -211,7 +211,7 @@ export const GroupsTable: React.FunctionComponent = () => {
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th width={20}>Group Name</Th>
+            <Th width={20}>Group</Th>
             <Th width={15}>Members</Th>
             <Th width={20}>Sync Source</Th>
             <Th width={20}>Last Synced</Th>
@@ -231,7 +231,7 @@ export const GroupsTable: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
-              <Td dataLabel="Group Name" width={20}>
+              <Td dataLabel="Group" width={20}>
                 <Button
                   variant="link"
                   isInline

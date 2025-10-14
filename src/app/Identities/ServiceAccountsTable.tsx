@@ -134,7 +134,7 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
                 style={{ transform: 'scale(0.7)' }}
               />
             </Th>
-            <Th>Name</Th>
+            <Th>Service account</Th>
             <Th>Namespace</Th>
             <Th>Description</Th>
             <Th>Created</Th>
@@ -152,7 +152,7 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
                   style={{ transform: 'scale(0.7)' }}
                 />
               </Td>
-              <Td dataLabel="Name">
+              <Td dataLabel="Service account">
                 <Button
                   variant="link"
                   isInline
