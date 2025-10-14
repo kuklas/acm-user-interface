@@ -47,7 +47,7 @@ import {
   FormGroup,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 
@@ -737,39 +737,55 @@ const VirtualMachines: React.FunctionComponent = () => {
             <CardBody>
               <ExpandableSection toggleText="Summary" isExpanded={true}>
                 <Flex style={{ marginTop: '16px' }}>
-                  <FlexItem flex={{ default: 'flex_1' }}>
+                  <FlexItem flex={{ default: 'flex_1' }} style={{ paddingRight: '24px' }}>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>Virtual Machines (2)</Title>
+                        <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>Virtual Machines (10)</Title>
                       </FlexItem>
                       <FlexItem>
-                        <Flex spaceItems={{ default: 'spaceItemsXl' }}>
+                        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }}>
                           <FlexItem>
                             <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                              <FlexItem style={{ color: 'var(--pf-t--global--icon--color--status--danger--default)', fontSize: '20px' }}>⚠</FlexItem>
-                              <FlexItem style={{ fontSize: '24px', fontWeight: 'bold' }}>0</FlexItem>
+                              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                                <FlexItem>
+                                  <ExclamationCircleIcon style={{ color: 'var(--pf-t--global--icon--color--status--danger--default)', fontSize: '16px' }} />
+                                </FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>3</FlexItem>
+                              </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Error</FlexItem>
                             </Flex>
                           </FlexItem>
                           <FlexItem>
                             <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                              <FlexItem style={{ color: 'var(--pf-t--global--icon--color--status--success--default)', fontSize: '20px' }}>⚙</FlexItem>
-                              <FlexItem style={{ fontSize: '24px', fontWeight: 'bold' }}>0</FlexItem>
+                              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                                <FlexItem>
+                                  <SyncAltIcon style={{ color: 'var(--pf-t--global--icon--color--status--success--default)', fontSize: '16px' }} />
+                                </FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>5</FlexItem>
+                              </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Running</FlexItem>
                             </Flex>
                           </FlexItem>
                           <FlexItem>
                             <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                              <FlexItem style={{ fontSize: '20px' }}>ⓘ</FlexItem>
-                              <FlexItem style={{ fontSize: '24px', fontWeight: 'bold' }}>2</FlexItem>
+                              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                                <FlexItem>
+                                  <OffIcon style={{ color: 'var(--pf-t--global--icon--color--regular)', fontSize: '16px' }} />
+                                </FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>1</FlexItem>
+                              </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Stopped</FlexItem>
                             </Flex>
                           </FlexItem>
                           <FlexItem>
                             <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                              <FlexItem style={{ fontSize: '20px' }}>◎</FlexItem>
-                              <FlexItem style={{ fontSize: '24px', fontWeight: 'bold' }}>0</FlexItem>
-                              <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Other</FlexItem>
+                              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                                <FlexItem>
+                                  <PauseCircleIcon style={{ color: 'var(--pf-t--global--icon--color--regular)', fontSize: '16px' }} />
+                                </FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>1</FlexItem>
+                              </Flex>
+                              <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Paused</FlexItem>
                             </Flex>
                           </FlexItem>
                         </Flex>
