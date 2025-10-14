@@ -18,17 +18,20 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
+import { getAllGroups } from '@app/data';
 
-// Mock data for groups
-const mockGroups = [
-  { id: 1, name: 'cluster-admins', members: 5, created: '2024-01-15', syncSource: 'Local', lastSynced: null },
-  { id: 2, name: 'developers', members: 12, created: '2024-01-10', syncSource: 'Corporate LDAP', lastSynced: '2 hours ago' },
-  { id: 3, name: 'operators', members: 8, created: '2024-02-01', syncSource: 'Corporate LDAP', lastSynced: '2 hours ago' },
-  { id: 4, name: 'viewers', members: 20, created: '2024-01-20', syncSource: 'Local', lastSynced: null },
-  { id: 5, name: 'engineering-team', members: 45, created: '2024-01-05', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
-  { id: 6, name: 'qa-team', members: 15, created: '2024-01-08', syncSource: 'GitHub OAuth', lastSynced: '5 minutes ago' },
-  { id: 7, name: 'dev-team-alpha', members: 8, created: '2024-01-12', syncSource: 'Local', lastSynced: null },
-];
+// Get groups from centralized database
+const dbGroups = getAllGroups();
+
+// Transform groups from database to component format
+const mockGroups = dbGroups.map((group, index) => ({
+  id: index + 1,
+  name: group.name,
+  members: group.userIds.length,
+  created: '2024-01-15', // Could be added to schema later
+  syncSource: group.type === 'team' || group.type === 'project' ? 'Local' : 'Corporate LDAP',
+  lastSynced: group.type === 'regional' ? '2 hours ago' : null,
+}));
 
 export const GroupsTable: React.FunctionComponent = () => {
   const navigate = useNavigate();
