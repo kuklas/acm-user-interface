@@ -29,6 +29,7 @@ import {
 } from '@patternfly/react-core';
 import { CaretDownIcon, FilterIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { getAllUsers, getAllGroups, getAllClusters, getAllClusterSets, getAllNamespaces, getAllRoles } from '@app/data';
 
 interface RoleAssignmentWizardProps {
   isOpen: boolean;
@@ -47,47 +48,55 @@ interface RoleAssignmentWizardProps {
   };
 }
 
-// Mock data
-const mockUsers = [
-  { id: 1, name: 'Joydeep Banerjee', username: 'jbanerje', provider: 'LDAP' },
-  { id: 2, name: 'awaltez', username: 'awaltez', provider: 'LDAP' },
-  { id: 3, name: 'Joshua Packer', username: 'jpacker', provider: 'LDAP' },
-];
+// Get data from centralized database
+const dbUsers = getAllUsers();
+const dbGroups = getAllGroups();
+const dbClusters = getAllClusters();
+const dbClusterSets = getAllClusterSets();
+const dbNamespaces = getAllNamespaces();
+const dbRoles = getAllRoles();
 
-const mockGroups = [
-  { id: 1, name: 'Observability team', users: 38 },
-  { id: 2, name: 'Security team', users: 46 },
-  { id: 3, name: 'dev-team-alpha', users: 60 },
-];
+// Transform data for wizard format
+const mockUsers = dbUsers.map((user, index) => ({
+  id: index + 1,
+  name: `${user.firstName} ${user.lastName}`,
+  username: user.username,
+  provider: 'LDAP',
+}));
 
-const mockClusters = [
-  { id: 1, name: 'EU-Prod-5G-Core', infrastructure: 'Amazon Web Services', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['12 labels'] },
-  { id: 2, name: 'Global Edge Sites Host Inventory', infrastructure: 'Host Inventory', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['12 labels'] },
-  { id: 3, name: 'dev-team-a', infrastructure: 'Amazon Web Services', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['18 labels'] },
-  { id: 4, name: 'dev-team-b', infrastructure: 'Amazon Web Services', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['18 labels'] },
-  { id: 5, name: 'dev-test-a', infrastructure: 'Host Inventory', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['9 labels'] },
-  { id: 6, name: 'dev-test-b', infrastructure: 'Host Inventory', controlPlane: 'Standalone', distribution: 'OpenShift 4.18.19', labels: ['9 labels'] },
-];
+const mockGroups = dbGroups.map((group, index) => ({
+  id: index + 1,
+  name: group.name,
+  users: group.userIds.length,
+}));
 
-const mockClusterSets = [
-  { id: 1, name: 'development-clusters', clusters: 4 },
-  { id: 2, name: 'production-clusters', clusters: 3 },
-  { id: 3, name: 'test-clusters', clusters: 2 },
-];
+const mockClusters = dbClusters.map((cluster, index) => ({
+  id: index + 1,
+  name: cluster.name,
+  infrastructure: 'Amazon Web Services', // Placeholder - could extend schema
+  controlPlane: 'Standalone',
+  distribution: `Kubernetes ${cluster.kubernetesVersion}`,
+  labels: ['12 labels'], // Placeholder
+}));
 
-const mockProjects = [
-  { id: 1, name: 'project-starlight-dev', clusters: 'dev-linux-a, dev-linux-b' },
-  { id: 2, name: 'analytics', clusters: 'dev-linux-a, dev-linux-b' },
-  { id: 3, name: 'observability', clusters: 'dev-linux-a, dev-linux-b' },
-  { id: 4, name: 'other', clusters: 'dev-linux-a, dev-linux-b' },
-  { id: 5, name: 'test', clusters: 'dev-linux-a, dev-linux-b' },
-];
+const mockClusterSets = dbClusterSets.map((clusterSet, index) => ({
+  id: index + 1,
+  name: clusterSet.name,
+  clusters: clusterSet.clusterIds.length,
+}));
 
-const mockRoles = [
-  { id: 1, name: 'Virtualization admin', type: 'kubevirt.io/admin', description: 'Full control: Create, modify, and delete all Virtualization resources' },
-  { id: 2, name: 'Virtualization viewer', type: 'kubevirt.io/view', description: 'View-only: Observe Virtualization resources and configurations' },
-  { id: 3, name: 'Virtualization editor', type: 'kubevirt.io/edit', description: 'Modify resources: Create, edit, and delete most Virtualization resources; cannot manage access' },
-];
+const mockProjects = dbNamespaces.map((namespace, index) => ({
+  id: index + 1,
+  name: namespace.name,
+  clusters: 'Multiple clusters', // Placeholder
+}));
+
+const mockRoles = dbRoles.map((role, index) => ({
+  id: index + 1,
+  name: role.name,
+  type: role.type,
+  description: role.description,
+}));
 
 const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> = ({ 
   isOpen, 
