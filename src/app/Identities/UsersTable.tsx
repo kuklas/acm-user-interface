@@ -33,6 +33,8 @@ const mockUsers = dbUsers.map((user, index) => ({
 export const UsersTable: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
+  const [filterType, setFilterType] = React.useState('User');
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
@@ -52,6 +54,35 @@ export const UsersTable: React.FunctionComponent = () => {
     <div className="table-content-card">
       <Toolbar>
         <ToolbarContent>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isFilterOpen}
+              onSelect={() => setIsFilterOpen(false)}
+              onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle 
+                  ref={toggleRef} 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                  isExpanded={isFilterOpen}
+                  variant="default"
+                >
+                  {filterType}
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem value="User" onClick={() => setFilterType('User')}>
+                  User
+                </DropdownItem>
+                <DropdownItem value="Group" onClick={() => setFilterType('Group')}>
+                  Group
+                </DropdownItem>
+                <DropdownItem value="Service account" onClick={() => setFilterType('Service account')}>
+                  Service account
+                </DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
           <ToolbarItem>
             <SearchInput
               placeholder="Search users"
