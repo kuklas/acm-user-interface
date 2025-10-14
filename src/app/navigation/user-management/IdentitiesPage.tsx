@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Title, Tabs, Tab, TabTitleText } from '@patternfly/react-core';
-import { Identities } from '@app/Identities/Identities';
+import { UsersTable } from '@app/Identities/UsersTable';
 import { GroupsTable } from '@app/Identities/GroupsTable';
 import { ServiceAccountsTable } from '@app/Identities/ServiceAccountsTable';
 
@@ -17,13 +17,13 @@ export const IdentitiesPage: React.FunctionComponent = () => {
   const renderTabContent = () => {
     switch (activeTabKey) {
       case 0:
-        return <Identities />;
+        return <UsersTable />;
       case 1:
         return <GroupsTable />;
       case 2:
         return <ServiceAccountsTable />;
       default:
-        return <Identities />;
+        return <UsersTable />;
     }
   };
 
