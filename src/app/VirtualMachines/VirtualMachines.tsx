@@ -50,7 +50,7 @@ import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patter
 import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
-import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace } from '@app/data';
+import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
 
 // Mock VM search suggestions
 const vmSearchSuggestions = [
@@ -62,18 +62,33 @@ const vmSearchSuggestions = [
 ];
 
 // Mock VM data
-const mockVMs = [
-  { id: 1, name: 'vm-1', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 2, name: 'vm-2', status: 'Running', os: 'CentOS Stream 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 3, name: 'vm-3', status: 'Stopped', os: 'Fedora 39', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 4, name: 'vm-4', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 5, name: 'vm-5', status: 'Running', os: 'Ubuntu 22.04', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 6, name: 'vm-6', status: 'Stopped', os: 'CentOS Stream 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 7, name: 'vm-7', status: 'Running', os: 'RHEL 8', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 8, name: 'vm-8', status: 'Running', os: 'Fedora 39', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 9, name: 'vm-9', status: 'Error', os: 'Ubuntu 22.04', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-  { id: 10, name: 'vm-10', status: 'Running', os: 'RHEL 9', cpu: '0.25 vCPU / 2 (12%)', memory: '1.2 GiB / 4 GiB (30%)', disk: '8 GiB / 40 GiB (20%)', ip: '10.0.12.34', labels: ['app:web', 'env:test'], moreLabels: 3 },
-];
+// Helper function to get VMs based on selected tree node
+const getVMsForSelection = (selectedNodeId: string | null) => {
+  if (!selectedNodeId) {
+    // No selection, show all VMs
+    return getAllVirtualMachines();
+  }
+
+  // Parse the node ID to determine the level
+  if (selectedNodeId.startsWith('clusterset-')) {
+    const clusterSetId = selectedNodeId.replace('clusterset-', '');
+    return getVirtualMachinesByClusterSet(clusterSetId);
+  } else if (selectedNodeId.startsWith('cluster-')) {
+    const clusterId = selectedNodeId.replace('cluster-', '');
+    return getVirtualMachinesByCluster(clusterId);
+  } else if (selectedNodeId.startsWith('namespace-')) {
+    const namespaceId = selectedNodeId.replace('namespace-', '');
+    return getVirtualMachinesByNamespace(namespaceId);
+  } else if (selectedNodeId.startsWith('vm-')) {
+    // If a specific VM is selected, show just that VM
+    const vmId = selectedNodeId.replace('vm-', '');
+    const allVMs = getAllVirtualMachines();
+    const vm = allVMs.find(v => v.id === vmId);
+    return vm ? [vm] : [];
+  }
+  
+  return getAllVirtualMachines();
+};
 
 const VirtualMachines: React.FunctionComponent = () => {
   useDocumentTitle('Virtual machines');
@@ -88,6 +103,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [isSearchMenuOpen, setIsSearchMenuOpen] = React.useState(false);
   const [sidebarWidth, setSidebarWidth] = React.useState(280);
   const [isResizing, setIsResizing] = React.useState(false);
+  const [selectedTreeNode, setSelectedTreeNode] = React.useState<string | null>(null);
   const searchInputRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   
@@ -176,27 +192,52 @@ const VirtualMachines: React.FunctionComponent = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchMenuOpen]);
   
+  // Get VMs based on selected tree node and apply filters
+  const filteredVMs = React.useMemo(() => {
+    // Get VMs from database based on selected tree node
+    const vmsFromDB = getVMsForSelection(selectedTreeNode);
+    
+    // Transform VMs from database to table format and apply filters
+    return vmsFromDB
+      .filter(vm => {
+        const matchesStatus = statusFilter === 'All' || vm.status === statusFilter;
+        const matchesOS = osFilter === 'All' || vm.os === osFilter;
+        const matchesSearch = !searchValue || vm.name.toLowerCase().includes(searchValue.toLowerCase());
+        return matchesStatus && matchesOS && matchesSearch;
+      })
+      .map((vm, index) => ({
+        id: index + 1,
+        name: vm.name,
+        status: vm.status,
+        os: vm.os,
+        cpu: `${vm.cpu} vCPU`,
+        memory: `${vm.memory}`,
+        disk: `${vm.storage}`,
+        ip: vm.ipAddress,
+        labels: ['app:web', 'env:prod'], // Placeholder
+        moreLabels: 0,
+      }));
+  }, [selectedTreeNode, statusFilter, osFilter, searchValue]);
+
+  // Get unique statuses and operating systems for filter options
+  const allVMs = React.useMemo(() => getVMsForSelection(selectedTreeNode), [selectedTreeNode]);
+  const availableStatuses = React.useMemo(() => 
+    ['All', ...Array.from(new Set(allVMs.map(vm => vm.status)))],
+    [allVMs]
+  );
+  const availableOSs = React.useMemo(() => 
+    ['All', ...Array.from(new Set(allVMs.map(vm => vm.os)))],
+    [allVMs]
+  );
+
+  // Handle selecting all VMs
   const handleSelectAllVMs = (isSelected: boolean) => {
     if (isSelected) {
-      setSelectedVMs(mockVMs.map(vm => vm.id));
+      setSelectedVMs(filteredVMs.map(vm => vm.id));
     } else {
       setSelectedVMs([]);
     }
   };
-
-  // Filter VMs based on status and OS filters
-  const filteredVMs = React.useMemo(() => {
-    return mockVMs.filter(vm => {
-      const matchesStatus = statusFilter === 'All' || vm.status === statusFilter;
-      const matchesOS = osFilter === 'All' || vm.os === osFilter;
-      const matchesSearch = !searchValue || vm.name.toLowerCase().includes(searchValue.toLowerCase());
-      return matchesStatus && matchesOS && matchesSearch;
-    });
-  }, [statusFilter, osFilter, searchValue]);
-
-  // Get unique statuses and operating systems for filter options
-  const availableStatuses = ['All', ...Array.from(new Set(mockVMs.map(vm => vm.status)))];
-  const availableOSs = ['All', ...Array.from(new Set(mockVMs.map(vm => vm.os)))];
 
   // Manage columns handlers
   const handleToggleColumn = (column: string) => {
@@ -339,6 +380,12 @@ const VirtualMachines: React.FunctionComponent = () => {
         data={treeData}
         defaultAllExpanded
         hasGuides
+        onSelect={(_event, item) => {
+          if (item.id) {
+            setSelectedTreeNode(item.id);
+            setPage(1); // Reset to first page when changing selection
+          }
+        }}
       />
       
       <div
@@ -794,7 +841,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                   <Checkbox
                     id="select-all-vms"
                     aria-label="Select all VMs"
-                    isChecked={selectedVMs.length === mockVMs.length}
+                    isChecked={selectedVMs.length === filteredVMs.length && filteredVMs.length > 0}
                     onChange={(_event, checked) => handleSelectAllVMs(checked)}
                   />
                 </ToolbarItem>
