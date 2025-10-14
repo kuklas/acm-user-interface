@@ -47,9 +47,10 @@ import {
   FormGroup,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
+import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace } from '@app/data';
 
 // Mock VM search suggestions
 const vmSearchSuggestions = [
@@ -265,103 +266,57 @@ const VirtualMachines: React.FunctionComponent = () => {
   ];
   
   // Tree view data for sidebar
-  const treeData: TreeViewDataItem[] = [
-    {
-      name: (
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ServerIcon />
-          <span>All clusters</span>
-        </span>
-      ),
-      id: 'all-clusters',
-      children: [
-        {
-          name: (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ServerIcon />
-              <span>virt-hub</span>
-            </span>
-          ),
-          id: 'virt-hub',
-          children: [
-            {
-              name: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ProjectDiagramIcon />
-                    <span>default</span>
-                  </span>
-                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>3</Label>
-                </div>
-              ),
-              id: 'virt-hub-default',
-              children: [
-                {
-                  name: 'example-1',
-                  id: 'example-1',
-                },
-                {
-                  name: 'fedora-jade-pike-13',
-                  id: 'fedora-jade-pike-13',
-                },
-                {
-                  name: 'rhel-10-lavender-butterfly-16',
-                  id: 'rhel-10-lavender-butterfly-16',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          name: (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ServerIcon />
-              <span>virt-spoke</span>
-            </span>
-          ),
-          id: 'virt-spoke',
-          children: [
-            {
-              name: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ProjectDiagramIcon />
-                    <span>default</span>
-                  </span>
-                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>1</Label>
-                </div>
-              ),
-              id: 'virt-spoke-default',
-              children: [
-                {
-                  name: 'rhel-8-jade-louse-14',
-                  id: 'rhel-8-jade-louse-14',
-                },
-              ],
-            },
-            {
-              name: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ProjectDiagramIcon />
-                    <span>openshift</span>
-                  </span>
-                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>1</Label>
-                </div>
-              ),
-              id: 'virt-spoke-openshift',
-              children: [
-                {
-                  name: 'kcormier-rhel8-template',
-                  id: 'kcormier-rhel8-template',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  // Build tree data from centralized database
+  const dbClusterSets = React.useMemo(() => getAllClusterSets(), []);
+  
+  const treeData: TreeViewDataItem[] = React.useMemo(() => {
+    return dbClusterSets.map(clusterSet => {
+      const clustersInSet = getClustersByClusterSet(clusterSet.id);
+      
+      return {
+        name: (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CubesIcon />
+            <span>{clusterSet.name}</span>
+          </span>
+        ),
+        id: `clusterset-${clusterSet.id}`,
+        children: clustersInSet.map(cluster => {
+          const namespacesInCluster = getNamespacesByCluster(cluster.id);
+          
+          return {
+            name: (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ServerIcon />
+                <span>{cluster.name}</span>
+              </span>
+            ),
+            id: `cluster-${cluster.id}`,
+            children: namespacesInCluster.map(namespace => {
+              const vmsInNamespace = getVirtualMachinesByNamespace(namespace.id);
+              
+              return {
+                name: (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ProjectDiagramIcon />
+                      <span>{namespace.name}</span>
+                    </span>
+                    <Label isCompact color="grey" style={{ flexShrink: 0 }}>{vmsInNamespace.length}</Label>
+                  </div>
+                ),
+                id: `namespace-${namespace.id}`,
+                children: vmsInNamespace.map(vm => ({
+                  name: vm.name,
+                  id: `vm-${vm.id}`,
+                })),
+              };
+            }),
+          };
+        }),
+      };
+    });
+  }, [dbClusterSets]);
   
   const sidebar = (
     <div 
