@@ -211,11 +211,6 @@ const routes: AppRouteConfig[] = [
         path: '/core/home/projects/:projectName',
         title: 'Project Detail',
       },
-    ],
-  },
-  {
-    label: 'Core Platforms User Management',
-    routes: [
       {
         element: <IdentityProvidersPage showClustersColumn={false} />,
         path: '/core/user-management/identity-providers',
