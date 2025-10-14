@@ -1212,7 +1212,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                         )}
                       </Flex>
                     </Td>
-                    <Td isActionCell style={{ textAlign: 'right' }}>
+                    <Td isActionCell style={{ textAlign: 'right', position: 'relative' }}>
                       <Dropdown
                         isOpen={openRowMenuId === vm.id}
                         onSelect={() => {
@@ -1238,6 +1238,10 @@ const VirtualMachines: React.FunctionComponent = () => {
                           </MenuToggle>
                         )}
                         shouldFocusToggleOnSelect
+                        popperProps={{
+                          position: 'right',
+                          enableFlip: true,
+                        }}
                       >
                         <DropdownList>
                           <DropdownItem key="start" onClick={() => console.log('Start', vm.name)}>
@@ -1258,13 +1262,13 @@ const VirtualMachines: React.FunctionComponent = () => {
                               const rect = target.getBoundingClientRect();
                               setRowMigrateMenuPosition({
                                 top: rect.top,
-                                left: rect.right
+                                left: rect.left - 300 // Position to the left, 300px is the flyout width
                               });
                               setOpenRowMigrateMenuId(vm.id);
                             }}
                             onMouseLeave={() => {
                               setTimeout(() => {
-                                const flyout = document.querySelector('.migrate-flyout-menu:hover');
+                                const flyout = document.querySelector('.migrate-row-flyout-menu:hover');
                                 if (!flyout) {
                                   setOpenRowMigrateMenuId(null);
                                   setRowMigrateMenuPosition(null);
@@ -1292,7 +1296,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                       </Dropdown>
                       {openRowMigrateMenuId === vm.id && rowMigrateMenuPosition && (
                         <div 
-                          className="migrate-flyout-menu"
+                          className="migrate-row-flyout-menu"
                           style={{
                             position: 'fixed',
                             top: `${rowMigrateMenuPosition.top}px`,
