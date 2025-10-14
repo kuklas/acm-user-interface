@@ -25,14 +25,21 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
+import { getAllIdentityProviders } from '@app/data';
 
-// Mock data for Identity Providers
-const mockIdentityProviders = [
-  { id: 1, name: 'GitHub OAuth', type: 'OAuth', status: 'Active', users: 45, clusters: ['local-cluster', 'prod-cluster'] },
-  { id: 2, name: 'Corporate LDAP', type: 'LDAP', status: 'Active', users: 120, clusters: ['local-cluster', 'dev-cluster', 'staging-cluster'] },
-  { id: 3, name: 'Google Workspace', type: 'OAuth', status: 'Active', users: 89, clusters: ['prod-cluster'] },
-  { id: 4, name: 'Azure AD', type: 'OIDC', status: 'Inactive', users: 0, clusters: [] },
-];
+// Get identity providers from centralized database
+const dbIdentityProviders = getAllIdentityProviders();
+
+// Transform identity providers from database to component format
+const mockIdentityProviders = dbIdentityProviders.map((idp, index) => ({
+  id: index + 1,
+  name: idp.name,
+  type: idp.type,
+  status: idp.status,
+  description: idp.description,
+  users: 0, // Could be calculated from users table later
+  clusters: [], // Could be calculated from cluster assignments later
+}));
 
 const IdentityProvider: React.FunctionComponent = () => {
   useDocumentTitle('ACM RBAC | Identity Provider');

@@ -597,8 +597,7 @@ export const serviceAccounts: ServiceAccount[] = [
 export const identityProviders: IdentityProvider[] = [
   { id: 'idp-001', name: 'PeteMobile LDAP', type: 'LDAP', status: 'Active', description: 'Corporate LDAP Directory' },
   { id: 'idp-002', name: 'PeteMobile SSO', type: 'SAML', status: 'Active', description: 'Enterprise Single Sign-On' },
-  { id: 'idp-003', name: 'GitHub Enterprise', type: 'GitHub', status: 'Active', description: 'GitHub Enterprise Authentication' },
-  { id: 'idp-004', name: 'Google Workspace', type: 'Google', status: 'Inactive', description: 'Google Workspace Integration (Legacy)' },
+  { id: 'idp-003', name: 'GitHub Enterprise', type: 'OpenID Connect', status: 'Active', description: 'GitHub Enterprise Authentication' },
 ];
 
 // ============================================================================

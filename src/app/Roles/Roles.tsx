@@ -26,38 +26,25 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
+import { getAllRoles } from '@app/data';
 
-// Mock data for Roles
-const mockRoles = [
-  {
-    id: 1,
-    name: 'kubevirt.io:admin',
-    type: 'Default',
-    resources: ['VirtualMachines', 'VirtualMachineInstances'],
-    permissions: ['create', 'delete', 'get', 'list', 'patch', 'update'],
-  },
-  {
-    id: 2,
-    name: 'kubevirt.io:edit',
-    type: 'Default',
-    resources: ['VirtualMachines'],
-    permissions: ['get', 'list', 'patch', 'update'],
-  },
-  {
-    id: 3,
-    name: 'kubevirt.io:view',
-    type: 'Default',
-    resources: ['VirtualMachines', 'VirtualMachineInstances'],
-    permissions: ['get', 'list'],
-  },
-  {
-    id: 4,
-    name: 'custom-vm-operator',
-    type: 'Custom',
-    resources: ['VirtualMachines'],
-    permissions: ['get', 'list', 'update'],
-  },
-];
+// Get roles from centralized database
+const dbRoles = getAllRoles();
+
+// Transform roles from database to component format
+const mockRoles = dbRoles.map((role, index) => ({
+  id: index + 1,
+  name: role.name,
+  type: role.type === 'default' ? 'Default' : 'Custom',
+  resources: role.category === 'kubevirt' 
+    ? ['VirtualMachines', 'VirtualMachineInstances'] 
+    : role.category === 'cluster' 
+    ? ['Clusters', 'ClusterSets'] 
+    : role.category === 'namespace'
+    ? ['Namespaces', 'Projects']
+    : ['Applications', 'Deployments'],
+  permissions: role.permissions,
+}));
 
 const Roles: React.FunctionComponent = () => {
   useDocumentTitle('ACM RBAC | Roles');
