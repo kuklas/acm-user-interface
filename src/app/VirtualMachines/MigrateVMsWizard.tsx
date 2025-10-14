@@ -157,17 +157,19 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
       title="Migrate virtual machines"
       isOpen={isOpen}
       onClose={handleClose}
-      actions={[
-        <Button key="back" variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
-          Back
-        </Button>,
-        <Button key="next" variant="primary" onClick={onNext}>
-          {activeStep === 4 ? 'Finish' : 'Next'}
-        </Button>,
-        <Button key="cancel" variant="link" onClick={handleClose}>
-          Cancel
-        </Button>,
-      ]}
+      action={
+        <>
+          <Button key="back" variant="secondary" onClick={onBack} isDisabled={activeStep === 1}>
+            Back
+          </Button>
+          <Button key="next" variant="primary" onClick={onNext}>
+            {activeStep === 4 ? 'Finish' : 'Next'}
+          </Button>
+          <Button key="cancel" variant="link" onClick={handleClose}>
+            Cancel
+          </Button>
+        </>
+      }
     >
       <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
         Choose the target location for your VMs, then adjust your migration plan if necessary.
