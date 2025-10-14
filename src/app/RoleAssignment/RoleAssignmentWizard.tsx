@@ -35,6 +35,7 @@ interface RoleAssignmentWizardProps {
   isOpen: boolean;
   onClose: () => void;
   clusterName?: string;
+  clusterSetName?: string;
   context?: 'clusters' | 'identities' | 'roles';
   preselectedIdentity?: {
     type: 'user' | 'group';
@@ -48,15 +49,12 @@ interface RoleAssignmentWizardProps {
   };
 }
 
-// Get data from centralized database
+// Get data from centralized database (static, non-contextual)
 const dbUsers = getAllUsers();
 const dbGroups = getAllGroups();
-const dbClusters = getAllClusters();
-const dbClusterSets = getAllClusterSets();
-const dbNamespaces = getAllNamespaces();
 const dbRoles = getAllRoles();
 
-// Transform data for wizard format
+// Transform static data for wizard format
 const mockUsers = dbUsers.map((user, index) => ({
   id: index + 1,
   name: `${user.firstName} ${user.lastName}`,
@@ -70,27 +68,6 @@ const mockGroups = dbGroups.map((group, index) => ({
   users: group.userIds.length,
 }));
 
-const mockClusters = dbClusters.map((cluster, index) => ({
-  id: index + 1,
-  name: cluster.name,
-  infrastructure: 'Amazon Web Services', // Placeholder - could extend schema
-  controlPlane: 'Standalone',
-  distribution: `Kubernetes ${cluster.kubernetesVersion}`,
-  labels: ['12 labels'], // Placeholder
-}));
-
-const mockClusterSets = dbClusterSets.map((clusterSet, index) => ({
-  id: index + 1,
-  name: clusterSet.name,
-  clusters: clusterSet.clusterIds.length,
-}));
-
-const mockProjects = dbNamespaces.map((namespace, index) => ({
-  id: index + 1,
-  name: namespace.name,
-  clusters: 'Multiple clusters', // Placeholder
-}));
-
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
@@ -101,11 +78,55 @@ const mockRoles = dbRoles.map((role, index) => ({
 const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> = ({ 
   isOpen, 
   onClose, 
-  clusterName, 
+  clusterName,
+  clusterSetName,
   context = 'clusters',
   preselectedIdentity,
   preselectedRole 
 }) => {
+  // Get contextual data from database
+  const dbClusters = getAllClusters();
+  const dbClusterSets = getAllClusterSets();
+  const dbNamespaces = getAllNamespaces();
+  
+  // Find current cluster or cluster set from context
+  const currentCluster = clusterName ? dbClusters.find(c => c.name === clusterName) : undefined;
+  const currentClusterSet = clusterSetName ? dbClusterSets.find(cs => cs.name === clusterSetName) : undefined;
+  
+  // Filter clusters based on cluster set context
+  const contextFilteredClusters = React.useMemo(() => {
+    if (currentClusterSet) {
+      // If in a cluster set, only show clusters from that set
+      return dbClusters.filter(cluster => currentClusterSet.clusterIds.includes(cluster.id));
+    }
+    // Otherwise show all clusters
+    return dbClusters;
+  }, [currentClusterSet, dbClusters]);
+  
+  const mockClusters = contextFilteredClusters.map((cluster, index) => ({
+    id: index + 1,
+    name: cluster.name,
+    infrastructure: 'Amazon Web Services', // Placeholder - could extend schema
+    controlPlane: 'Standalone',
+    distribution: `Kubernetes ${cluster.kubernetesVersion}`,
+    labels: ['12 labels'], // Placeholder
+    dbId: cluster.id, // Keep track of database ID for filtering namespaces
+  }));
+
+  const mockClusterSets = dbClusterSets.map((clusterSet, index) => ({
+    id: index + 1,
+    name: clusterSet.name,
+    clusters: clusterSet.clusterIds.length,
+  }));
+
+  const mockProjects = dbNamespaces.map((namespace, index) => ({
+    id: index + 1,
+    name: namespace.name,
+    type: namespace.type,
+    cluster: dbClusters.find(c => c.id === namespace.clusterId)?.name || 'Unknown',
+    dbClusterId: namespace.clusterId, // Keep track of cluster ID for filtering
+  }));
+
   // Determine initial step based on context
   const getInitialStep = () => {
     if (context === 'identities') return 1; // For identities, step 1 is "Select resources"
@@ -661,19 +682,35 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     }
   };
 
-  const filteredClusters = mockClusters
+  const displayClusters = mockClusters
     .filter((cluster) => cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase()))
     .filter((cluster) => clusterViewMode === 'all' || selectedClusters.includes(cluster.id));
 
   const filteredProjects = mockProjects
     .filter((project) => project.name.toLowerCase().includes(projectSearchValue.toLowerCase()))
     .filter((project) => {
-      // For single cluster context or single cluster selection (multi-select), use projectViewMode
-      if (clusterName || selectedClusters.length === 1) {
-        return projectViewMode === 'all' || selectedProjects.includes(project.id);
+      // If we're in a single cluster context, only show projects from that cluster
+      if (currentCluster) {
+        return project.dbClusterId === currentCluster.id;
       }
-      // For multiple clusters (single-select), always show all
-      return true;
+      
+      // If we're in a cluster set context and clusters are selected, only show projects from those clusters
+      if (currentClusterSet && selectedClusters.length > 0) {
+        // Get the database IDs of the selected clusters
+        const selectedClusterDbIds = mockClusters
+          .filter(c => selectedClusters.includes(c.id))
+          .map(c => c.dbId);
+        return selectedClusterDbIds.includes(project.dbClusterId);
+      }
+      
+      // If we're in a cluster set context but no clusters selected yet, show all projects from the cluster set
+      if (currentClusterSet) {
+        // Get all cluster IDs in the current cluster set
+        return currentClusterSet.clusterIds.includes(project.dbClusterId);
+      }
+      
+      // Apply view mode filter
+      return projectViewMode === 'all' || selectedProjects.includes(project.id);
     });
 
   const filteredRoles = mockRoles.filter((role) =>
@@ -1103,7 +1140,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               </Tr>
             </Thead>
             <Tbody>
-              {filteredClusters.map((cluster) => (
+              {displayClusters.map((cluster) => (
                 <Tr key={cluster.id}>
                   <Td
                     select={{
@@ -1249,7 +1286,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     />
                   )}
                   <Td dataLabel="Project">{project.name}</Td>
-                  <Td dataLabel="Cluster">{project.clusters}</Td>
+                  <Td dataLabel="Cluster">{project.cluster}</Td>
                 </Tr>
               ))}
             </Tbody>
@@ -1374,7 +1411,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               </Tr>
             </Thead>
             <Tbody>
-              {filteredClusters.map((cluster) => (
+              {displayClusters.map((cluster) => (
                 <Tr key={cluster.id}>
                   <Td
                     select={{
@@ -1519,7 +1556,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   <Td dataLabel="Project">{project.name}</Td>
                   {/* Only show Cluster cell when selecting from multiple clusters */}
                   {!isSingleClusterContext && selectedClusters.length > 1 && (
-                    <Td dataLabel="Cluster">{project.clusters}</Td>
+                    <Td dataLabel="Cluster">{project.cluster}</Td>
                   )}
                 </Tr>
               ))}

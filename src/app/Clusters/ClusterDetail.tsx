@@ -702,6 +702,7 @@ const ClusterDetail: React.FunctionComponent = () => {
             isOpen={isWizardOpen} 
             onClose={() => setIsWizardOpen(false)} 
             clusterName={isClusterSet ? undefined : clusterName}
+            clusterSetName={isClusterSet ? clusterName : undefined}
             context="clusters"
           />
     </>
