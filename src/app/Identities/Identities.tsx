@@ -17,30 +17,37 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
+import { getAllUsers, getAllGroups, getAllServiceAccounts } from '@app/data';
 
-// Mock data for service accounts matching the screenshot
-const mockServiceAccounts = [
-  { id: 1, name: 'dev-team-alpha', users: 5, created: '5 minutes ago' },
-  { id: 2, name: 'dev-team-vm-editors', users: 1, created: '5 minutes ago' },
-  { id: 3, name: 'dev-team-vm-admins', users: 13, created: '5 minutes ago' },
-  { id: 4, name: 'dev-team-vm-viewers', users: 13, created: '5 minutes ago' },
-  { id: 5, name: 'prod-cluster-admins', users: 13, created: '5 minutes ago' },
-];
+// Get data from centralized database
+const dbUsers = getAllUsers();
+const dbGroups = getAllGroups();
+const dbServiceAccounts = getAllServiceAccounts();
 
-// Mock data for users matching the OpenShift screenshot
-const mockUsers = [
-  { id: 1, name: 'Joydeep Banerjee', username: 'jbanerje', identityProvider: 'LDAP', created: '5 minutes ago' },
-  { id: 2, name: 'awaltez', username: 'awaltez', identityProvider: 'LDAP', created: '1 month ago' },
-  { id: 3, name: 'Joshua Packer', username: 'jpacker', identityProvider: 'LDAP', created: '1 month ago' },
-];
+// Transform users from database to component format
+const mockUsers = dbUsers.map((user, index) => ({
+  id: index + 1,
+  name: `${user.firstName} ${user.lastName}`,
+  username: user.username,
+  identityProvider: 'LDAP',
+  created: new Date(user.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+}));
 
-// Mock data for groups
-const mockGroups = [
-  { id: 1, name: 'cluster-admins', members: 5, created: '2024-01-15' },
-  { id: 2, name: 'developers', members: 12, created: '2024-01-10' },
-  { id: 3, name: 'operators', members: 8, created: '2024-02-01' },
-  { id: 4, name: 'viewers', members: 20, created: '2024-01-20' },
-];
+// Transform groups from database to component format
+const mockGroups = dbGroups.map((group, index) => ({
+  id: index + 1,
+  name: group.name,
+  members: group.userIds.length,
+  created: '2024-01-15', // Could be added to schema later
+}));
+
+// Transform service accounts from database to component format
+const mockServiceAccounts = dbServiceAccounts.map((sa, index) => ({
+  id: index + 1,
+  name: sa.name,
+  users: 0, // Service accounts don't have users
+  created: new Date(sa.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+}));
 
 const Identities: React.FunctionComponent = () => {
   useDocumentTitle('ACM | Identities');

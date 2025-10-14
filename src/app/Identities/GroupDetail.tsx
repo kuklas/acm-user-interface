@@ -42,6 +42,7 @@ import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon } from '@patternfl
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { getAllGroups, getUsersByGroup } from '@app/data';
 
 const GroupDetail: React.FunctionComponent = () => {
   const { groupName } = useParams<{ groupName: string }>();
@@ -426,13 +427,19 @@ users:
   };
 
   const UsersTab = () => {
-    const mockUsers = [
-      { id: 1, name: 'Joydeep Banerjee', username: 'jbanerje', identityProvider: 'LDAP', created: '5 minutes ago' },
-      { id: 2, name: 'Anna Walker', username: 'awalker', identityProvider: 'LDAP', created: '1 month ago' },
-      { id: 3, name: 'Joshua Packer', username: 'jpacker', identityProvider: 'LDAP', created: '1 month ago' },
-      { id: 4, name: 'Sarah Mitchell', username: 'smitchel', identityProvider: 'LDAP', created: '2 weeks ago' },
-      { id: 5, name: 'Michael Chen', username: 'mchen', identityProvider: 'LDAP', created: '3 weeks ago' },
-    ];
+    // Get group data from centralized database
+    const allGroups = getAllGroups();
+    const currentGroup = allGroups.find(g => g.name === groupName);
+    const groupUsers = currentGroup ? getUsersByGroup(currentGroup.id) : [];
+    
+    // Transform users from database to component format
+    const mockUsers = groupUsers.map((user, index) => ({
+      id: index + 1,
+      name: `${user.firstName} ${user.lastName}`,
+      username: user.username,
+      identityProvider: 'LDAP',
+      created: new Date(user.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    }));
 
     const [selectedUsers, setSelectedUsers] = React.useState<Set<number>>(new Set());
     const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);

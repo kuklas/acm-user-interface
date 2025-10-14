@@ -38,6 +38,7 @@ import { CubesIcon, FilterIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { getAllUsers, getGroupsForUser } from '@app/data';
 
 const IdentityDetail: React.FunctionComponent = () => {
   const { identityName } = useParams<{ identityName: string }>();
@@ -144,12 +145,18 @@ groups: null`}
   );
 
   const GroupsTab = () => {
-    // Mock data showing groups that this user belongs to
-    const mockGroups = [
-      { id: 1, name: 'Security team', members: 12, created: '2024-01-15' },
-      { id: 2, name: 'Engineering', members: 45, created: '2024-02-10' },
-      { id: 3, name: 'DevOps', members: 8, created: '2024-03-01' },
-    ];
+    // Get user data from centralized database
+    const allUsers = getAllUsers();
+    const currentUser = allUsers.find(u => `${u.firstName} ${u.lastName}` === identityName || u.username === identityName);
+    const userGroups = currentUser ? getGroupsForUser(currentUser.id) : [];
+    
+    // Transform groups from database to component format
+    const mockGroups = userGroups.map((group, index) => ({
+      id: index + 1,
+      name: group.name,
+      members: group.userIds.length,
+      created: '2024-01-15', // Could be added to schema later
+    }));
 
     const [selectedGroups, setSelectedGroups] = React.useState<Set<number>>(new Set());
     const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
