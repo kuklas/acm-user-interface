@@ -230,6 +230,25 @@ const VirtualMachines: React.FunctionComponent = () => {
     [allVMs]
   );
 
+  // Calculate status counts for summary card
+  const vmStatusCounts = React.useMemo(() => {
+    const counts = {
+      Error: 0,
+      Running: 0,
+      Stopped: 0,
+      Paused: 0,
+      Migrating: 0,
+    };
+    
+    allVMs.forEach(vm => {
+      if (counts.hasOwnProperty(vm.status)) {
+        counts[vm.status as keyof typeof counts]++;
+      }
+    });
+    
+    return counts;
+  }, [allVMs]);
+
   // Handle selecting all VMs
   const handleSelectAllVMs = (isSelected: boolean) => {
     if (isSelected) {
@@ -742,7 +761,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                   <FlexItem flex={{ default: 'flex_1' }} style={{ paddingRight: '24px' }}>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>Virtual Machines (10)</Title>
+                        <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>Virtual Machines ({allVMs.length})</Title>
                       </FlexItem>
                       <FlexItem>
                         <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }}>
@@ -752,7 +771,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                                 <FlexItem>
                                   <ExclamationCircleIcon style={{ color: 'var(--pf-t--global--icon--color--status--danger--default)', fontSize: '16px' }} />
                                 </FlexItem>
-                                <FlexItem style={{ fontSize: '24px' }}>3</FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>{vmStatusCounts.Error}</FlexItem>
                               </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Error</FlexItem>
                             </Flex>
@@ -763,7 +782,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                                 <FlexItem>
                                   <SyncAltIcon style={{ color: 'var(--pf-t--global--icon--color--status--success--default)', fontSize: '16px' }} />
                                 </FlexItem>
-                                <FlexItem style={{ fontSize: '24px' }}>5</FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>{vmStatusCounts.Running}</FlexItem>
                               </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Running</FlexItem>
                             </Flex>
@@ -774,7 +793,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                                 <FlexItem>
                                   <OffIcon style={{ color: 'var(--pf-t--global--icon--color--regular)', fontSize: '16px' }} />
                                 </FlexItem>
-                                <FlexItem style={{ fontSize: '24px' }}>1</FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>{vmStatusCounts.Stopped}</FlexItem>
                               </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Stopped</FlexItem>
                             </Flex>
@@ -785,7 +804,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                                 <FlexItem>
                                   <PauseCircleIcon style={{ color: 'var(--pf-t--global--icon--color--regular)', fontSize: '16px' }} />
                                 </FlexItem>
-                                <FlexItem style={{ fontSize: '24px' }}>1</FlexItem>
+                                <FlexItem style={{ fontSize: '24px' }}>{vmStatusCounts.Paused}</FlexItem>
                               </Flex>
                               <FlexItem style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>Paused</FlexItem>
                             </Flex>
