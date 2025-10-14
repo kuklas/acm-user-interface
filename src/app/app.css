@@ -572,3 +572,28 @@ input[type="checkbox"] {
 .pf-v6-c-table tbody tr {
   overflow: visible !important;
 }
+
+.pf-v6-c-table tbody {
+  overflow: visible !important;
+}
+
+.pf-v6-c-table td {
+  overflow: visible !important;
+}
+
+.table-content-card .pf-v6-c-table tbody,
+.table-content-card .pf-v6-c-table tbody tr,
+.table-content-card .pf-v6-c-table tbody tr td {
+  overflow: visible !important;
+}
+
+/* Ensure dropdown menus appear above table content */
+.table-content-card .pf-v6-c-dropdown {
+  position: relative !important;
+  z-index: 1;
+}
+
+.table-content-card .pf-v6-c-dropdown__menu {
+  z-index: 10000 !important;
+  position: absolute !important;
+}

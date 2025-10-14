@@ -369,7 +369,7 @@ groups: null`}
                 navigate('/user-management/identities');
               }}
             >
-              Users, Groups and Service accounts
+              Identities
             </BreadcrumbItem>
             <BreadcrumbItem isActive>{identityName}</BreadcrumbItem>
           </Breadcrumb>
