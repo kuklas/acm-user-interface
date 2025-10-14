@@ -27,7 +27,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
-import { getAllIdentityProviders, getUsersByIdentityProvider } from '@app/data';
+import { getAllIdentityProviders, getUsersByIdentityProvider, getClustersByIdentityProvider } from '@app/data';
 
 // Get identity providers from centralized database
 const dbIdentityProviders = getAllIdentityProviders();
@@ -35,6 +35,7 @@ const dbIdentityProviders = getAllIdentityProviders();
 // Transform identity providers from database to component format
 const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
   const connectedUsers = getUsersByIdentityProvider(idp.id);
+  const connectedClusters = getClustersByIdentityProvider(idp.id);
   
   return {
     id: index + 1,
@@ -43,7 +44,7 @@ const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
     status: idp.status,
     description: idp.description,
     users: connectedUsers.length, // Actual count of users from database
-    clusters: [], // Could be calculated from cluster assignments later
+    clusters: connectedClusters.map(c => c.name), // Cluster names from database
   };
 });
 

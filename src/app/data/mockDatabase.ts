@@ -595,9 +595,52 @@ export const serviceAccounts: ServiceAccount[] = [
 // ============================================================================
 
 export const identityProviders: IdentityProvider[] = [
-  { id: 'idp-001', name: 'PeteMobile LDAP', type: 'LDAP', status: 'Active', description: 'Corporate LDAP Directory' },
-  { id: 'idp-002', name: 'PeteMobile SSO', type: 'SAML', status: 'Active', description: 'Enterprise Single Sign-On' },
-  { id: 'idp-003', name: 'GitHub Enterprise', type: 'OpenID Connect', status: 'Active', description: 'GitHub Enterprise Authentication' },
+  { 
+    id: 'idp-001', 
+    name: 'PeteMobile LDAP', 
+    type: 'LDAP', 
+    status: 'Active', 
+    description: 'Corporate LDAP Directory',
+    clusterIds: [
+      'cluster-us-west-prod-01',
+      'cluster-us-east-prod-02',
+      'cluster-eu-west-prod-01',
+      'cluster-eu-east-prod-02',
+      'cluster-sa-prod-brazil-01',
+      'cluster-sa-prod-argentina-02',
+      'cluster-apac-prod-japan-01',
+      'cluster-apac-prod-korea-02',
+    ],
+  },
+  { 
+    id: 'idp-002', 
+    name: 'PeteMobile SSO', 
+    type: 'SAML', 
+    status: 'Active', 
+    description: 'Enterprise Single Sign-On',
+    clusterIds: [
+      'cluster-na-edge-ny-01',
+      'cluster-eu-edge-berlin-01',
+      'cluster-sa-prod-chile-03',
+      'cluster-sa-prod-colombia-04',
+      'cluster-sa-prod-peru-05',
+      'cluster-apac-prod-australia-03',
+      'cluster-apac-prod-singapore-04',
+      'cluster-apac-prod-india-05',
+    ],
+  },
+  { 
+    id: 'idp-003', 
+    name: 'GitHub Enterprise', 
+    type: 'OpenID Connect', 
+    status: 'Active', 
+    description: 'GitHub Enterprise Authentication',
+    clusterIds: [
+      'cluster-dev-team-a',
+      'cluster-dev-team-b',
+      'cluster-qa-env',
+    ],
+  },
 ];
 
 // ============================================================================

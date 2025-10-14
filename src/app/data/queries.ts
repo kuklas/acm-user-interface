@@ -156,6 +156,12 @@ export const getIdentityProvidersByStatus = (status: 'Active' | 'Inactive') =>
 export const getIdentityProvidersByType = (type: string) =>
   identityProviders.filter(idp => idp.type === type);
 
+export const getClustersByIdentityProvider = (identityProviderId: string) => {
+  const provider = identityProviders.find(idp => idp.id === identityProviderId);
+  if (!provider) return [];
+  return clusters.filter(c => provider.clusterIds.includes(c.id));
+};
+
 // ============================================================================
 // ROLE QUERIES
 // ============================================================================

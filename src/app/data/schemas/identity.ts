@@ -35,5 +35,6 @@ export interface IdentityProvider {
   type: 'LDAP' | 'SAML' | 'OpenID Connect' | 'GitHub' | 'Google';
   status: 'Active' | 'Inactive';
   description: string;
+  clusterIds: string[]; // Which clusters this identity provider is configured for
 }
 
