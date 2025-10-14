@@ -25,21 +25,25 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
-import { getAllIdentityProviders } from '@app/data';
+import { getAllIdentityProviders, getUsersByIdentityProvider } from '@app/data';
 
 // Get identity providers from centralized database
 const dbIdentityProviders = getAllIdentityProviders();
 
 // Transform identity providers from database to component format
-const mockIdentityProviders = dbIdentityProviders.map((idp, index) => ({
-  id: index + 1,
-  name: idp.name,
-  type: idp.type,
-  status: idp.status,
-  description: idp.description,
-  users: 0, // Could be calculated from users table later
-  clusters: [], // Could be calculated from cluster assignments later
-}));
+const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
+  const connectedUsers = getUsersByIdentityProvider(idp.id);
+  
+  return {
+    id: index + 1,
+    name: idp.name,
+    type: idp.type,
+    status: idp.status,
+    description: idp.description,
+    users: connectedUsers.length, // Actual count of users from database
+    clusters: [], // Could be calculated from cluster assignments later
+  };
+});
 
 const IdentityProvider: React.FunctionComponent = () => {
   useDocumentTitle('ACM RBAC | Identity Provider');
