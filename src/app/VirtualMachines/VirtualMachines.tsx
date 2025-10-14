@@ -104,8 +104,10 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [sidebarWidth, setSidebarWidth] = React.useState(420);
   const [isResizing, setIsResizing] = React.useState(false);
   const [selectedTreeNode, setSelectedTreeNode] = React.useState<string | null>(null);
+  const [migrateMenuPosition, setMigrateMenuPosition] = React.useState<{ top: number; left: number } | null>(null);
   const searchInputRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const migrateItemRef = React.useRef<HTMLDivElement>(null);
   
   // Dropdown states
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -981,60 +983,34 @@ const VirtualMachines: React.FunctionComponent = () => {
                       <DropdownItem 
                         key="migrate"
                         description="Migrate VirtualMachines"
-                        onMouseEnter={() => setIsMigrateMenuOpen(true)}
-                        onMouseLeave={() => setIsMigrateMenuOpen(false)}
-                        style={{ position: 'relative' }}
+                        onMouseEnter={(e) => {
+                          console.log('[Migrate] Mouse entered');
+                          const target = e.currentTarget as HTMLElement;
+                          const rect = target.getBoundingClientRect();
+                          console.log('[Migrate] Position:', rect);
+                          setMigrateMenuPosition({
+                            top: rect.top,
+                            left: rect.right
+                          });
+                          setIsMigrateMenuOpen(true);
+                        }}
+                        onMouseLeave={(e) => {
+                          console.log('[Migrate] Mouse left');
+                          // Small delay to allow moving to flyout menu
+                          setTimeout(() => {
+                            const flyout = document.querySelector('.migrate-flyout-menu:hover');
+                            if (!flyout) {
+                              setIsMigrateMenuOpen(false);
+                              setMigrateMenuPosition(null);
+                            }
+                          }, 100);
+                        }}
+                        style={{ position: 'relative', overflow: 'visible' }}
                       >
-                        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ width: '100%' }}>
-                          <FlexItem>Migrate</FlexItem>
-                          <FlexItem>
-                            <AngleRightIcon />
-                          </FlexItem>
-                        </Flex>
-                        {isMigrateMenuOpen && (
-                          <div 
-                            className="migrate-flyout-menu"
-                            onMouseEnter={() => setIsMigrateMenuOpen(true)}
-                            onMouseLeave={() => setIsMigrateMenuOpen(false)}
-                          >
-                            <Menu>
-                              <MenuContent>
-                                <MenuList>
-                                  <MenuItem
-                                    onClick={() => {
-                                      console.log('Migrate across clusters');
-                                      setIsToolbarActionsOpen(false);
-                                      setIsMigrateMenuOpen(false);
-                                    }}
-                                    description="Migrate VirtualMachines across your clusters"
-                                  >
-                                    Migrate across clusters
-                                  </MenuItem>
-                                  <MenuItem
-                                    onClick={() => {
-                                      console.log('Migrate compute');
-                                      setIsToolbarActionsOpen(false);
-                                      setIsMigrateMenuOpen(false);
-                                    }}
-                                    description="Migrate VirtualMachines to a different node"
-                                  >
-                                    Compute
-                                  </MenuItem>
-                                  <MenuItem
-                                    onClick={() => {
-                                      console.log('Migrate storage');
-                                      setIsToolbarActionsOpen(false);
-                                      setIsMigrateMenuOpen(false);
-                                    }}
-                                    description="Migrate Storage to a different StorageClass"
-                                  >
-                                    Storage
-                                  </MenuItem>
-                                </MenuList>
-                              </MenuContent>
-                            </Menu>
-                          </div>
-                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span>Migrate</span>
+                          <AngleRightIcon />
+                        </div>
                       </DropdownItem>
                       <Divider key="divider-2" />
                       <DropdownItem key="edit" onClick={() => console.log('Edit VMs')}>
@@ -1048,6 +1024,68 @@ const VirtualMachines: React.FunctionComponent = () => {
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
+                  {isMigrateMenuOpen && migrateMenuPosition && (
+                    <div 
+                      className="migrate-flyout-menu"
+                      style={{
+                        position: 'fixed',
+                        top: `${migrateMenuPosition.top}px`,
+                        left: `${migrateMenuPosition.left}px`,
+                        zIndex: 10001,
+                        backgroundColor: 'white',
+                        boxShadow: 'var(--pf-t--global--box-shadow--lg)',
+                        border: '1px solid var(--pf-t--global--border--color--default)',
+                        borderRadius: '4px',
+                        minWidth: '300px',
+                      }}
+                      onMouseEnter={() => {
+                        console.log('[Flyout] Mouse entered flyout');
+                        setIsMigrateMenuOpen(true);
+                      }}
+                      onMouseLeave={() => {
+                        console.log('[Flyout] Mouse left flyout');
+                        setIsMigrateMenuOpen(false);
+                        setMigrateMenuPosition(null);
+                      }}
+                    >
+                      <Menu>
+                        <MenuContent>
+                          <MenuList>
+                            <MenuItem
+                              onClick={() => {
+                                console.log('Migrate across clusters');
+                                setIsToolbarActionsOpen(false);
+                                setIsMigrateMenuOpen(false);
+                              }}
+                              description="Migrate VirtualMachines across your clusters"
+                            >
+                              Migrate across clusters
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                console.log('Migrate compute');
+                                setIsToolbarActionsOpen(false);
+                                setIsMigrateMenuOpen(false);
+                              }}
+                              description="Migrate VirtualMachines to a different node"
+                            >
+                              Compute
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                console.log('Migrate storage');
+                                setIsToolbarActionsOpen(false);
+                                setIsMigrateMenuOpen(false);
+                              }}
+                              description="Migrate Storage to a different StorageClass"
+                            >
+                              Storage
+                            </MenuItem>
+                          </MenuList>
+                        </MenuContent>
+                      </Menu>
+                    </div>
+                  )}
                 </ToolbarItem>
                 <ToolbarItem>
                   <Button
