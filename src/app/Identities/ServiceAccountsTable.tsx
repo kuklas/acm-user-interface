@@ -13,15 +13,19 @@ import {
   Checkbox,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { getAllServiceAccounts } from '@app/data';
 
-// Mock data for service accounts matching the screenshot
-const mockServiceAccounts = [
-  { id: 1, name: 'dev-team-alpha', users: 5, created: '5 minutes ago' },
-  { id: 2, name: 'dev-team-vm-editors', users: 1, created: '5 minutes ago' },
-  { id: 3, name: 'dev-team-vm-admins', users: 13, created: '5 minutes ago' },
-  { id: 4, name: 'dev-team-vm-viewers', users: 13, created: '5 minutes ago' },
-  { id: 5, name: 'prod-cluster-admins', users: 13, created: '5 minutes ago' },
-];
+// Get service accounts from centralized database
+const dbServiceAccounts = getAllServiceAccounts();
+
+// Transform service accounts from database to component format
+const mockServiceAccounts = dbServiceAccounts.map((sa, index) => ({
+  id: index + 1,
+  name: sa.name,
+  namespace: sa.namespace,
+  description: sa.description,
+  created: new Date(sa.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+}));
 
 export const ServiceAccountsTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = React.useState('');
@@ -104,7 +108,8 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
               />
             </Th>
             <Th>Name</Th>
-            <Th>Users</Th>
+            <Th>Namespace</Th>
+            <Th>Description</Th>
             <Th>Created</Th>
           </Tr>
         </Thead>
@@ -129,7 +134,8 @@ export const ServiceAccountsTable: React.FunctionComponent = () => {
                   {sa.name}
                 </Button>
               </Td>
-              <Td dataLabel="Users">{sa.users}</Td>
+              <Td dataLabel="Namespace">{sa.namespace}</Td>
+              <Td dataLabel="Description">{sa.description}</Td>
               <Td dataLabel="Created">{sa.created}</Td>
             </Tr>
           ))}
