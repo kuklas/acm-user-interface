@@ -107,8 +107,8 @@ export const Projects: React.FC = () => {
   };
 
   return (
-    <>
-      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} className="pf-v6-u-mb-md">
+    <div style={{ padding: '48px' }}>
+      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '32px' }}>
         <FlexItem>
           <Title headingLevel="h1" size="2xl">Projects</Title>
         </FlexItem>
@@ -273,7 +273,7 @@ export const Projects: React.FC = () => {
             </Tbody>
           </Table>
       </div>
-    </>
+    </div>
   );
 };
 

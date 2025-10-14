@@ -47,7 +47,7 @@ import {
   FormGroup,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, CubesIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
@@ -101,7 +101,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   const [perPage, setPerPage] = React.useState(10);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const [isSearchMenuOpen, setIsSearchMenuOpen] = React.useState(false);
-  const [sidebarWidth, setSidebarWidth] = React.useState(280);
+  const [sidebarWidth, setSidebarWidth] = React.useState(420);
   const [isResizing, setIsResizing] = React.useState(false);
   const [selectedTreeNode, setSelectedTreeNode] = React.useState<string | null>(null);
   const searchInputRef = React.useRef<HTMLDivElement>(null);
@@ -336,7 +336,7 @@ const VirtualMachines: React.FunctionComponent = () => {
       return {
         name: (
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CubesIcon />
+            <MulticlusterIcon />
             <span>{clusterSet.name}</span>
           </span>
         ),
@@ -366,6 +366,7 @@ const VirtualMachines: React.FunctionComponent = () => {
                   </div>
                 ),
                 id: `namespace-${namespace.id}`,
+                defaultExpanded: false,
                 children: vmsInNamespace.map(vm => ({
                   name: vm.name,
                   id: `vm-${vm.id}`,

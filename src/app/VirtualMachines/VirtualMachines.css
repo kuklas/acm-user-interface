@@ -111,6 +111,8 @@ body.resizing-sidebar * {
 
 .vm-sidebar .pf-v6-c-tree-view {
   background-color: transparent !important;
+  max-height: calc(100vh - 270px);
+  overflow-y: auto;
 }
 
 .vm-sidebar .pf-v6-c-tree-view__list-item .pf-v6-c-tree-view__node-container {
