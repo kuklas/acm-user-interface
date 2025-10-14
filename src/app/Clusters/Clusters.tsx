@@ -31,9 +31,29 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
 import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon, RedoIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { getAllClusters, getAllClusterSets, getClustersByClusterSet } from '@app/data';
 
-// Mock cluster data using petemobile infrastructure
-const mockClusters = [
+// Transform centralized database data to component format
+const dbClusters = getAllClusters();
+const dbClusterSets = getAllClusterSets();
+
+const mockClusters = dbClusters.map((cluster, index) => ({
+  id: index + 1,
+  name: cluster.name,
+  namespace: dbClusterSets.find(cs => cs.id === cluster.clusterSetId)?.name || '',
+  status: cluster.status,
+  infrastructure: 'Amazon Web Services', // Could be extended in schema
+  controlPlaneType: 'Standalone',
+  distribution: `Kubernetes ${cluster.kubernetesVersion}`,
+  distributionUpgrade: false,
+  labels: 3,
+  nodes: cluster.nodes,
+  addOns: 4,
+  creationDate: new Date(2024, 0, 15 + index).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+}));
+
+// Keep original mock data for reference (commented out)
+const _originalMockClusters = [
   // petemobile-na-prod cluster set
   {
     id: 1,
@@ -199,8 +219,21 @@ const mockClusters = [
   },
 ];
 
-// Mock cluster sets data using petemobile infrastructure
-const mockClusterSets = [
+// Transform centralized cluster sets data
+const mockClusterSets = dbClusterSets.map((clusterSet, index) => {
+  const clustersInSet = getClustersByClusterSet(clusterSet.id);
+  const readyClusters = clustersInSet.filter(c => c.status === 'Ready').length;
+  
+  return {
+    id: index + 1,
+    name: clusterSet.name,
+    clusterStatus: readyClusters,
+    namespaceBindings: [], // Will be populated from namespace data if needed
+  };
+});
+
+// Keep original mock data for reference (commented out)
+const _originalMockClusterSets = [
   {
     id: 1,
     name: 'petemobile-na-prod',
