@@ -31,11 +31,12 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
 import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon, RedoIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { getAllClusters, getAllClusterSets, getClustersByClusterSet } from '@app/data';
+import { getAllClusters, getAllClusterSets, getClustersByClusterSet, getAllNamespaces } from '@app/data';
 
 // Transform centralized database data to component format
 const dbClusters = getAllClusters();
 const dbClusterSets = getAllClusterSets();
+const dbNamespaces = getAllNamespaces();
 
 const mockClusters = dbClusters.map((cluster, index) => ({
   id: index + 1,
@@ -224,11 +225,19 @@ const mockClusterSets = dbClusterSets.map((clusterSet, index) => {
   const clustersInSet = getClustersByClusterSet(clusterSet.id);
   const readyClusters = clustersInSet.filter(c => c.status === 'Ready').length;
   
+  // Get all unique namespaces across all clusters in this cluster set
+  const namespacesInSet = clustersInSet.flatMap(cluster => 
+    dbNamespaces
+      .filter(ns => ns.clusterId === cluster.id)
+      .map(ns => ns.name)
+  );
+  const uniqueNamespaces = Array.from(new Set(namespacesInSet));
+  
   return {
     id: index + 1,
     name: clusterSet.name,
     clusterStatus: readyClusters,
-    namespaceBindings: [], // Will be populated from namespace data if needed
+    namespaceBindings: uniqueNamespaces,
   };
 });
 
