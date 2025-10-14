@@ -37,6 +37,7 @@ import { InfoCircleIcon, CheckIcon, ExclamationTriangleIcon } from '@patternfly/
 import { CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { getAllClusterSets, getClustersByClusterSet } from '@app/data';
 
 const ClusterDetail: React.FunctionComponent = () => {
   const { clusterName } = useParams<{ clusterName: string }>();
@@ -479,75 +480,99 @@ const ClusterDetail: React.FunctionComponent = () => {
     </div>
   );
 
-  const ClusterListTab = () => (
-    <div className="table-content-card">
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Search for a cluster"
-              value={searchValue}
-              onChange={(_event, value) => setSearchValue(value)}
-              onClear={() => setSearchValue('')}
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-      <Table aria-label="Clusters in set table" variant="compact">
-        <Thead>
-          <Tr>
-            <Th>Name</Th>
-            <Th>Status</Th>
-            <Th>Provider</Th>
-            <Th>Region</Th>
-            <Th>Nodes</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          <Tr>
-            <Td dataLabel="Name">
-              <Button 
-                variant="link" 
-                isInline 
-                onClick={() => navigate('/infrastructure/clusters/cluster-a')}
-                style={{ paddingLeft: 0 }}
-              >
-                cluster-a
-              </Button>
-            </Td>
-            <Td dataLabel="Status">
-              <Label color="green" icon={<CheckIcon />}>
-                Ready
-              </Label>
-            </Td>
-            <Td dataLabel="Provider">AWS</Td>
-            <Td dataLabel="Region">us-east-1</Td>
-            <Td dataLabel="Nodes">5</Td>
-          </Tr>
-          <Tr>
-            <Td dataLabel="Name">
-              <Button 
-                variant="link" 
-                isInline 
-                onClick={() => navigate('/infrastructure/clusters/cluster-b')}
-                style={{ paddingLeft: 0 }}
-              >
-                cluster-b
-              </Button>
-            </Td>
-            <Td dataLabel="Status">
-              <Label color="green" icon={<CheckIcon />}>
-                Ready
-              </Label>
-            </Td>
-            <Td dataLabel="Provider">Azure</Td>
-            <Td dataLabel="Region">eastus</Td>
-            <Td dataLabel="Nodes">3</Td>
-          </Tr>
-        </Tbody>
-      </Table>
-    </div>
-  );
+  const ClusterListTab = () => {
+    // Get cluster set data from centralized database
+    const allClusterSets = getAllClusterSets();
+    const currentClusterSet = allClusterSets.find(cs => cs.name === clusterName);
+    const clustersInSet = currentClusterSet ? getClustersByClusterSet(currentClusterSet.id) : [];
+
+    // Filter clusters based on search
+    const filteredClusters = clustersInSet.filter(cluster =>
+      cluster.name.toLowerCase().includes(searchValue.toLowerCase())
+    );
+
+    // Map cluster status to label color
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case 'Ready':
+          return 'green';
+        case 'Not Ready':
+          return 'red';
+        case 'Degraded':
+          return 'orange';
+        default:
+          return 'grey';
+      }
+    };
+
+    return (
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search for a cluster"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        <Table aria-label="Clusters in set table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th>Name</Th>
+              <Th>Status</Th>
+              <Th>Provider</Th>
+              <Th>Region</Th>
+              <Th>Nodes</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {filteredClusters.length === 0 ? (
+              <Tr>
+                <Td colSpan={5}>
+                  <EmptyState>
+                    <CubesIcon />
+                    <Title headingLevel="h2" size="lg">
+                      No clusters found
+                    </Title>
+                    <EmptyStateBody>
+                      {searchValue ? 'No clusters match your search criteria.' : 'No clusters in this cluster set.'}
+                    </EmptyStateBody>
+                  </EmptyState>
+                </Td>
+              </Tr>
+            ) : (
+              filteredClusters.map((cluster) => (
+                <Tr key={cluster.id}>
+                  <Td dataLabel="Name">
+                    <Button 
+                      variant="link" 
+                      isInline 
+                      onClick={() => navigate(`/infrastructure/clusters/${cluster.name}`)}
+                      style={{ paddingLeft: 0 }}
+                    >
+                      {cluster.name}
+                    </Button>
+                  </Td>
+                  <Td dataLabel="Status">
+                    <Label color={getStatusColor(cluster.status)} icon={<CheckIcon />}>
+                      {cluster.status}
+                    </Label>
+                  </Td>
+                  <Td dataLabel="Provider">Amazon Web Services</Td>
+                  <Td dataLabel="Region">{cluster.location}</Td>
+                  <Td dataLabel="Nodes">{cluster.nodes}</Td>
+                </Tr>
+              ))
+            )}
+          </Tbody>
+        </Table>
+      </div>
+    );
+  };
 
   const ClusterPoolsTab = () => (
     <div className="table-content-card">
