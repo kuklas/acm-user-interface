@@ -155,7 +155,6 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
     <Modal
       variant={ModalVariant.large}
       title="Migrate virtual machines"
-      description="Choose the target location for your VMs, then adjust your migration plan if necessary."
       isOpen={isOpen}
       onClose={handleClose}
       actions={[
@@ -170,6 +169,9 @@ export const MigrateVMsWizard: React.FunctionComponent<MigrateVMsWizardProps> = 
         </Button>,
       ]}
     >
+      <div style={{ marginBottom: '16px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+        Choose the target location for your VMs, then adjust your migration plan if necessary.
+      </div>
       <div style={{ display: 'flex', minHeight: '400px' }}>
         <div style={{ width: '200px', borderRight: '1px solid var(--pf-t--global--border--color--default)', paddingRight: '16px', marginRight: '24px' }}>
           <div
