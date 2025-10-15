@@ -34,6 +34,17 @@ import { getAllUsers, getAllGroups, getAllClusters, getAllClusterSets, getAllNam
 interface RoleAssignmentWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: (wizardData: {
+    identityType: 'user' | 'group';
+    identityId: number | null;
+    identityName: string;
+    roleId: number | null;
+    roleName: string;
+    resourceSummary: string;
+    selectedClusters?: number[];
+    selectedProjects?: number[];
+    selectedClusterSets?: number[];
+  }) => void;
   clusterName?: string;
   clusterSetName?: string;
   context?: 'clusters' | 'identities' | 'roles' | 'projects';
@@ -54,9 +65,10 @@ const dbUsers = getAllUsers();
 const dbGroups = getAllGroups();
 const dbRoles = getAllRoles();
 
-// Transform static data for wizard format
+// Transform static data for wizard format (preserve database IDs as numbers)
 const mockUsers = dbUsers.map((user, index) => ({
   id: index + 1,
+  dbId: user.id, // Preserve original database ID for lookup
   name: `${user.firstName} ${user.lastName}`,
   username: user.username,
   provider: 'LDAP',
@@ -64,12 +76,14 @@ const mockUsers = dbUsers.map((user, index) => ({
 
 const mockGroups = dbGroups.map((group, index) => ({
   id: index + 1,
+  dbId: group.id, // Preserve original database ID for lookup
   name: group.name,
   users: group.userIds.length,
 }));
 
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
+  dbId: role.id, // Preserve original database ID for lookup
   name: role.name,
   type: role.type,
   description: role.description,
@@ -77,7 +91,8 @@ const mockRoles = dbRoles.map((role, index) => ({
 
 const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> = ({ 
   isOpen, 
-  onClose, 
+  onClose,
+  onComplete,
   clusterName,
   clusterSetName,
   context = 'clusters',
@@ -156,12 +171,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [groupsPage, setGroupsPage] = React.useState(1);
   const [groupsPerPage, setGroupsPerPage] = React.useState(10);
   
+  
   // Step 2: Select resources
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
   // In single cluster context (when clusterName is provided), skip cluster selection
-  // In multi-cluster context (cluster set or no specific cluster), show cluster selection
+  // In multi-cluster context (cluster set or no specific cluster), start with initial selection screen
   // For identities and roles context, always start with no substeps visible (show main selection first)
-  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState((context === 'identities' || context === 'roles') ? false : !clusterName);
+  // For clusters context, also start with initial selection screen (Apply to all / Assign specific)
+  const [showSpecifyClusters, setShowSpecifyClusters] = React.useState(false);
   const [showIncludeProjects, setShowIncludeProjects] = React.useState(false);
   const [showSpecifyProjects, setShowSpecifyProjects] = React.useState(false);
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
@@ -199,30 +216,22 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [roleSearchValue, setRoleSearchValue] = React.useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
 
-  // Track when substeps are shown
-  React.useEffect(() => {
-    if (showSpecifyClusters) setHasVisitedSpecifyClusters(true);
-    if (showIncludeProjects) setHasVisitedIncludeProjects(true);
-    if (showSpecifyProjects) setHasVisitedSpecifyProjects(true);
-    if (showSpecifyClusterSets) setHasVisitedSpecifyClusterSets(true);
-    if (showIncludeClusters) setHasVisitedIncludeClusters(true);
-  }, [showSpecifyClusters, showIncludeProjects, showSpecifyProjects, showSpecifyClusterSets, showIncludeClusters]);
-
-  const handleClose = () => {
+  const resetWizard = () => {
     setCurrentStep(getInitialStep());
     setActiveTabKey(0);
+    setSelectedIdentityType('user');
     // Reset substep visibility based on context
-    // For identities and roles: start with initial selection screen (Apply to all / Assign specific)
-    // In single cluster context, skip directly to project scope selection (no cluster selection)
-    setShowSpecifyClusters((context === 'identities' || context === 'roles') ? false : !clusterName);
+    // All contexts now start with initial selection screen (Apply to all / Assign specific)
+    setShowSpecifyClusters(false);
     setShowIncludeProjects(false);
     setShowSpecifyProjects(false);
     // Reset identities and roles-specific state
-    setShowSpecifyClusterSets(false); // Both start with initial selection screen
+    setShowSpecifyClusterSets(false);
     setShowIncludeClusters(false);
     setSelectedClusterSets([]);
     setResourceScope('specific');
     setClusterSetScope('all');
+    setProjectScope('cluster');
     // Reset hasVisited flags to ensure clean state on next wizard open
     setHasVisitedSpecifyClusters(false);
     setHasVisitedIncludeProjects(false);
@@ -236,25 +245,45 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setSelectedProjects([]);
     setSelectedCommonProject(null);
     setSelectedRole(preselectedRole?.id || null);
+    // Reset search values
+    setUserSearchValue('');
+    setClusterSearchValue('');
+    setProjectSearchValue('');
+    setRoleSearchValue('');
+    setClusterSetSearchValue('');
+    // Reset pagination
+    setUsersPage(1);
+    setGroupsPage(1);
+  };
+
+  // Track when substeps are shown
+  React.useEffect(() => {
+    if (showSpecifyClusters) setHasVisitedSpecifyClusters(true);
+    if (showIncludeProjects) setHasVisitedIncludeProjects(true);
+    if (showSpecifyProjects) setHasVisitedSpecifyProjects(true);
+    if (showSpecifyClusterSets) setHasVisitedSpecifyClusterSets(true);
+    if (showIncludeClusters) setHasVisitedIncludeClusters(true);
+  }, [showSpecifyClusters, showIncludeProjects, showSpecifyProjects, showSpecifyClusterSets, showIncludeClusters]);
+
+  // Track previous isOpen state to only reset when wizard opens (not closes)
+  const prevIsOpenRef = React.useRef(isOpen);
+  
+  React.useEffect(() => {
+    // Only reset when wizard opens (transitions from false to true)
+    if (isOpen && !prevIsOpenRef.current) {
+      resetWizard();
+    }
+    prevIsOpenRef.current = isOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const handleClose = () => {
     onClose();
   };
   
   // When moving to step 2 from step 1, ensure we start with the proper substep
-  // This is for clusters context only (identities and roles use cluster sets flow)
-  React.useEffect(() => {
-    if (context === 'clusters' && currentStep === 2 && resourceScope === 'specific') {
-      if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
-        // In single cluster context, don't show cluster selection
-        if (clusterName) {
-          // Start with project scope selection (showing the radio buttons)
-          // Don't set any substep visibility - the main view will show
-        } else {
-          // In multi-cluster context, start with cluster selection
-          setShowSpecifyClusters(true);
-        }
-      }
-    }
-  }, [currentStep]);
+  // Removed automatic substep triggering - flow is now controlled by handleNext button
+  // This allows the initial "Apply to all / Assign specific" selection screen to show properly
 
   const handleNext = () => {
     const isSingleClusterContext = !!clusterName;
@@ -441,6 +470,22 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         // Move to Step 3: Review (skip role selection)
         setCurrentStep(3);
         return;
+      }
+    }
+    
+    // === CLUSTERS CONTEXT - INITIAL SELECTION ===
+    if (context === 'clusters' && currentStep === 2 && !isSingleClusterContext) {
+      // Handle initial selection screen for cluster sets
+      if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
+        if (resourceScope === 'all') {
+          // "Apply to all resources" → skip directly to role selection
+          setCurrentStep(3);
+          return;
+        } else if (resourceScope === 'specific') {
+          // "Assign specific resources" → show "Specify clusters"
+          setShowSpecifyClusters(true);
+          return;
+        }
       }
     }
     
@@ -683,17 +728,68 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const handleFinish = () => {
     console.log('Role assignment created');
-    handleClose();
+    
+    // Gather wizard data to pass back
+    if (onComplete) {
+      // Get identity name (look up by ID in mockUsers/mockGroups which use index-based IDs)
+      let identityName = 'Unknown';
+      if (selectedIdentityType === 'user' && selectedUser !== null) {
+        const user = mockUsers.find(u => u.id === selectedUser);
+        identityName = user?.name || 'Unknown User';
+      } else if (selectedIdentityType === 'group' && selectedGroup !== null) {
+        const group = mockGroups.find(g => g.id === selectedGroup);
+        identityName = group?.name || 'Unknown Group';
+      }
+      
+      // Get role name (look up by ID in mockRoles which uses index-based IDs)
+      let roleName = 'Unknown Role';
+      if (selectedRole !== null) {
+        const role = mockRoles.find(r => r.id === selectedRole);
+        roleName = role?.name || 'Unknown Role';
+      }
+      
+      // Build resource summary
+      let resourceSummary = 'All resources';
+      if (context === 'projects') {
+        resourceSummary = clusterName || 'This project';
+      } else if (clusterName) {
+        resourceSummary = clusterName;
+      } else if (clusterSetName) {
+        resourceSummary = clusterSetName;
+      } else if (selectedClusterSets.length > 0) {
+        resourceSummary = `${selectedClusterSets.length} cluster set${selectedClusterSets.length > 1 ? 's' : ''}`;
+      } else if (selectedClusters.length > 0) {
+        resourceSummary = `${selectedClusters.length} cluster${selectedClusters.length > 1 ? 's' : ''}`;
+      } else if (selectedProjects.length > 0) {
+        resourceSummary = `${selectedProjects.length} project${selectedProjects.length > 1 ? 's' : ''}`;
+      } else if (resourceScope === 'all') {
+        resourceSummary = 'All resources';
+      }
+      
+      onComplete({
+        identityType: selectedIdentityType,
+        identityId: selectedIdentityType === 'user' ? selectedUser : selectedGroup,
+        identityName,
+        roleId: selectedRole,
+        roleName,
+        resourceSummary,
+        selectedClusters,
+        selectedProjects,
+        selectedClusterSets
+      });
+    } else {
+      handleClose();
+    }
   };
 
-  const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
+  const handleTabClick = React.useCallback((_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
     setActiveTabKey(tabIndex);
     if (tabIndex === 0) {
       setSelectedIdentityType('user');
     } else {
       setSelectedIdentityType('group');
     }
-  };
+  }, []);
 
   const toggleClusterSetSelection = (clusterSetId: number) => {
     if (selectedClusterSets.includes(clusterSetId)) {
@@ -783,7 +879,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   // Step 1: Select user or group
-  const Step1SelectUserOrGroup = () => (
+  const Step1SelectUserOrGroup = React.useMemo(() => (
     <div>
       <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
         Select user, or group you want to grant access to
@@ -796,7 +892,12 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         .
       </Content>
 
-      <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity type tabs">
+      <Tabs 
+        key="identity-selection-tabs"
+        activeKey={activeTabKey} 
+        onSelect={handleTabClick} 
+        aria-label="Identity type tabs"
+      >
         <Tab eventKey={0} title={<TabTitleText>Users</TabTitleText>}>
           <div style={{ paddingTop: '24px' }}>
             <Toolbar>
@@ -826,6 +927,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </ToolbarItem>
                 <ToolbarItem>
                   <SearchInput
+                    id="wizard-users-search"
+                    aria-label="Search users"
                     placeholder="Search"
                     value={userSearchValue}
                     onChange={(_event, value) => setUserSearchValue(value)}
@@ -931,6 +1034,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 </ToolbarItem>
                 <ToolbarItem>
                   <SearchInput
+                    aria-label="Search groups"
                     placeholder="Search"
                     value={userSearchValue}
                     onChange={(_event, value) => setUserSearchValue(value)}
@@ -1006,7 +1110,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         </Tab>
       </Tabs>
     </div>
-  );
+  ), [activeTabKey, handleTabClick, userSearchValue, isUserFilterOpen, usersPage, usersPerPage, groupsPage, groupsPerPage, selectedUser, selectedGroup]);
 
   // Step 2: Select resources
   // Identities-specific: Step 1 = Select resources (with Apply to all / Assign specific)
@@ -1059,6 +1163,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           <Flex className="pf-v6-u-mb-md">
             <FlexItem>
               <SearchInput
+                aria-label="Search cluster sets"
                 placeholder="Search"
                 value={clusterSetSearchValue}
                 onChange={(_event, value) => setClusterSetSearchValue(value)}
@@ -1157,6 +1262,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             </FlexItem>
             <FlexItem>
               <SearchInput
+                aria-label="Search clusters"
                 placeholder="Search"
                 value={clusterSearchValue}
                 onChange={(_event, value) => setClusterSearchValue(value)}
@@ -1281,6 +1387,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             </FlexItem>
             <FlexItem>
               <SearchInput
+                aria-label="Search projects"
                 placeholder="Search"
                 value={projectSearchValue}
                 onChange={(_event, value) => setProjectSearchValue(value)}
@@ -1356,6 +1463,40 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     
     return (
     <div>
+      {/* Initial selection screen for multi-cluster (cluster set) context */}
+      {!isSingleClusterContext && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Select resources
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Assign this permission to specific resources or everything on the cluster set
+          </Content>
+
+          <Form>
+            <FormGroup>
+              <Radio
+                isChecked={resourceScope === 'all'}
+                name="resource-scope"
+                onChange={() => setResourceScope('all')}
+                label="Apply to all resources"
+                description="Apply the selected role to all existing and future clusters and projects in the cluster set."
+                id="radio-all-resources"
+              />
+              <Radio
+                isChecked={resourceScope === 'specific'}
+                name="resource-scope"
+                onChange={() => setResourceScope('specific')}
+                label="Assign specific resources"
+                description="Select exactly which clusters and projects this permission will apply to."
+                id="radio-specific-resources"
+                className="pf-v6-u-mt-md"
+              />
+            </FormGroup>
+          </Form>
+        </>
+      )}
+
       {isSingleClusterContext && !showSpecifyProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
@@ -1417,6 +1558,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             </FlexItem>
             <FlexItem>
               <SearchInput
+                aria-label="Search clusters"
                 placeholder="Search"
                 value={clusterSearchValue}
                 onChange={(_event, value) => setClusterSearchValue(value)}
@@ -1548,6 +1690,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             </FlexItem>
             <FlexItem>
               <SearchInput
+                aria-label="Search projects"
                 placeholder="Search"
                 value={projectSearchValue}
                 onChange={(_event, value) => setProjectSearchValue(value)}
@@ -1663,6 +1806,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           </ToolbarItem>
           <ToolbarItem>
             <SearchInput
+              aria-label="Search roles"
               placeholder="Search"
               value={roleSearchValue}
               onChange={(_event, value) => setRoleSearchValue(value)}
@@ -1819,7 +1963,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       // Projects context: Step 1 = Users/Groups, Step 2 = Role, Step 3 = Review
       switch (currentStep) {
         case 1:
-          return <Step1SelectUserOrGroup />;
+          return Step1SelectUserOrGroup;
         case 2:
           return <Step3SelectRole />;
         case 3:
@@ -1847,7 +1991,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       // Roles context: Step 1 = User/Group, Step 2 = Resources, Step 3 = Review
       switch (currentStep) {
         case 1:
-          return <Step1SelectUserOrGroup />;
+          return Step1SelectUserOrGroup;
         case 2:
           return <Step1SelectResourcesForIdentities />;
         case 3:
@@ -1860,7 +2004,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     // Clusters context
     switch (currentStep) {
       case 1:
-        return <Step1SelectUserOrGroup />;
+        return Step1SelectUserOrGroup;
       case 2:
         return <Step2SelectResources />;
       case 3:

@@ -29,9 +29,35 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateActions,
+  Alert,
+  AlertGroup,
+  AlertActionCloseButton,
 } from '@patternfly/react-core';
 import { StarIcon, ArrowRightIcon, InfoCircleIcon, CubesIcon } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
+import { 
+  Toolbar, 
+  ToolbarContent, 
+  ToolbarItem, 
+  SearchInput, 
+  Pagination, 
+  PaginationVariant 
+} from '@patternfly/react-core';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+
+// Interface for role assignment entries
+interface RoleAssignment {
+  id: string;
+  name: string;
+  type: 'User' | 'Group';
+  clusters: string[];
+  namespaces: string[];
+  roles: string[];
+  status: 'Active' | 'Inactive';
+  assignedDate: string;
+  assignedBy: string;
+  origin: string;
+}
 
 export const ProjectDetail: React.FC = () => {
   const { projectName } = useParams<{ projectName: string }>();
@@ -40,9 +66,96 @@ export const ProjectDetail: React.FC = () => {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(true);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [roleAssignments, setRoleAssignments] = useState<RoleAssignment[]>([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false);
+  const [filterValue, setFilterValue] = useState<string>('all');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   const handleCreateRoleAssignment = () => {
     setIsWizardOpen(true);
+  };
+
+  const handleWizardComplete = (wizardData: any) => {
+    // For projects context, clusters and namespaces are scoped to the current project
+    const clustersList = ['hub-cluster']; // Projects are typically on the hub cluster
+    const namespacesList = [projectName || 'Unknown project'];
+    
+    // Create a new role assignment from the wizard selections
+    const newAssignment: RoleAssignment = {
+      id: `ra-${Date.now()}`,
+      name: wizardData.identityName || 'Unknown',
+      type: wizardData.identityType === 'user' ? 'User' : 'Group',
+      clusters: clustersList,
+      namespaces: namespacesList,
+      roles: [wizardData.roleName || 'Unknown Role'],
+      status: 'Active',
+      assignedDate: new Date().toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }),
+      assignedBy: 'Walter Joseph Kovacs',
+      origin: 'Hub cluster'
+    };
+    
+    setRoleAssignments([...roleAssignments, newAssignment]);
+    setIsWizardOpen(false);
+    
+    // Show success alert (auto-dismiss handled by Alert timeout prop)
+    setShowSuccessAlert(true);
+  };
+
+  const handleDeleteAssignment = (assignmentId: string) => {
+    setRoleAssignments(roleAssignments.filter(ra => ra.id !== assignmentId));
+    setSelectedAssignments(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(assignmentId);
+      return newSet;
+    });
+  };
+
+  const handleSelectAssignment = (assignmentId: string, isSelecting: boolean) => {
+    setSelectedAssignments(prev => {
+      const newSet = new Set(prev);
+      if (isSelecting) {
+        newSet.add(assignmentId);
+      } else {
+        newSet.delete(assignmentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (isSelecting: boolean) => {
+    if (isSelecting) {
+      const allIds = roleAssignments.map(ra => ra.id);
+      setSelectedAssignments(new Set(allIds));
+    } else {
+      setSelectedAssignments(new Set());
+    }
+  };
+
+  const handleBulkDelete = () => {
+    setRoleAssignments(roleAssignments.filter(ra => !selectedAssignments.has(ra.id)));
+    setSelectedAssignments(new Set());
+    setIsBulkActionsOpen(false);
+  };
+
+  const onSetPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const onPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
+    setPerPage(newPerPage);
   };
 
   return (
@@ -492,29 +605,257 @@ spec:
         )}
 
         {activeTabKey === 4 && (
-          <Card>
-            <CardBody>
-              <EmptyState>
-                <CubesIcon />
-                <Title headingLevel="h2" size="lg">
-                  No role assignment created yet
-                </Title>
-                <EmptyStateBody>
-                  Control what users and groups can access or view by assigning them roles for this project.
-                </EmptyStateBody>
-                <EmptyStateActions>
-                  <Button variant="primary" onClick={handleCreateRoleAssignment}>
-                    Create role assignment
-                  </Button>
-                </EmptyStateActions>
-                <EmptyStateBody>
-                  <Button component="a" href="#" variant="link">
-                    Link to documentation
-                  </Button>
-                </EmptyStateBody>
-              </EmptyState>
-            </CardBody>
-          </Card>
+          <>
+            {roleAssignments.length === 0 ? (
+              <Card>
+                <CardBody>
+                  <EmptyState>
+                    <CubesIcon />
+                    <Title headingLevel="h2" size="lg">
+                      No role assignment created yet
+                    </Title>
+                    <EmptyStateBody>
+                      Control what users and groups can access or view by assigning them roles for this project.
+                    </EmptyStateBody>
+                    <EmptyStateActions>
+                      <Button variant="primary" onClick={handleCreateRoleAssignment}>
+                        Create role assignment
+                      </Button>
+                    </EmptyStateActions>
+                    <EmptyStateBody>
+                      <Button component="a" href="#" variant="link">
+                        Link to documentation
+                      </Button>
+                    </EmptyStateBody>
+                  </EmptyState>
+                </CardBody>
+              </Card>
+            ) : (
+              <Card>
+                <CardBody>
+                  {(() => {
+                    let filteredAssignments = roleAssignments.filter(assignment =>
+                      assignment.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                      assignment.roles.some(role => role.toLowerCase().includes(searchValue.toLowerCase()))
+                    );
+
+                    // Apply filter
+                    if (filterValue === 'user') {
+                      filteredAssignments = filteredAssignments.filter(a => a.type === 'User');
+                    } else if (filterValue === 'group') {
+                      filteredAssignments = filteredAssignments.filter(a => a.type === 'Group');
+                    } else if (filterValue === 'active') {
+                      filteredAssignments = filteredAssignments.filter(a => a.status === 'Active');
+                    }
+
+                    const paginatedAssignments = filteredAssignments.slice(
+                      (page - 1) * perPage,
+                      page * perPage
+                    );
+
+                    const areAllSelected = roleAssignments.length > 0 && selectedAssignments.size === roleAssignments.length;
+                    const areSomeSelected = selectedAssignments.size > 0;
+
+                    return (
+                      <>
+                        <Toolbar>
+                          <ToolbarContent>
+                            <ToolbarItem>
+                              <Dropdown
+                                isOpen={isFilterOpen}
+                                onSelect={() => setIsFilterOpen(false)}
+                                onOpenChange={(isOpen) => setIsFilterOpen(isOpen)}
+                                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                  <MenuToggle
+                                    ref={toggleRef}
+                                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                    isExpanded={isFilterOpen}
+                                  >
+                                    Filter: {filterValue === 'all' ? 'All' : filterValue === 'user' ? 'User' : filterValue === 'group' ? 'Group' : 'Active'}
+                                  </MenuToggle>
+                                )}
+                              >
+                                <DropdownList>
+                                  <DropdownItem key="all" onClick={() => setFilterValue('all')}>
+                                    All
+                                  </DropdownItem>
+                                  <DropdownItem key="user" onClick={() => setFilterValue('user')}>
+                                    User
+                                  </DropdownItem>
+                                  <DropdownItem key="group" onClick={() => setFilterValue('group')}>
+                                    Group
+                                  </DropdownItem>
+                                  <DropdownItem key="active" onClick={() => setFilterValue('active')}>
+                                    Active
+                                  </DropdownItem>
+                                </DropdownList>
+                              </Dropdown>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                              <SearchInput
+                                placeholder="Search role assignments"
+                                value={searchValue}
+                                onChange={(_event, value) => setSearchValue(value)}
+                                onClear={() => setSearchValue('')}
+                              />
+                            </ToolbarItem>
+                            <ToolbarItem variant="separator" />
+                            <ToolbarItem>
+                              <Dropdown
+                                isOpen={isBulkActionsOpen}
+                                onSelect={() => setIsBulkActionsOpen(false)}
+                                onOpenChange={(isOpen) => setIsBulkActionsOpen(isOpen)}
+                                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                  <MenuToggle
+                                    ref={toggleRef}
+                                    onClick={() => setIsBulkActionsOpen(!isBulkActionsOpen)}
+                                    isExpanded={isBulkActionsOpen}
+                                    variant="secondary"
+                                    isDisabled={!areSomeSelected}
+                                  >
+                                    Actions {areSomeSelected ? `(${selectedAssignments.size} selected)` : ''}
+                                  </MenuToggle>
+                                )}
+                              >
+                                <DropdownList>
+                                  <DropdownItem key="delete" onClick={handleBulkDelete}>
+                                    Delete selected
+                                  </DropdownItem>
+                                </DropdownList>
+                              </Dropdown>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                              <Button variant="primary" onClick={handleCreateRoleAssignment}>
+                                Create role assignment
+                              </Button>
+                            </ToolbarItem>
+                          </ToolbarContent>
+                        </Toolbar>
+                        
+                        <Table aria-label="Role assignments table" variant="compact">
+                          <Thead>
+                            <Tr>
+                              <Th style={{ backgroundColor: '#f0f0f0' }} />
+                              <Th colSpan={2} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Subject</Th>
+                              <Th colSpan={7} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
+                              <Th style={{ backgroundColor: '#f0f0f0' }}></Th>
+                            </Tr>
+                            <Tr>
+                              <Th
+                                select={{
+                                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                                  isSelected: areAllSelected,
+                                }}
+                              />
+                              <Th sort={{ sortBy: {}, columnIndex: 0 }}>Name</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 1 }}>Type</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Clusters</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Namespaces</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Roles</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Status</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Assigned date</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 7 }}>Assigned by</Th>
+                              <Th sort={{ sortBy: {}, columnIndex: 8 }}>Origin</Th>
+                              <Th></Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {paginatedAssignments.map((assignment, rowIndex) => (
+                              <Tr key={assignment.id}>
+                                <Td
+                                  select={{
+                                    rowIndex,
+                                    onSelect: (_event, isSelecting) => handleSelectAssignment(assignment.id, isSelecting),
+                                    isSelected: selectedAssignments.has(assignment.id),
+                                  }}
+                                />
+                                <Td dataLabel="Name">
+                                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                    {assignment.name}
+                                  </Button>
+                                </Td>
+                                <Td dataLabel="Type">{assignment.type}</Td>
+                            <Td dataLabel="Clusters">
+                              {assignment.clusters.map((cluster, idx) => (
+                                <span key={idx}>
+                                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                    {cluster}
+                                  </Button>
+                                  {idx < assignment.clusters.length - 1 && ', '}
+                                </span>
+                              ))}
+                            </Td>
+                            <Td dataLabel="Namespaces">
+                              {assignment.namespaces.map((ns, idx) => (
+                                <span key={idx}>
+                                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                    {ns}
+                                  </Button>
+                                  {idx < assignment.namespaces.length - 1 && ', '}
+                                </span>
+                              ))}
+                            </Td>
+                            <Td dataLabel="Roles">
+                              {assignment.roles.map((role, idx) => (
+                                <span key={idx}>
+                                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                    {role}
+                                  </Button>
+                                  {idx < assignment.roles.length - 1 && ', '}
+                                </span>
+                              ))}
+                            </Td>
+                            <Td dataLabel="Status">
+                              <Label color="green" icon={<span>✓</span>}>
+                                {assignment.status}
+                              </Label>
+                            </Td>
+                            <Td dataLabel="Assigned date">{assignment.assignedDate}</Td>
+                            <Td dataLabel="Assigned by">{assignment.assignedBy}</Td>
+                            <Td dataLabel="Origin">{assignment.origin}</Td>
+                            <Td isActionCell>
+                              <ActionsColumn
+                                items={[
+                                  {
+                                    title: 'Edit',
+                                    onClick: () => console.log('Edit', assignment.id)
+                                  },
+                                  {
+                                    isSeparator: true
+                                  },
+                                  {
+                                    title: 'Delete',
+                                    onClick: () => handleDeleteAssignment(assignment.id)
+                                  }
+                                ]}
+                              />
+                            </Td>
+                          </Tr>
+                        ))}
+                            </Tbody>
+                          </Table>
+                          
+                          <Toolbar>
+                            <ToolbarContent>
+                              <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                                <Pagination
+                                  itemCount={filteredAssignments.length}
+                                  page={page}
+                                  perPage={perPage}
+                                  onSetPage={onSetPage}
+                                  onPerPageSelect={onPerPageSelect}
+                                  variant={PaginationVariant.bottom}
+                                />
+                              </ToolbarItem>
+                            </ToolbarContent>
+                          </Toolbar>
+                        </>
+                      );
+                    })()}
+                </CardBody>
+              </Card>
+            )}
+          </>
         )}
 
         {activeTabKey === 5 && (
@@ -531,8 +872,24 @@ spec:
       <RoleAssignmentWizard
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
+        onComplete={handleWizardComplete}
         context="projects"
       />
+
+      {/* Success Alert */}
+      <AlertGroup isToast isLiveRegion>
+        {showSuccessAlert && (
+          <Alert
+            variant="success"
+            title="Role assignment created"
+            actionClose={
+              <AlertActionCloseButton onClose={() => setShowSuccessAlert(false)} />
+            }
+            timeout={10000}
+            onTimeout={() => setShowSuccessAlert(false)}
+          />
+        )}
+      </AlertGroup>
     </>
   );
 };
