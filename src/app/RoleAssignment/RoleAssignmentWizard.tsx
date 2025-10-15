@@ -36,7 +36,7 @@ interface RoleAssignmentWizardProps {
   onClose: () => void;
   clusterName?: string;
   clusterSetName?: string;
-  context?: 'clusters' | 'identities' | 'roles';
+  context?: 'clusters' | 'identities' | 'roles' | 'projects';
   preselectedIdentity?: {
     type: 'user' | 'group';
     id: number;
@@ -131,6 +131,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const getInitialStep = () => {
     if (context === 'identities') return 1; // For identities, step 1 is "Select resources"
     if (context === 'roles') return 1; // Start with user/group selection
+    if (context === 'projects') return 1; // For projects, start with user/group selection
     return 1; // Default for clusters - start with user/group selection
   };
 
@@ -257,6 +258,23 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const handleNext = () => {
     const isSingleClusterContext = !!clusterName;
+    
+    // === PROJECTS CONTEXT (Simplified) ===
+    if (context === 'projects') {
+      if (currentStep === 1) {
+        // Step 1: Select users/groups → Step 2: Select role
+        // Validate selection
+        if (selectedIdentityType === 'user' && !selectedUser) return;
+        if (selectedIdentityType === 'group' && !selectedGroup) return;
+        setCurrentStep(2);
+        return;
+      } else if (currentStep === 2) {
+        // Step 2: Select role → Step 3: Review
+        if (!selectedRole) return;
+        setCurrentStep(3);
+        return;
+      }
+    }
     
     // === IDENTITIES CONTEXT ===
     if (context === 'identities') {
@@ -504,6 +522,21 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const handleBack = () => {
     const isSingleClusterContext = !!clusterName;
+    
+    // === PROJECTS CONTEXT (Simplified) ===
+    if (context === 'projects') {
+      if (currentStep === 3) {
+        // Step 3 (Review) → Step 2 (Select role)
+        setCurrentStep(2);
+        return;
+      } else if (currentStep === 2) {
+        // Step 2 (Select role) → Step 1 (Select users/groups)
+        setCurrentStep(1);
+        return;
+      }
+      // Can't go back from Step 1
+      return;
+    }
     
     // === IDENTITIES CONTEXT ===
     if (context === 'identities') {
@@ -1782,6 +1815,20 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   );
 
   const getCurrentStepContent = () => {
+    if (context === 'projects') {
+      // Projects context: Step 1 = Users/Groups, Step 2 = Role, Step 3 = Review
+      switch (currentStep) {
+        case 1:
+          return <Step1SelectUserOrGroup />;
+        case 2:
+          return <Step3SelectRole />;
+        case 3:
+          return <Step4Review />;
+        default:
+          return null;
+      }
+    }
+    
     if (context === 'identities') {
       // Identities context: Step 1 = Resources, Step 2 = Role, Step 3 = Review
       switch (currentStep) {
@@ -1826,6 +1873,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const getStepTitle = () => {
+    if (context === 'projects') {
+      const titles = ['', 'Select users or groups', 'Select role', 'Review'];
+      return titles[currentStep] || '';
+    }
+    
     if (context === 'identities') {
       if (currentStep === 1) {
         // Step 1 for Identities: Select resources with substeps
@@ -1980,6 +2032,26 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
 
   const isNextButtonDisabled = () => {
     const isSingleClusterContext = !!clusterName;
+    
+    // === PROJECTS CONTEXT (Simplified) ===
+    if (context === 'projects') {
+      if (currentStep === 1) {
+        // Step 1: Select users or groups
+        if (selectedIdentityType === 'user') {
+          return selectedUser === null;
+        } else {
+          return selectedGroup === null;
+        }
+      }
+      
+      if (currentStep === 2) {
+        // Step 2: Select role
+        return selectedRole === null;
+      }
+      
+      // Step 3 is Review, no validation needed
+      return false;
+    }
     
     // === IDENTITIES CONTEXT ===
     if (context === 'identities') {
@@ -2162,7 +2234,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               flexShrink: 0,
               margin: 0
             }}>
-              {context === 'identities' ? (
+              {context === 'projects' ? (
+                // Projects context: Simplified flow - Users/Groups → Roles → Review
+                <>
+                  {renderStepIndicator(1, 'Select users or groups', false, true)}
+                  {renderStepIndicator(2, 'Select role', false, true)}
+                  {renderStepIndicator(3, 'Review', false, false)}
+                </>
+              ) : context === 'identities' ? (
                 // Identities context: New flow with cluster sets
                 <>
                   {renderStepIndicator(1, 'Select resources', false, true)}
@@ -2237,14 +2316,16 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 backgroundColor: '#ffffff',
                 flexShrink: 0
               }}>
-                {((context === 'identities' && (currentStep > 1 || showSpecifyClusterSets || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
+                {((context === 'projects' && currentStep > 1) ||
+                  (context === 'identities' && (currentStep > 1 || showSpecifyClusterSets || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
                   (context === 'roles' && (currentStep > 1 || showSpecifyClusterSets || showIncludeClusters || showSpecifyClusters || showIncludeProjects || showSpecifyProjects)) || 
                   (context === 'clusters' && currentStep > 1)) && (
                   <Button variant="secondary" onClick={handleBack}>
                     Back
                   </Button>
                 )}{' '}
-                {((context === 'identities' && currentStep < 3) || 
+                {((context === 'projects' && currentStep < 3) ||
+                  (context === 'identities' && currentStep < 3) || 
                   (context === 'roles' && currentStep < 3) || 
                   (context === 'clusters' && currentStep < 4)) ? (
                   <Button variant="primary" onClick={handleNext} isDisabled={isNextButtonDisabled()}>

@@ -263,6 +263,34 @@ body,
   max-width: 100% !important;
 }
 
+/* Projects page container - same layout as identity providers */
+.projects-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 24px !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.projects-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 0 24px 0 !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.projects-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 0 24px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* Clusters page - no padding, no card, completely flat, full width */
 .clusters-page-content {
   background-color: #f5f5f5 !important;

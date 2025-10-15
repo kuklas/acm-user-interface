@@ -26,8 +26,12 @@ import {
   MenuToggle,
   MenuToggleElement,
   Content,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateActions,
 } from '@patternfly/react-core';
-import { StarIcon, ArrowRightIcon, InfoCircleIcon } from '@patternfly/react-icons';
+import { StarIcon, ArrowRightIcon, InfoCircleIcon, CubesIcon } from '@patternfly/react-icons';
+import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
 
 export const ProjectDetail: React.FC = () => {
   const { projectName } = useParams<{ projectName: string }>();
@@ -35,6 +39,11 @@ export const ProjectDetail: React.FC = () => {
   const [activeTabKey, setActiveTabKey] = useState<string | number>(0);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showGettingStarted, setShowGettingStarted] = useState(true);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+
+  const handleCreateRoleAssignment = () => {
+    setIsWizardOpen(true);
+  };
 
   return (
     <>
@@ -485,8 +494,25 @@ spec:
         {activeTabKey === 4 && (
           <Card>
             <CardBody>
-              <Title headingLevel="h2" size="lg" className="pf-v6-u-mb-md">Role assignments</Title>
-              <Content>Role assignments content goes here...</Content>
+              <EmptyState>
+                <CubesIcon />
+                <Title headingLevel="h2" size="lg">
+                  No role assignment created yet
+                </Title>
+                <EmptyStateBody>
+                  Control what users and groups can access or view by assigning them roles for this project.
+                </EmptyStateBody>
+                <EmptyStateActions>
+                  <Button variant="primary" onClick={handleCreateRoleAssignment}>
+                    Create role assignment
+                  </Button>
+                </EmptyStateActions>
+                <EmptyStateBody>
+                  <Button component="a" href="#" variant="link">
+                    Link to documentation
+                  </Button>
+                </EmptyStateBody>
+              </EmptyState>
             </CardBody>
           </Card>
         )}
@@ -500,6 +526,13 @@ spec:
           </Card>
         )}
       </div>
+
+      {/* Role Assignment Wizard */}
+      <RoleAssignmentWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        context="projects"
+      />
     </>
   );
 };

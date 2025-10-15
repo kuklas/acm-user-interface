@@ -85,6 +85,34 @@ export const clusterSets: ClusterSet[] = [
 // ============================================================================
 
 export const clusters: Cluster[] = [
+  // Hub Cluster - The central ACM management cluster
+  {
+    id: 'cluster-hub',
+    name: 'hub-cluster',
+    clusterSetId: 'cs-na-prod',
+    status: 'Ready',
+    kubernetesVersion: '1.29.2',
+    region: 'North America',
+    location: 'US Central',
+    nodes: 8,
+    namespaceIds: [
+      'ns-hub-acm',
+      'ns-hub-openshift-marketplace',
+      'ns-hub-openshift-operators',
+      'ns-hub-monitoring',
+      'ns-hub-logging',
+      'ns-hub-multicluster-engine',
+      'ns-hub-ansible-automation',
+      'ns-hub-argo-cd',
+      'ns-hub-gitops',
+      'ns-hub-policies',
+      'ns-hub-apps',
+      'ns-hub-dev-team',
+      'ns-hub-qa-team',
+      'ns-hub-demo-apps',
+      'ns-hub-backup-restore',
+    ],
+  },
   // North America Production
   {
     id: 'cluster-us-west-prod-01',
@@ -309,6 +337,23 @@ export const clusters: Cluster[] = [
 // In a real implementation, you'd generate these programmatically or use a data generator
 
 export const namespaces: Namespace[] = [
+  // Hub Cluster namespaces
+  { id: 'ns-hub-acm', name: 'open-cluster-management', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'acm' } },
+  { id: 'ns-hub-openshift-marketplace', name: 'openshift-marketplace', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'marketplace' } },
+  { id: 'ns-hub-openshift-operators', name: 'openshift-operators', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'operators' } },
+  { id: 'ns-hub-monitoring', name: 'openshift-monitoring', clusterId: 'cluster-hub', type: 'monitoring', labels: { env: 'prod', app: 'monitoring' } },
+  { id: 'ns-hub-logging', name: 'openshift-logging', clusterId: 'cluster-hub', type: 'monitoring', labels: { env: 'prod', app: 'logging' } },
+  { id: 'ns-hub-multicluster-engine', name: 'multicluster-engine', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'mce' } },
+  { id: 'ns-hub-ansible-automation', name: 'ansible-automation-platform', clusterId: 'cluster-hub', type: 'application', labels: { env: 'prod', app: 'ansible' } },
+  { id: 'ns-hub-argo-cd', name: 'openshift-gitops', clusterId: 'cluster-hub', type: 'application', labels: { env: 'prod', app: 'argocd' } },
+  { id: 'ns-hub-gitops', name: 'gitops-apps', clusterId: 'cluster-hub', type: 'application', labels: { env: 'prod', app: 'gitops' } },
+  { id: 'ns-hub-policies', name: 'acm-policies', clusterId: 'cluster-hub', type: 'application', labels: { env: 'prod', app: 'policies' } },
+  { id: 'ns-hub-apps', name: 'application-samples', clusterId: 'cluster-hub', type: 'application', labels: { env: 'dev', app: 'samples' } },
+  { id: 'ns-hub-dev-team', name: 'dev-team-workspace', clusterId: 'cluster-hub', type: 'development', labels: { env: 'dev', team: 'developers' } },
+  { id: 'ns-hub-qa-team', name: 'qa-team-workspace', clusterId: 'cluster-hub', type: 'qa', labels: { env: 'qa', team: 'qa-engineers' } },
+  { id: 'ns-hub-demo-apps', name: 'demo-applications', clusterId: 'cluster-hub', type: 'application', labels: { env: 'demo', app: 'demos' } },
+  { id: 'ns-hub-backup-restore', name: 'backup-restore', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'backup' } },
+  
   // US West Prod 01 namespaces
   { id: 'ns-core-ntwk-usw01', name: 'core-ntwk', clusterId: 'cluster-us-west-prod-01', type: 'infrastructure', labels: { env: 'prod', region: 'us-west' } },
   { id: 'ns-5g-api-prod-usw01', name: '5g-api-prod', clusterId: 'cluster-us-west-prod-01', type: 'application', labels: { env: 'prod', app: '5g' } },

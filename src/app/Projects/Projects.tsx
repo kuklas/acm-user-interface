@@ -1,35 +1,27 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as React from 'react';
 import {
-  Title,
+  Button,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
   SearchInput,
-  Button,
+  Label,
   Dropdown,
   DropdownList,
   DropdownItem,
   MenuToggle,
   MenuToggleElement,
-  Flex,
-  FlexItem,
+  Pagination,
+  PaginationVariant,
 } from '@patternfly/react-core';
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  ThProps,
-} from '@patternfly/react-table';
-import {
-  FilterIcon,
-  StarIcon,
-  EllipsisVIcon,
-  ClockIcon,
-} from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { FilterIcon } from '@patternfly/react-icons';
+import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { useNavigate } from 'react-router-dom';
+import { getAllNamespaces, getClusterById, getVirtualMachinesByNamespace } from '@app/data/queries';
+
+// Hub cluster ID - the cluster where ACM is installed
+const HUB_CLUSTER_ID = 'cluster-hub';
 
 interface Project {
   id: string;
@@ -40,240 +32,207 @@ interface Project {
   memory: string;
   cpu: string;
   created: string;
+  type: string;
 }
 
-const mockProjects: Project[] = [
-  { id: '1', name: 'aap', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '6,519.1 MiB', cpu: '0.101 cores', created: '4 Feb 2025, 14:12' },
-  { id: '2', name: 'aks-central', displayName: 'No display name', status: 'Active', requester: 'berenss', memory: '-', cpu: '-', created: '29 Jan 2025, 19:39' },
-  { id: '3', name: 'appanynamespace', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '2 Jun 2025, 11:44' },
-  { id: '4', name: 'appcluster1', displayName: 'No display name', status: 'Active', requester: 'ch-stark', memory: '-', cpu: '-', created: '9 Oct 2025, 21:55' },
-  { id: '5', name: 'apptest2', displayName: 'No display name', status: 'Active', requester: 'ch-stark', memory: '-', cpu: '-', created: '9 Oct 2025, 21:59' },
-  { id: '6', name: 'aro-central', displayName: 'No display name', status: 'Active', requester: 'berenss', memory: '-', cpu: '-', created: '21 Jul 2025, 19:02' },
-  { id: '7', name: 'august-aws-credentials', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '11 Mar 2025, 01:50' },
-  { id: '8', name: 'august-ocp-clusters-broker', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '11 Mar 2025, 01:47' },
-  { id: '9', name: 'august-policies', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '11 Mar 2025, 04:42' },
-  { id: '10', name: 'boston', displayName: 'No display name', status: 'Active', requester: 'berenss', memory: '-', cpu: '-', created: '5 Jun 2025, 21:41' },
-  { id: '11', name: 'capa-system', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '1 Aug 2025, 21:31' },
-  { id: '12', name: 'capi-system', displayName: 'No display name', status: 'Active', requester: 'No requester', memory: '-', cpu: '-', created: '1 Aug 2025, 21:31' },
-];
-
-export const Projects: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isNameSortOpen, setIsNameSortOpen] = useState(false);
-  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<{ index: number; direction: 'asc' | 'desc' }>({ index: 0, direction: 'asc' });
-
-  const filteredProjects = useMemo(() => {
-    let filtered = [...mockProjects];
+// Transform namespace data into project format
+const createProjectsFromNamespaces = () => {
+  const namespaces = getAllNamespaces();
+  
+  // Filter to only show namespaces from the hub cluster
+  const hubNamespaces = namespaces.filter(ns => ns.clusterId === HUB_CLUSTER_ID);
+  
+  return hubNamespaces.map((namespace, index) => {
+    const cluster = getClusterById(namespace.clusterId);
+    const vms = getVirtualMachinesByNamespace(namespace.id);
     
-    if (searchValue) {
-      filtered = filtered.filter(project =>
-        project.name.toLowerCase().includes(searchValue.toLowerCase())
-      );
-    }
-
-    // Sort by column
-    if (sortBy.index === 0) {
-      filtered.sort((a, b) => {
-        const comparison = a.name.localeCompare(b.name);
-        return sortBy.direction === 'asc' ? comparison : -comparison;
-      });
-    }
-
-    return filtered;
-  }, [searchValue, sortBy]);
-
-  const handleSort = (_event: any, index: number, direction: 'asc' | 'desc') => {
-    setSortBy({ index, direction });
-  };
-
-  const getSortParams = (columnIndex: number): ThProps['sort'] => ({
-    sortBy: {
-      index: sortBy.index,
-      direction: sortBy.direction,
-    },
-    onSort: handleSort,
-    columnIndex,
+    // Calculate total memory and CPU from VMs
+    const totalMemory = vms.reduce((sum, vm) => {
+      const memMatch = vm.memory.match(/(\d+)/);
+      return sum + (memMatch ? parseInt(memMatch[1]) : 0);
+    }, 0);
+    
+    const totalCpu = vms.reduce((sum, vm) => sum + vm.cpu, 0);
+    
+    // Generate a created date
+    const createdDate = new Date(2024, 0, 15 + index);
+    
+    return {
+      id: namespace.id,
+      name: namespace.name,
+      displayName: namespace.labels.app ? `${namespace.labels.app} project` : 'No display name',
+      status: cluster?.status === 'Ready' ? 'Active' : 'Unknown',
+      requester: namespace.labels.team || namespace.labels.env || 'system',
+      memory: totalMemory > 0 ? `${totalMemory} GiB` : '-',
+      cpu: totalCpu > 0 ? `${totalCpu} cores` : '-',
+      created: createdDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+      type: namespace.type,
+    };
   });
+};
 
-  const toggleActionMenu = (projectId: string) => {
-    setOpenActionMenuId(openActionMenuId === projectId ? null : projectId);
+const mockProjects: Project[] = createProjectsFromNamespaces();
+
+const Projects: React.FunctionComponent = () => {
+  useDocumentTitle('Projects');
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = React.useState('');
+  const [selectedProjects, setSelectedProjects] = React.useState<Set<string>>(new Set());
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+
+  const paginatedProjects = mockProjects.slice((page - 1) * perPage, page * perPage);
+
+  const isAllSelected = paginatedProjects.length > 0 && paginatedProjects.every(project => selectedProjects.has(project.id));
+
+  const handleSelectAll = (isSelecting: boolean) => {
+    const newSelected = new Set(selectedProjects);
+    if (isSelecting) {
+      paginatedProjects.forEach(project => newSelected.add(project.id));
+    } else {
+      paginatedProjects.forEach(project => newSelected.delete(project.id));
+    }
+    setSelectedProjects(newSelected);
   };
 
-  const handleProjectClick = (projectName: string) => {
-    navigate(`/core/home/projects/${projectName}`);
+  const handleSelectProject = (projectId: string, isSelecting: boolean) => {
+    const newSelected = new Set(selectedProjects);
+    if (isSelecting) {
+      newSelected.add(projectId);
+    } else {
+      newSelected.delete(projectId);
+    }
+    setSelectedProjects(newSelected);
   };
 
   return (
-    <div style={{ padding: '48px' }}>
-      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '32px' }}>
-        <FlexItem>
-          <Title headingLevel="h1" size="2xl">Projects</Title>
-        </FlexItem>
-        <FlexItem>
-          <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-            <FlexItem>
-              <Button variant="plain" icon={<StarIcon />} />
-            </FlexItem>
-            <FlexItem>
-              <Button variant="primary">Create Project</Button>
-            </FlexItem>
-          </Flex>
-        </FlexItem>
-      </Flex>
-
+    <>
       <div className="table-content-card">
         <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <Dropdown
-                  isOpen={isFilterOpen}
-                  onSelect={() => setIsFilterOpen(false)}
-                  onOpenChange={(isOpen) => setIsFilterOpen(isOpen)}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      onClick={() => setIsFilterOpen(!isFilterOpen)}
-                      isExpanded={isFilterOpen}
-                      icon={<FilterIcon />}
-                    >
-                      Filter
-                    </MenuToggle>
-                  )}
-                >
-                  <DropdownList>
-                    <DropdownItem value="all">All projects</DropdownItem>
-                    <DropdownItem value="active">Active</DropdownItem>
-                    <DropdownItem value="inactive">Inactive</DropdownItem>
-                  </DropdownList>
-                </Dropdown>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Dropdown
-                  isOpen={isNameSortOpen}
-                  onSelect={() => setIsNameSortOpen(false)}
-                  onOpenChange={(isOpen) => setIsNameSortOpen(isOpen)}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      onClick={() => setIsNameSortOpen(!isNameSortOpen)}
-                      isExpanded={isNameSortOpen}
-                    >
-                      Name
-                    </MenuToggle>
-                  )}
-                >
-                  <DropdownList>
-                    <DropdownItem value="name-asc">Name (A-Z)</DropdownItem>
-                    <DropdownItem value="name-desc">Name (Z-A)</DropdownItem>
-                  </DropdownList>
-                </Dropdown>
-              </ToolbarItem>
-              <ToolbarItem style={{ flexGrow: 1 }}>
-                <SearchInput
-                  placeholder="Search by name..."
-                  value={searchValue}
-                  onChange={(_event, value) => setSearchValue(value)}
-                  onClear={() => setSearchValue('')}
+          <ToolbarContent>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isFilterOpen}
+                onSelect={() => setIsFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="default"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    isExpanded={isFilterOpen}
+                  >
+                    <FilterIcon /> Project
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="all">All projects</DropdownItem>
+                  <DropdownItem key="infrastructure">Infrastructure</DropdownItem>
+                  <DropdownItem key="application">Application</DropdownItem>
+                  <DropdownItem key="development">Development</DropdownItem>
+                  <DropdownItem key="monitoring">Monitoring</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search projects"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary">Create project</Button>
+            </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={mockProjects.length}
+                perPage={perPage}
+                page={page}
+                onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+                onPerPageSelect={(_event, newPerPage) => {
+                  setPerPage(newPerPage);
+                  setPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        <Table aria-label="Projects table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: isAllSelected,
+                }}
+              />
+              <Th width={25}>Name</Th>
+              <Th width={20}>Display name</Th>
+              <Th width={10}>Status</Th>
+              <Th width={10}>Type</Th>
+              <Th width={15}>Requester</Th>
+              <Th width={10}>Memory</Th>
+              <Th width={10}>CPU</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {paginatedProjects.map((project) => (
+              <Tr key={project.id}>
+                <Td
+                  select={{
+                    rowIndex: project.id,
+                    onSelect: (_event, isSelecting) => handleSelectProject(project.id, isSelecting),
+                    isSelected: selectedProjects.has(project.id),
+                  }}
                 />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <Table variant="compact">
-            <Thead>
-              <Tr>
-                <Th sort={getSortParams(0)}>Name</Th>
-                <Th>Display name</Th>
-                <Th>Status</Th>
-                <Th>Requester</Th>
-                <Th>Memory</Th>
-                <Th>CPU</Th>
-                <Th>Created</Th>
-                <Th></Th>
+                <Td dataLabel="Name" width={25} style={{ textAlign: 'left' }}>
+                  <Button
+                    variant="link"
+                    isInline
+                    onClick={() => navigate(`/core/home/projects/${project.name}`)}
+                    style={{ paddingLeft: 0 }}
+                  >
+                    {project.name}
+                  </Button>
+                </Td>
+                <Td dataLabel="Display name" width={20}>
+                  {project.displayName}
+                </Td>
+                <Td dataLabel="Status" width={10}>
+                  <Label color={project.status === 'Active' ? 'green' : 'grey'}>{project.status}</Label>
+                </Td>
+                <Td dataLabel="Type" width={10}>
+                  <Label color="blue">{project.type.charAt(0).toUpperCase() + project.type.slice(1)}</Label>
+                </Td>
+                <Td dataLabel="Requester" width={15}>{project.requester}</Td>
+                <Td dataLabel="Memory" width={10}>{project.memory}</Td>
+                <Td dataLabel="CPU" width={10}>{project.cpu}</Td>
               </Tr>
-            </Thead>
-            <Tbody>
-              {filteredProjects.map((project) => (
-                <Tr key={project.id}>
-                  <Td>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                      <FlexItem>
-                        <div
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '4px',
-                            backgroundColor: 'var(--pf-t--global--color--nonstatus--green--default)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--pf-t--global--color--nonstatus--white--default)',
-                            fontWeight: 'var(--pf-t--global--font--weight--body--bold)',
-                            fontSize: '12px',
-                          }}
-                        >
-                          PR
-                        </div>
-                      </FlexItem>
-                      <FlexItem>
-                        <Button variant="link" isInline onClick={() => handleProjectClick(project.name)} style={{ paddingLeft: 0 }}>
-                          {project.name}
-                        </Button>
-                      </FlexItem>
-                    </Flex>
-                  </Td>
-                  <Td>{project.displayName}</Td>
-                  <Td>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                      <FlexItem>
-                        <span style={{ color: 'var(--pf-t--global--icon--color--status--success--default)' }}>✓</span>
-                      </FlexItem>
-                      <FlexItem>{project.status}</FlexItem>
-                    </Flex>
-                  </Td>
-                  <Td>{project.requester}</Td>
-                  <Td>{project.memory}</Td>
-                  <Td>{project.cpu}</Td>
-                  <Td>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                      <FlexItem>
-                        <ClockIcon style={{ fontSize: '14px' }} />
-                      </FlexItem>
-                      <FlexItem>{project.created}</FlexItem>
-                    </Flex>
-                  </Td>
-                  <Td>
-                    <Dropdown
-                      isOpen={openActionMenuId === project.id}
-                      onSelect={() => setOpenActionMenuId(null)}
-                      onOpenChange={(isOpen) => !isOpen && setOpenActionMenuId(null)}
-                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                        <MenuToggle
-                          ref={toggleRef}
-                          onClick={() => toggleActionMenu(project.id)}
-                          isExpanded={openActionMenuId === project.id}
-                          variant="plain"
-                        >
-                          <EllipsisVIcon />
-                        </MenuToggle>
-                      )}
-                      shouldFocusToggleOnSelect
-                    >
-                      <DropdownList>
-                        <DropdownItem value="edit">Edit Project</DropdownItem>
-                        <DropdownItem value="delete">Delete Project</DropdownItem>
-                      </DropdownList>
-                    </Dropdown>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+            ))}
+          </Tbody>
+        </Table>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={mockProjects.length}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+            onPerPageSelect={(_event, newPerPage) => {
+              setPerPage(newPerPage);
+              setPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
+export { Projects };

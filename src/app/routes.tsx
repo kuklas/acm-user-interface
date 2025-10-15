@@ -10,7 +10,6 @@ import { CreateRole } from '@app/Roles/CreateRole';
 import { RoleDetail } from '@app/Roles/RoleDetail';
 import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDetail';
 import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
-import { Projects } from '@app/Projects/Projects';
 import { ProjectDetail } from '@app/Projects/ProjectDetail';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import { NotFound } from '@app/NotFound/NotFound';
@@ -21,6 +20,7 @@ import {
   RolesPage,
   IdentityProvidersPage
 } from '@app/navigation';
+import { ProjectsPage } from '@app/navigation/core-platforms';
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
@@ -202,7 +202,7 @@ const routes: AppRouteConfig[] = [
     label: 'Core Platforms',
     routes: [
       {
-        element: <Projects />,
+        element: <ProjectsPage />,
         path: '/core/home/projects',
         title: 'Projects',
       },
