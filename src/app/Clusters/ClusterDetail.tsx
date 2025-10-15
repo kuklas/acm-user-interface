@@ -91,7 +91,7 @@ const ClusterDetail: React.FunctionComponent = () => {
 
   const handleWizardComplete = (wizardData: any) => {
     // Determine clusters - use the cluster name if in single cluster context, otherwise use resource summary
-    let clustersList = [];
+    let clustersList: string[] = [];
     if (clusterName && !isClusterSet) {
       clustersList = [clusterName];
     } else if (wizardData.resourceSummary) {
@@ -100,7 +100,7 @@ const ClusterDetail: React.FunctionComponent = () => {
     }
     
     // Determine namespaces/projects - use selected projects if available
-    let namespacesList = [];
+    let namespacesList: string[] = [];
     if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
       // Map project IDs to names (you would typically fetch these from your data source)
       namespacesList = wizardData.selectedProjects.map((id: number) => `project-${id}`);
