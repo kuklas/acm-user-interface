@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   Button,
+  Checkbox,
   Content,
   Dropdown,
   DropdownItem,
@@ -9,6 +10,9 @@ import {
   FlexItem,
   Form,
   FormGroup,
+  FormSelect,
+  FormSelectOption,
+  Label,
   MenuToggle,
   MenuToggleElement,
   Modal,
@@ -137,7 +141,10 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const mockProjects = dbNamespaces.map((namespace, index) => ({
     id: index + 1,
     name: namespace.name,
+    displayName: namespace.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     type: namespace.type,
+    status: 'Active' as 'Active' | 'Terminating' | 'Failed',
+    requester: index % 3 === 0 ? 'Walter Joseph Kovacs' : index % 3 === 1 ? 'Adrian Veidt' : 'Daniel Dreiberg',
     cluster: dbClusters.find(c => c.id === namespace.clusterId)?.name || 'Unknown',
     dbClusterId: namespace.clusterId, // Keep track of cluster ID for filtering
   }));
@@ -174,6 +181,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   
   // Step 2: Select resources
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
+  // Option B: Hierarchical dropdown states
+  const [clusterSetScope, setClusterSetScope] = React.useState<'everything' | 'select-clusters'>('everything');
+  const [clusterScope, setClusterScope] = React.useState<'everything' | 'narrow-down'>('everything');
   // In single cluster context (when clusterName is provided), skip cluster selection
   // In multi-cluster context (cluster set or no specific cluster), start with initial selection screen
   // For identities and roles context, always start with no substeps visible (show main selection first)
@@ -230,7 +240,8 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setShowIncludeClusters(false);
     setSelectedClusterSets([]);
     setResourceScope('specific');
-    setClusterSetScope('all');
+    setClusterSetScope('everything'); // Option B
+    setClusterScope('everything'); // Option B
     setProjectScope('cluster');
     // Reset hasVisited flags to ensure clean state on next wizard open
     setHasVisitedSpecifyClusters(false);
@@ -473,19 +484,54 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       }
     }
     
-    // === CLUSTERS CONTEXT - INITIAL SELECTION ===
+    // === CLUSTERS CONTEXT - OPTION B SUB-STEPS ===
     if (context === 'clusters' && currentStep === 2 && !isSingleClusterContext) {
-      // Handle initial selection screen for cluster sets
+      // SUB-STEP 1: Initial selection
       if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
-        if (resourceScope === 'all') {
-          // "Apply to all resources" → skip directly to role selection
+        if (clusterSetScope === 'everything') {
+          // "Everything in the cluster set" → skip to role selection (step 3)
           setCurrentStep(3);
           return;
-        } else if (resourceScope === 'specific') {
-          // "Assign specific resources" → show "Specify clusters"
+        } else if (clusterSetScope === 'select-clusters') {
+          // "Cluster or Clusters" → show SUB-STEP 2 (select clusters)
           setShowSpecifyClusters(true);
           return;
         }
+      }
+      
+      // SUB-STEP 2: Select clusters
+      if (showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
+        if (selectedClusters.length === 0) return; // Need at least one cluster
+        // Go to SUB-STEP 3 (choose cluster scope)
+        setShowSpecifyClusters(false);
+        setShowIncludeProjects(true);
+        return;
+      }
+      
+      // SUB-STEP 3: Choose cluster scope
+      if (showIncludeProjects && !showSpecifyProjects && selectedClusters.length > 0) {
+        if (clusterScope === 'everything') {
+          // "Everything on clusters" → skip to role selection (step 3)
+          setShowIncludeProjects(false);
+          setCurrentStep(3);
+          return;
+        } else if (clusterScope === 'narrow-down') {
+          // "Narrow down to projects" → show SUB-STEP 4 (select projects)
+          setShowIncludeProjects(false);
+          setShowSpecifyProjects(true);
+          return;
+        }
+      }
+      
+      // SUB-STEP 4: Select projects
+      if (showSpecifyProjects && selectedClusters.length > 0) {
+        // Validate selections (both single and multiple clusters now support multi-select)
+        if (selectedProjects.length === 0) return; // Need at least one project
+        
+        // Go to role selection (step 3)
+        setShowSpecifyProjects(false);
+        setCurrentStep(3);
+        return;
       }
     }
     
@@ -686,38 +732,41 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
       return;
     }
     
-    // === CLUSTERS / ROLES CONTEXT ===
-    if (currentStep === 2 && resourceScope === 'specific') {
-      // Single cluster context: handle back navigation
-      if (isSingleClusterContext) {
-        // From "Specify projects" substep → go back to project scope selection
-        if (showSpecifyProjects) {
-          setShowSpecifyProjects(false);
-          return;
-        }
-        // From project scope selection → go back to previous step
-        // Fall through
-      } else {
-        // Multi-cluster context: original logic
-        // From "Specify common projects" substep → go back to "Include projects"
-        if (showSpecifyProjects) {
-          setShowSpecifyProjects(false);
-          setShowIncludeProjects(true);
-          return;
-        }
-        
-        // From "Include projects" substep → go back to "Specify clusters"
-        if (showIncludeProjects) {
-          setShowIncludeProjects(false);
-          setShowSpecifyClusters(true);
-          return;
-        }
-        
-        // From "Specify clusters" substep → go back to previous step
-        if (showSpecifyClusters) {
-          // Fall through to go to previous step
-        }
+    // === CLUSTERS CONTEXT - OPTION B SUB-STEPS BACK NAVIGATION ===
+    if (context === 'clusters' && currentStep === 2 && !isSingleClusterContext) {
+      // SUB-STEP 4: Select projects → back to SUB-STEP 3 (cluster scope)
+      if (showSpecifyProjects) {
+        setShowSpecifyProjects(false);
+        setShowIncludeProjects(true);
+        return;
       }
+      
+      // SUB-STEP 3: Cluster scope → back to SUB-STEP 2 (select clusters)
+      if (showIncludeProjects) {
+        setShowIncludeProjects(false);
+        setShowSpecifyClusters(true);
+        return;
+      }
+      
+      // SUB-STEP 2: Select clusters → back to SUB-STEP 1 (initial selection)
+      if (showSpecifyClusters) {
+        setShowSpecifyClusters(false);
+        return;
+      }
+      
+      // SUB-STEP 1: Initial selection → back to previous main step
+      // Fall through to go to previous step (step 1)
+    }
+    
+    // === SINGLE CLUSTER CONTEXT ===
+    if (currentStep === 2 && isSingleClusterContext) {
+      // From "Specify projects" substep → go back to project scope selection
+      if (showSpecifyProjects) {
+        setShowSpecifyProjects(false);
+        return;
+      }
+      // From project scope selection → go back to previous step
+      // Fall through
     }
     
     // Determine previous step based on context
@@ -917,6 +966,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                         <FilterIcon /> Filters
                       </MenuToggle>
                     )}
+                    popperProps={{
+                      appendTo: () => document.body,
+                      position: 'bottom-start',
+                      strategy: 'fixed'
+                    }}
                   >
                     <DropdownList>
                       <DropdownItem key="all">All users</DropdownItem>
@@ -1024,6 +1078,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                         <FilterIcon /> Filters
                       </MenuToggle>
                     )}
+                    popperProps={{
+                      appendTo: () => document.body,
+                      position: 'bottom-start',
+                      strategy: 'fixed'
+                    }}
                   >
                     <DropdownList>
                       <DropdownItem key="all">All groups</DropdownItem>
@@ -1254,6 +1313,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     Filter
                   </MenuToggle>
                 )}
+                popperProps={{
+                  appendTo: () => document.body,
+                  position: 'bottom-start',
+                  strategy: 'fixed'
+                }}
               >
                 <DropdownList>
                   <DropdownItem>All clusters</DropdownItem>
@@ -1379,6 +1443,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     Filter
                   </MenuToggle>
                 )}
+                popperProps={{
+                  appendTo: () => document.body,
+                  position: 'bottom-start',
+                  strategy: 'fixed'
+                }}
               >
                 <DropdownList>
                   <DropdownItem>All projects</DropdownItem>
@@ -1458,45 +1527,402 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   };
 
   const Step2SelectResources = () => {
-    // If we have a clusterName, we're in single cluster context - skip to project scope
+    // If we have a clusterName, we're in single cluster context
     const isSingleClusterContext = !!clusterName;
+    
+    // Filter projects based on selected cluster(s) and search
+    const filteredProjects = React.useMemo(() => {
+      let projects = mockProjects;
+      
+      // Filter by selected cluster(s)
+      if (isSingleClusterContext) {
+        const currentCluster = mockClusters.find(c => c.name === clusterName);
+        if (currentCluster) {
+          projects = projects.filter(p => p.dbClusterId === currentCluster.dbId);
+        }
+      } else if (selectedClusters.length > 0) {
+        const selectedClusterDbIds = selectedClusters.map(id => mockClusters.find(c => c.id === id)?.dbId).filter(Boolean);
+        projects = projects.filter(p => selectedClusterDbIds.includes(p.dbClusterId));
+      }
+      
+      // Filter by search
+      if (projectSearchValue) {
+        projects = projects.filter(p => p.name.toLowerCase().includes(projectSearchValue.toLowerCase()));
+      }
+      
+      // For multiple clusters, find common projects
+      if (!isSingleClusterContext && selectedClusters.length > 1) {
+        const projectsByName = new Map<string, typeof mockProjects>();
+        projects.forEach(project => {
+          if (!projectsByName.has(project.name)) {
+            projectsByName.set(project.name, []);
+          }
+          projectsByName.get(project.name)?.push(project);
+        });
+        
+        // Only keep projects that exist in ALL selected clusters
+        const commonProjectNames = Array.from(projectsByName.entries())
+          .filter(([_, projs]) => projs.length === selectedClusters.length)
+          .map(([name]) => name);
+        
+        projects = projects.filter(p => commonProjectNames.includes(p.name));
+        
+        // Deduplicate by name for display (show one row per project name)
+        const seen = new Set<string>();
+        projects = projects.filter(p => {
+          if (seen.has(p.name)) return false;
+          seen.add(p.name);
+          return true;
+        });
+      }
+      
+      return projects;
+    }, [selectedClusters, projectSearchValue, isSingleClusterContext, clusterName]);
     
     return (
     <div>
-      {/* Initial selection screen for multi-cluster (cluster set) context */}
-      {!isSingleClusterContext && !showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects && (
+      {/* OPTION B: For cluster set context - Logical sub-steps */}
+      
+      {/* SUB-STEP 1: Initial selection - Choose cluster set scope */}
+      {!isSingleClusterContext && !showSpecifyClusters && !showIncludeProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
             Select resources
           </Title>
           <Content component="p" className="pf-v6-u-mb-md">
-            Assign this permission to specific resources or everything on the cluster set
+            Choose which resources to assign this role to
           </Content>
 
-          <Form>
-            <FormGroup>
-              <Radio
-                isChecked={resourceScope === 'all'}
-                name="resource-scope"
-                onChange={() => setResourceScope('all')}
-                label="Apply to all resources"
-                description="Apply the selected role to all existing and future clusters and projects in the cluster set."
-                id="radio-all-resources"
-              />
-              <Radio
-                isChecked={resourceScope === 'specific'}
-                name="resource-scope"
-                onChange={() => setResourceScope('specific')}
-                label="Assign specific resources"
-                description="Select exactly which clusters and projects this permission will apply to."
-                id="radio-specific-resources"
-                className="pf-v6-u-mt-md"
-              />
-            </FormGroup>
-          </Form>
+          <FormGroup label="Resource scope">
+            <FormSelect
+              value={clusterSetScope}
+              onChange={(_event, value) => {
+                setClusterSetScope(value as 'everything' | 'select-clusters');
+                setSelectedClusters([]);
+                setSelectedProjects([]);
+                setClusterScope('everything');
+              }}
+              aria-label="Resource scope selection"
+            >
+              <FormSelectOption value="everything" label="Everything in the cluster set" />
+              <FormSelectOption value="select-clusters" label="Cluster or Clusters" />
+            </FormSelect>
+            <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {clusterSetScope === 'everything' 
+                ? 'Apply to all clusters and all resources within them, including any created in the future'
+                : 'Select specific clusters, then choose to apply to full clusters or narrow down to specific projects'}
+            </div>
+          </FormGroup>
+
+          {clusterSetScope === 'everything' && (
+            <Content component="p" className="pf-v6-u-mt-md" style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
+              This role assignment will apply to all clusters in the cluster set and all resources within them, including any resources created in the future.
+            </Content>
+          )}
         </>
       )}
 
+      {/* SUB-STEP 2: Select clusters (only if "Cluster or Clusters" was chosen) */}
+      {!isSingleClusterContext && showSpecifyClusters && !showIncludeProjects && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            Select clusters
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            Choose one or more clusters from the cluster set
+          </Content>
+
+          <SearchInput
+            aria-label="Search clusters"
+            placeholder="Search"
+            value={clusterSearchValue}
+            onChange={(_event, value) => setClusterSearchValue(value)}
+            onClear={() => setClusterSearchValue('')}
+            className="pf-v6-u-mb-md"
+          />
+
+          <Table aria-label="Clusters table" variant="compact">
+            <Thead>
+              <Tr>
+                <Th>
+                  <Checkbox
+                    id="select-all-clusters"
+                    aria-label="Select all clusters"
+                    isChecked={mockClusters.length > 0 && mockClusters.every(c => selectedClusters.includes(c.id))}
+                    onChange={(_, isChecked) => {
+                      if (isChecked) {
+                        setSelectedClusters(mockClusters.map(c => c.id));
+                      } else {
+                        setSelectedClusters([]);
+                      }
+                      // Reset downstream
+                      setSelectedProjects([]);
+                      setClusterScope('everything');
+                    }}
+                  />
+                </Th>
+                <Th>Name</Th>
+                <Th>Namespace</Th>
+                <Th>Status</Th>
+                <Th>Infrastructure</Th>
+                <Th>Control plane type</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {mockClusters
+                .filter(cluster => cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase()))
+                .map((cluster) => (
+                  <Tr key={cluster.id}>
+                    <Td>
+                      <Checkbox
+                        id={`select-cluster-${cluster.id}`}
+                        aria-label={`Select ${cluster.name}`}
+                        isChecked={selectedClusters.includes(cluster.id)}
+                        onChange={() => {
+                          const newSelection = selectedClusters.includes(cluster.id)
+                            ? selectedClusters.filter(id => id !== cluster.id)
+                            : [...selectedClusters, cluster.id];
+                          setSelectedClusters(newSelection);
+                          // Reset downstream
+                          setSelectedProjects([]);
+                          setClusterScope('everything');
+                        }}
+                      />
+                    </Td>
+                    <Td dataLabel="Name">{cluster.name}</Td>
+                    <Td dataLabel="Namespace">{mockClusterSets.find(cs => cs.id === cluster.clusterSetId)?.name || 'N/A'}</Td>
+                    <Td dataLabel="Status">
+                      <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
+                        {cluster.status}
+                      </Label>
+                    </Td>
+                    <Td dataLabel="Infrastructure">Amazon Web Services</Td>
+                    <Td dataLabel="Control plane type">Standalone</Td>
+                  </Tr>
+                ))}
+            </Tbody>
+          </Table>
+        </>
+      )}
+
+      {/* SUB-STEP 3: Choose cluster scope (after clusters are selected) */}
+      {!isSingleClusterContext && showIncludeProjects && !showSpecifyProjects && selectedClusters.length > 0 && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            {selectedClusters.length === 1 ? 'Choose cluster scope' : 'Choose scope'}
+          </Title>
+          <Content component="p" className="pf-v6-u-mb-md">
+            {selectedClusters.length === 1 
+              ? 'Apply full cluster access or narrow down to specific projects within this cluster'
+              : `Apply full access across all ${selectedClusters.length} clusters or narrow down to common projects that exist across all of them`}
+          </Content>
+
+          <FormGroup label="Scope">
+            <FormSelect
+              value={clusterScope}
+              onChange={(_event, value) => {
+                setClusterScope(value as 'everything' | 'narrow-down');
+                setSelectedProjects([]);
+              }}
+              aria-label="Cluster scope selection"
+            >
+              <FormSelectOption 
+                value="everything" 
+                label={selectedClusters.length === 1 ? 'Full cluster access' : 'Full access on all clusters'} 
+              />
+              <FormSelectOption 
+                value="narrow-down" 
+                label={selectedClusters.length === 1 ? 'Select specific projects (multiple)' : 'Select common projects (multiple)'} 
+              />
+            </FormSelect>
+            <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {clusterScope === 'everything' 
+                ? (selectedClusters.length === 1 
+                    ? 'Apply to all projects and resources in this cluster, including any created in the future'
+                    : `Apply to all projects and resources across all ${selectedClusters.length} clusters, including any created in the future`)
+                : (selectedClusters.length === 1 
+                    ? 'Select one or more specific projects from this cluster'
+                    : `Select one or more common projects that exist across the ${selectedClusters.length} selected clusters`)}
+            </div>
+          </FormGroup>
+
+          {clusterScope === 'everything' && (
+            <Content component="p" className="pf-v6-u-mt-md" style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {selectedClusters.length === 1 
+                ? 'Full cluster access: This role assignment will apply to all projects and resources in the selected cluster, including any created in the future.'
+                : `Full access across ${selectedClusters.length} clusters: This role assignment will apply to all projects and resources across all selected clusters, including any created in the future.`}
+            </Content>
+          )}
+          
+          {clusterScope === 'narrow-down' && (
+            <Content component="p" className="pf-v6-u-mt-md" style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {selectedClusters.length === 1 
+                ? 'You will be able to select one or more specific projects from this cluster.'
+                : `You will select one or more common projects that exist with the same name across all ${selectedClusters.length} selected clusters.`}
+            </Content>
+          )}
+        </>
+      )}
+
+      {/* SUB-STEP 4: Select projects (if narrow down was chosen) */}
+      {!isSingleClusterContext && showSpecifyProjects && selectedClusters.length > 0 && (
+        <>
+          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
+            {selectedClusters.length === 1 ? 'Select specific projects' : 'Select common projects'}
+          </Title>
+          {selectedClusters.length > 1 && (
+            <Content component="p" className="pf-v6-u-mb-md">
+              Select one or more common projects that exist with the same name across all {selectedClusters.length} selected clusters. The role will be assigned to each selected project in all clusters where it exists.
+            </Content>
+          )}
+          {selectedClusters.length === 1 && (
+            <Content component="p" className="pf-v6-u-mb-md">
+              Select one or more specific projects from this cluster. The role will be assigned only to the selected projects.
+            </Content>
+          )}
+          
+          <SearchInput
+            aria-label="Search projects"
+            placeholder="Search"
+            value={projectSearchValue}
+            onChange={(_event, value) => setProjectSearchValue(value)}
+            onClear={() => setProjectSearchValue('')}
+            className="pf-v6-u-mb-md"
+          />
+
+          <Table aria-label="Projects table" variant="compact">
+            <Thead>
+              <Tr>
+                <Th>
+                  <Checkbox
+                    id="select-all-projects"
+                    aria-label="Select all projects"
+                    isChecked={filteredProjects.length > 0 && filteredProjects.every(p => selectedProjects.includes(p.id))}
+                    onChange={(_, isChecked) => {
+                      if (isChecked) {
+                        setSelectedProjects(filteredProjects.map(p => p.id));
+                      } else {
+                        setSelectedProjects([]);
+                      }
+                    }}
+                  />
+                </Th>
+                <Th width={selectedClusters.length === 1 ? 25 : 40}>Project name</Th>
+                {selectedClusters.length === 1 ? (
+                  <>
+                    <Th width={20}>Display name</Th>
+                    <Th width={10}>Status</Th>
+                    <Th width={10}>Type</Th>
+                    <Th width={15}>Requester</Th>
+                  </>
+                ) : (
+                  <Th width={40}>Clusters</Th>
+                )}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {selectedClusters.length === 1 ? (
+                // Single cluster - show all project details
+                filteredProjects.map((project) => (
+                  <Tr key={project.id}>
+                    <Td>
+                      <Checkbox
+                        id={`select-project-${project.id}`}
+                        aria-label={`Select ${project.name}`}
+                        isChecked={selectedProjects.includes(project.id)}
+                        onChange={() => {
+                          const newSelection = selectedProjects.includes(project.id)
+                            ? selectedProjects.filter(id => id !== project.id)
+                            : [...selectedProjects, project.id];
+                          setSelectedProjects(newSelection);
+                        }}
+                      />
+                    </Td>
+                    <Td dataLabel="Project name">{project.name}</Td>
+                    <Td dataLabel="Display name">{project.displayName}</Td>
+                    <Td dataLabel="Status">
+                      <Label color={project.status === 'Active' ? 'green' : project.status === 'Terminating' ? 'orange' : 'red'}>
+                        {project.status}
+                      </Label>
+                    </Td>
+                    <Td dataLabel="Type">
+                      <Label color="blue">{project.type}</Label>
+                    </Td>
+                    <Td dataLabel="Requester">{project.requester}</Td>
+                  </Tr>
+                ))
+              ) : (
+                // Multiple clusters - show common projects with cluster list
+                (() => {
+                  // Get selected cluster names
+                  const selectedClusterNames = mockClusters
+                    .filter(c => selectedClusters.includes(c.id))
+                    .map(c => c.name);
+
+                  // Build a map of common project names
+                  const commonProjectsMap = new Map<string, { projects: typeof mockProjects, clusterNames: string[] }>();
+                  
+                  filteredProjects.forEach(project => {
+                    if (!commonProjectsMap.has(project.name)) {
+                      commonProjectsMap.set(project.name, { projects: [], clusterNames: [] });
+                    }
+                    const entry = commonProjectsMap.get(project.name)!;
+                    entry.projects.push(project);
+                    const clusterName = mockClusters.find(c => c.dbId === project.dbClusterId)?.name;
+                    if (clusterName) {
+                      entry.clusterNames.push(clusterName);
+                    }
+                  });
+
+                  // Filter to only projects that exist in ALL selected clusters
+                  const commonProjects = Array.from(commonProjectsMap.entries())
+                    .filter(([_, entry]) => entry.clusterNames.length === selectedClusters.length)
+                    .map(([name, entry]) => ({
+                      name,
+                      projects: entry.projects,
+                      clusterNames: entry.clusterNames.sort()
+                    }));
+
+                  return commonProjects.map((item, index) => {
+                    const isSelected = item.projects.every(p => selectedProjects.includes(p.id));
+                    
+                    return (
+                      <Tr key={index}>
+                        <Td>
+                          <Checkbox
+                            id={`select-common-project-${index}`}
+                            aria-label={`Select ${item.name}`}
+                            isChecked={isSelected}
+                            onChange={() => {
+                              if (isSelected) {
+                                // Remove all instances of this project
+                                setSelectedProjects(selectedProjects.filter(id => !item.projects.some(p => p.id === id)));
+                              } else {
+                                // Add all instances of this project
+                                setSelectedProjects([...selectedProjects, ...item.projects.map(p => p.id)]);
+                              }
+                            }}
+                          />
+                        </Td>
+                        <Td dataLabel="Project name">{item.name}</Td>
+                        <Td dataLabel="Clusters">
+                          {item.clusterNames.map((clusterName, idx) => (
+                            <Label key={idx} color="blue" className={idx > 0 ? 'pf-v6-u-ml-xs' : ''}>
+                              {clusterName}
+                            </Label>
+                          ))}
+                        </Td>
+                      </Tr>
+                    );
+                  });
+                })()
+              )}
+            </Tbody>
+          </Table>
+        </>
+      )}
+
+      {/* Single cluster context - keep original logic */}
       {isSingleClusterContext && !showSpecifyProjects && (
         <>
           <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
@@ -1504,136 +1930,6 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
           </Title>
           <Content component="p" className="pf-v6-u-mb-md">
             Define project scope on {clusterName}
-          </Content>
-
-          <Form>
-            <FormGroup>
-              <Radio
-                isChecked={projectScope === 'cluster'}
-                name="project-scope"
-                onChange={() => setProjectScope('cluster')}
-                label="Apply to cluster / Full cluster scope"
-                description="Not binds a cluster role to the cluster. It includes all existing and new projects."
-                id="radio-cluster-scope"
-              />
-              <Radio
-                isChecked={projectScope === 'project'}
-                name="project-scope"
-                onChange={() => setProjectScope('project')}
-                label="Apply to project(s) / Partial / Project-specific access"
-                description="Scope with projects by name to bind a role by."
-                id="radio-project-scope"
-                className="pf-v6-u-mt-md"
-              />
-            </FormGroup>
-          </Form>
-        </>
-      )}
-
-      {!isSingleClusterContext && showSpecifyClusters && (
-        <>
-          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
-            Specify clusters
-          </Title>
-          <Content component="p" className="pf-v6-u-mb-md">
-            Select clusters to define scope
-          </Content>
-
-          <Flex className="pf-v6-u-mb-md">
-            <FlexItem>
-              <Dropdown
-                isOpen={isClusterFilterOpen}
-                onSelect={() => setIsClusterFilterOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle ref={toggleRef} onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} isExpanded={isClusterFilterOpen}>
-                    Filter
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  <DropdownItem>All clusters</DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </FlexItem>
-            <FlexItem>
-              <SearchInput
-                aria-label="Search clusters"
-                placeholder="Search"
-                value={clusterSearchValue}
-                onChange={(_event, value) => setClusterSearchValue(value)}
-                onClear={() => setClusterSearchValue('')}
-              />
-            </FlexItem>
-            <FlexItem align={{ default: 'alignRight' }}>
-              <ToggleGroup aria-label="Cluster view toggle">
-                <ToggleGroupItem
-                  text="All"
-                  buttonId="cluster-view-all"
-                  isSelected={clusterViewMode === 'all'}
-                  onChange={() => setClusterViewMode('all')}
-                />
-                <ToggleGroupItem
-                  text={`Selected ${selectedClusters.length}`}
-                  buttonId="cluster-view-selected"
-                  isSelected={clusterViewMode === 'selected'}
-                  onChange={() => setClusterViewMode('selected')}
-                />
-              </ToggleGroup>
-            </FlexItem>
-          </Flex>
-
-          {clusterSearchValue && (
-            <div className="pf-v6-u-mb-sm">
-              <Button variant="link" isInline onClick={() => setClusterSearchValue('')}>
-                {clusterSearchValue} ✕
-              </Button>
-              <Button variant="link" isInline onClick={() => setClusterSearchValue('')} className="pf-v6-u-ml-sm">
-                Clear filters
-              </Button>
-            </div>
-          )}
-
-          <Table aria-label="Clusters table" variant="compact" className="pf-v6-u-mt-md">
-            <Thead>
-              <Tr>
-                <Th />
-                <Th>Name</Th>
-                <Th>Infrastructure</Th>
-                <Th>Control plane type</Th>
-                <Th>Distribution version</Th>
-                <Th>Labels</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {displayClusters.map((cluster) => (
-                <Tr key={cluster.id}>
-                  <Td
-                    select={{
-                      rowIndex: cluster.id,
-                      onSelect: () => toggleClusterSelection(cluster.id),
-                      isSelected: selectedClusters.includes(cluster.id),
-                    }}
-                  />
-                  <Td dataLabel="Name">{cluster.name}</Td>
-                  <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
-                  <Td dataLabel="Control plane type">{cluster.controlPlane}</Td>
-                  <Td dataLabel="Distribution version">{cluster.distribution}</Td>
-                  <Td dataLabel="Labels">{cluster.labels[0]}</Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </>
-      )}
-
-      {showIncludeProjects && (
-        <>
-          <Title headingLevel="h2" size="xl" className="pf-v6-u-mb-sm">
-            Include projects
-          </Title>
-          <Content component="p" className="pf-v6-u-mb-md">
-            Define project scope on selected clusters
           </Content>
 
           <Form>
@@ -1682,6 +1978,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     Filter
                   </MenuToggle>
                 )}
+                popperProps={{
+                  appendTo: () => document.body,
+                  position: 'bottom-start',
+                  strategy: 'fixed'
+                }}
               >
                 <DropdownList>
                   <DropdownItem>All projects</DropdownItem>
@@ -1794,6 +2095,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   <FilterIcon /> Filters
                 </MenuToggle>
               )}
+              popperProps={{
+                appendTo: () => document.body,
+                position: 'bottom-start',
+                strategy: 'fixed'
+              }}
             >
               <DropdownList>
                 <DropdownItem key="all">All roles</DropdownItem>
@@ -2419,13 +2725,69 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                   {renderStepIndicator(4, 'Review', false, false)}
                 </>
               ) : (
-                // Default clusters/cluster set context: Show all steps with cluster selection
+                // Cluster set context: OPTION B - Show sub-steps with breadcrumb progression
                 <>
                   {renderStepIndicator(1, 'Select user or group', false, true)}
                   {renderStepIndicator(2, 'Select resources', false, true)}
-                  {(hasVisitedSpecifyClusters || (currentStep === 2 && showSpecifyClusters)) && renderStepIndicator(2, 'Specify clusters', true, true)}
-                  {(hasVisitedIncludeProjects || (currentStep === 2 && showIncludeProjects)) && renderStepIndicator(2, 'Include projects', true, true)}
-                  {(hasVisitedSpecifyProjects || (currentStep === 2 && showSpecifyProjects)) && renderStepIndicator(2, selectedClusters.length === 1 ? 'Specify projects' : 'Specify common projects', true, false)}
+                  
+                  {/* SUB-STEP 1: Choose resource scope - Always visible when on step 2 */}
+                  {currentStep === 2 && (
+                    <>
+                      {/* Show initial selection screen as a sub-step */}
+                      {!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects ? (
+                        renderStepIndicator(2, clusterSetScope === 'everything' ? 'Everything in cluster set' : 'Choose resource scope', true, true)
+                      ) : (
+                        // Show as visited if we're past this step
+                        clusterSetScope === 'select-clusters' && renderStepIndicator(2, 'Choose resource scope', true, true)
+                      )}
+                      
+                      {/* SUB-STEP 2: Select clusters - Show if "Cluster or Clusters" was chosen */}
+                      {clusterSetScope === 'select-clusters' && (
+                        <>
+                          {showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects ? (
+                            renderStepIndicator(2, 'Select clusters', true, true)
+                          ) : (selectedClusters.length > 0 || showIncludeProjects || showSpecifyProjects) && (
+                            renderStepIndicator(2, 'Select clusters', true, true)
+                          )}
+                          
+                          {/* SUB-STEP 3: Define cluster scope - Show if clusters were selected */}
+                          {selectedClusters.length > 0 && (
+                            <>
+                              {showIncludeProjects && !showSpecifyProjects ? (
+                                renderStepIndicator(2, 
+                                  selectedClusters.length === 1 
+                                    ? (clusterScope === 'everything' ? 'Full cluster access' : 'Choose: Full cluster or specific projects')
+                                    : (clusterScope === 'everything' ? 'Full access on all clusters' : 'Choose: Full access or common projects'),
+                                  true, 
+                                  true
+                                )
+                              ) : clusterScope === 'narrow-down' && showSpecifyProjects && (
+                                renderStepIndicator(2, 
+                                  selectedClusters.length === 1 
+                                    ? 'Full cluster or specific projects'
+                                    : 'Full access or common projects',
+                                  true, 
+                                  true
+                                )
+                              )}
+                              
+                              {/* SUB-STEP 4: Select projects - Show if "narrow down" was chosen */}
+                              {clusterScope === 'narrow-down' && showSpecifyProjects && (
+                                renderStepIndicator(2, 
+                                  selectedClusters.length === 1 
+                                    ? 'Select specific projects' 
+                                    : 'Select common projects', 
+                                  true, 
+                                  false
+                                )
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                  
                   {renderStepIndicator(3, 'Select role', false, true)}
                   {renderStepIndicator(4, 'Review', false, false)}
                 </>

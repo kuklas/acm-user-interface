@@ -496,11 +496,21 @@ export const users: User[] = [
   { id: 'user-003', username: 'michael.rodriguez', firstName: 'Michael', lastName: 'Rodriguez', email: 'michael.rodriguez@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:10:00Z', lastLogin: '2025-01-11T16:45:00Z' },
   { id: 'user-004', username: 'emily.johnson', firstName: 'Emily', lastName: 'Johnson', email: 'emily.johnson@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:15:00Z', lastLogin: '2025-01-13T11:20:00Z' },
   { id: 'user-005', username: 'david.kim', firstName: 'David', lastName: 'Kim', email: 'david.kim@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:20:00Z', lastLogin: '2025-01-09T08:30:00Z' },
-  // ... (Add 55 more dev-team-alpha users - I'll show a few more as examples)
   { id: 'user-006', username: 'jessica.martinez', firstName: 'Jessica', lastName: 'Martinez', email: 'jessica.martinez@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:25:00Z', lastLogin: '2025-01-14T13:00:00Z' },
   { id: 'user-007', username: 'james.wilson', firstName: 'James', lastName: 'Wilson', email: 'james.wilson@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:30:00Z', lastLogin: '2025-01-08T15:45:00Z' },
   { id: 'user-008', username: 'amanda.taylor', firstName: 'Amanda', lastName: 'Taylor', email: 'amanda.taylor@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:35:00Z', lastLogin: '2025-01-13T10:30:00Z' },
-  // ... continuing to 60 total
+  { id: 'user-009', username: 'chris.nguyen', firstName: 'Chris', lastName: 'Nguyen', email: 'chris.nguyen@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:40:00Z', lastLogin: '2025-01-12T16:00:00Z' },
+  { id: 'user-010', username: 'sophia.patel', firstName: 'Sophia', lastName: 'Patel', email: 'sophia.patel@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:45:00Z', lastLogin: '2025-01-11T14:15:00Z' },
+  { id: 'user-011', username: 'daniel.brown', firstName: 'Daniel', lastName: 'Brown', email: 'daniel.brown@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:50:00Z', lastLogin: '2025-01-10T11:30:00Z' },
+  { id: 'user-012', username: 'natalie.anderson', firstName: 'Natalie', lastName: 'Anderson', email: 'natalie.anderson@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T10:55:00Z', lastLogin: '2025-01-14T10:45:00Z' },
+  { id: 'user-013', username: 'kevin.lee', firstName: 'Kevin', lastName: 'Lee', email: 'kevin.lee@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:00:00Z', lastLogin: '2025-01-13T15:20:00Z' },
+  { id: 'user-014', username: 'monica.davis', firstName: 'Monica', lastName: 'Davis', email: 'monica.davis@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:05:00Z', lastLogin: '2025-01-12T12:40:00Z' },
+  { id: 'user-015', username: 'ryan.thomas', firstName: 'Ryan', lastName: 'Thomas', email: 'ryan.thomas@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:10:00Z', lastLogin: '2025-01-11T09:50:00Z' },
+  { id: 'user-016', username: 'laura.white', firstName: 'Laura', lastName: 'White', email: 'laura.white@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:15:00Z', lastLogin: '2025-01-10T13:25:00Z' },
+  { id: 'user-017', username: 'andrew.harris', firstName: 'Andrew', lastName: 'Harris', email: 'andrew.harris@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:20:00Z', lastLogin: '2025-01-14T14:55:00Z' },
+  { id: 'user-018', username: 'jennifer.clark', firstName: 'Jennifer', lastName: 'Clark', email: 'jennifer.clark@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:25:00Z', lastLogin: '2025-01-13T08:30:00Z' },
+  { id: 'user-019', username: 'matthew.lewis', firstName: 'Matthew', lastName: 'Lewis', email: 'matthew.lewis@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:30:00Z', lastLogin: '2025-01-12T17:10:00Z' },
+  { id: 'user-020', username: 'ashley.walker', firstName: 'Ashley', lastName: 'Walker', email: 'ashley.walker@petemobile.com', status: 'Active', groupIds: ['group-dev-team-alpha'], identityProviderId: 'idp-001', created: '2023-01-15T11:35:00Z', lastLogin: '2025-01-11T10:45:00Z' },
   
   // Manager Project Starlight (5 users)
   { id: 'user-061', username: 'rachel.morrison', firstName: 'Rachel', lastName: 'Morrison', email: 'rachel.morrison@petemobile.com', status: 'Active', groupIds: ['group-manager-project-starlight'], identityProviderId: 'idp-002', created: '2023-02-01T09:00:00Z', lastLogin: '2025-01-14T08:00:00Z' },
@@ -512,9 +522,38 @@ export const users: User[] = [
   // Network Ops Team (20 users)
   { id: 'user-066', username: 'alex.thompson', firstName: 'Alex', lastName: 'Thompson', email: 'alex.thompson@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:00:00Z', lastLogin: '2025-01-13T12:00:00Z' },
   { id: 'user-067', username: 'olivia.brown', firstName: 'Olivia', lastName: 'Brown', email: 'olivia.brown@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:05:00Z', lastLogin: '2025-01-12T15:30:00Z' },
-  // ... (Add 18 more network-ops users)
+  { id: 'user-068', username: 'noah.jackson', firstName: 'Noah', lastName: 'Jackson', email: 'noah.jackson@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:10:00Z', lastLogin: '2025-01-11T13:45:00Z' },
+  { id: 'user-069', username: 'emma.martin', firstName: 'Emma', lastName: 'Martin', email: 'emma.martin@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:15:00Z', lastLogin: '2025-01-10T16:20:00Z' },
+  { id: 'user-070', username: 'liam.garcia', firstName: 'Liam', lastName: 'Garcia', email: 'liam.garcia@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:20:00Z', lastLogin: '2025-01-14T11:55:00Z' },
+  { id: 'user-071', username: 'ava.martinez', firstName: 'Ava', lastName: 'Martinez', email: 'ava.martinez@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:25:00Z', lastLogin: '2025-01-13T09:30:00Z' },
+  { id: 'user-072', username: 'william.lopez', firstName: 'William', lastName: 'Lopez', email: 'william.lopez@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:30:00Z', lastLogin: '2025-01-12T14:15:00Z' },
+  { id: 'user-073', username: 'isabella.gonzalez', firstName: 'Isabella', lastName: 'Gonzalez', email: 'isabella.gonzalez@petemobile.com', status: 'Active', groupIds: ['group-network-ops'], identityProviderId: 'idp-003', created: '2023-01-20T10:35:00Z', lastLogin: '2025-01-11T12:40:00Z' },
   
-  // Add more users for other groups...
+  // Billing API Team (15 users)
+  { id: 'user-081', username: 'ethan.rodriguez', firstName: 'Ethan', lastName: 'Rodriguez', email: 'ethan.rodriguez@petemobile.com', status: 'Active', groupIds: ['group-billing-api'], identityProviderId: 'idp-001', created: '2023-01-25T09:00:00Z', lastLogin: '2025-01-13T10:00:00Z' },
+  { id: 'user-082', username: 'mia.hernandez', firstName: 'Mia', lastName: 'Hernandez', email: 'mia.hernandez@petemobile.com', status: 'Active', groupIds: ['group-billing-api'], identityProviderId: 'idp-001', created: '2023-01-25T09:05:00Z', lastLogin: '2025-01-12T14:30:00Z' },
+  { id: 'user-083', username: 'mason.moore', firstName: 'Mason', lastName: 'Moore', email: 'mason.moore@petemobile.com', status: 'Active', groupIds: ['group-billing-api'], identityProviderId: 'idp-001', created: '2023-01-25T09:10:00Z', lastLogin: '2025-01-11T11:15:00Z' },
+  { id: 'user-084', username: 'charlotte.taylor', firstName: 'Charlotte', lastName: 'Taylor', email: 'charlotte.taylor@petemobile.com', status: 'Active', groupIds: ['group-billing-api'], identityProviderId: 'idp-001', created: '2023-01-25T09:15:00Z', lastLogin: '2025-01-14T08:45:00Z' },
+  { id: 'user-085', username: 'lucas.thomas', firstName: 'Lucas', lastName: 'Thomas', email: 'lucas.thomas@petemobile.com', status: 'Active', groupIds: ['group-billing-api'], identityProviderId: 'idp-001', created: '2023-01-25T09:20:00Z', lastLogin: '2025-01-13T16:20:00Z' },
+  
+  // 5G Platform Team (25 users)
+  { id: 'user-096', username: 'harper.jackson', firstName: 'Harper', lastName: 'Jackson', email: 'harper.jackson@petemobile.com', status: 'Active', groupIds: ['group-5g-platform'], identityProviderId: 'idp-001', created: '2023-02-05T10:00:00Z', lastLogin: '2025-01-12T09:00:00Z' },
+  { id: 'user-097', username: 'elijah.white', firstName: 'Elijah', lastName: 'White', email: 'elijah.white@petemobile.com', status: 'Active', groupIds: ['group-5g-platform'], identityProviderId: 'idp-001', created: '2023-02-05T10:05:00Z', lastLogin: '2025-01-11T15:30:00Z' },
+  { id: 'user-098', username: 'evelyn.harris', firstName: 'Evelyn', lastName: 'Harris', email: 'evelyn.harris@petemobile.com', status: 'Active', groupIds: ['group-5g-platform'], identityProviderId: 'idp-001', created: '2023-02-05T10:10:00Z', lastLogin: '2025-01-10T12:45:00Z' },
+  { id: 'user-099', username: 'logan.clark', firstName: 'Logan', lastName: 'Clark', email: 'logan.clark@petemobile.com', status: 'Active', groupIds: ['group-5g-platform'], identityProviderId: 'idp-001', created: '2023-02-05T10:15:00Z', lastLogin: '2025-01-14T14:20:00Z' },
+  { id: 'user-100', username: 'abigail.lewis', firstName: 'Abigail', lastName: 'Lewis', email: 'abigail.lewis@petemobile.com', status: 'Active', groupIds: ['group-5g-platform'], identityProviderId: 'idp-001', created: '2023-02-05T10:20:00Z', lastLogin: '2025-01-13T11:00:00Z' },
+  
+  // Security Ops Team (12 users)
+  { id: 'user-121', username: 'sebastian.walker', firstName: 'Sebastian', lastName: 'Walker', email: 'sebastian.walker@petemobile.com', status: 'Active', groupIds: ['group-security-ops'], identityProviderId: 'idp-003', created: '2023-02-10T09:00:00Z', lastLogin: '2025-01-12T08:30:00Z' },
+  { id: 'user-122', username: 'amelia.allen', firstName: 'Amelia', lastName: 'Allen', email: 'amelia.allen@petemobile.com', status: 'Active', groupIds: ['group-security-ops'], identityProviderId: 'idp-003', created: '2023-02-10T09:05:00Z', lastLogin: '2025-01-11T16:00:00Z' },
+  { id: 'user-123', username: 'jack.young', firstName: 'Jack', lastName: 'Young', email: 'jack.young@petemobile.com', status: 'Active', groupIds: ['group-security-ops'], identityProviderId: 'idp-003', created: '2023-02-10T09:10:00Z', lastLogin: '2025-01-10T13:15:00Z' },
+  { id: 'user-124', username: 'sofia.king', firstName: 'Sofia', lastName: 'King', email: 'sofia.king@petemobile.com', status: 'Active', groupIds: ['group-security-ops'], identityProviderId: 'idp-003', created: '2023-02-10T09:15:00Z', lastLogin: '2025-01-14T10:45:00Z' },
+  
+  // Database Admins (8 users)
+  { id: 'user-133', username: 'henry.wright', firstName: 'Henry', lastName: 'Wright', email: 'henry.wright@petemobile.com', status: 'Active', groupIds: ['group-database-admins'], identityProviderId: 'idp-002', created: '2023-02-15T10:00:00Z', lastLogin: '2025-01-13T09:30:00Z' },
+  { id: 'user-134', username: 'scarlett.green', firstName: 'Scarlett', lastName: 'Green', email: 'scarlett.green@petemobile.com', status: 'Active', groupIds: ['group-database-admins'], identityProviderId: 'idp-002', created: '2023-02-15T10:05:00Z', lastLogin: '2025-01-12T15:45:00Z' },
+  { id: 'user-135', username: 'owen.adams', firstName: 'Owen', lastName: 'Adams', email: 'owen.adams@petemobile.com', status: 'Active', groupIds: ['group-database-admins'], identityProviderId: 'idp-002', created: '2023-02-15T10:10:00Z', lastLogin: '2025-01-11T11:20:00Z' },
+  { id: 'user-136', username: 'grace.baker', firstName: 'Grace', lastName: 'Baker', email: 'grace.baker@petemobile.com', status: 'Active', groupIds: ['group-database-admins'], identityProviderId: 'idp-002', created: '2023-02-15T10:15:00Z', lastLogin: '2025-01-14T13:00:00Z' },
 ];
 
 // Note: For brevity, I'm showing a sample. In production, you'd generate all 400 users
@@ -531,7 +570,8 @@ export const groups: Group[] = [
     type: 'team',
     userIds: [
       'user-001', 'user-002', 'user-003', 'user-004', 'user-005', 'user-006', 'user-007', 'user-008',
-      // ... (60 total user IDs)
+      'user-009', 'user-010', 'user-011', 'user-012', 'user-013', 'user-014', 'user-015', 'user-016',
+      'user-017', 'user-018', 'user-019', 'user-020'
     ],
   },
   {
@@ -546,77 +586,77 @@ export const groups: Group[] = [
     name: 'network-ops-team',
     description: 'Network Operations Team - Manages core network infrastructure',
     type: 'team',
-    userIds: ['user-066', 'user-067' /* ... 18 more */],
+    userIds: ['user-066', 'user-067', 'user-068', 'user-069', 'user-070', 'user-071', 'user-072', 'user-073'],
   },
   {
     id: 'group-billing-api',
     name: 'billing-api-team',
     description: 'Billing API Development and Maintenance Team',
     type: 'team',
-    userIds: [/* 15 user IDs */],
+    userIds: ['user-081', 'user-082', 'user-083', 'user-084', 'user-085'],
   },
   {
     id: 'group-5g-platform',
     name: '5g-platform-developers',
     description: '5G Platform Development Team',
     type: 'team',
-    userIds: [/* 25 user IDs */],
+    userIds: ['user-096', 'user-097', 'user-098', 'user-099', 'user-100'],
   },
   {
     id: 'group-security-ops',
     name: 'security-ops-team',
     description: 'Security Operations Team',
     type: 'team',
-    userIds: [/* 12 user IDs */],
+    userIds: ['user-121', 'user-122', 'user-123', 'user-124'],
   },
   {
     id: 'group-database-admins',
     name: 'database-admins',
     description: 'Database Administration Team',
     type: 'team',
-    userIds: [/* 8 user IDs */],
+    userIds: ['user-133', 'user-134', 'user-135', 'user-136'],
   },
   {
     id: 'group-monitoring',
     name: 'monitoring-team',
     description: 'Infrastructure Monitoring Team',
     type: 'team',
-    userIds: [/* 10 user IDs */],
+    userIds: [],
   },
   {
     id: 'group-edge-platform',
     name: 'edge-platform-team',
     description: 'Edge Computing Platform Team',
     type: 'team',
-    userIds: [/* 18 user IDs */],
+    userIds: [],
   },
   {
     id: 'group-qa-testing',
     name: 'qa-testing-team',
     description: 'Quality Assurance and Testing Team',
     type: 'team',
-    userIds: [/* 15 user IDs */],
+    userIds: [],
   },
   {
     id: 'group-sa-region-ops',
     name: 'sa-region-ops',
     description: 'South America Regional Operations',
     type: 'regional',
-    userIds: [/* 10 user IDs */],
+    userIds: [],
   },
   {
     id: 'group-apac-region-ops',
     name: 'apac-region-ops',
     description: 'Asia-Pacific Regional Operations',
     type: 'regional',
-    userIds: [/* 10 user IDs */],
+    userIds: [],
   },
   {
     id: 'group-eu-region-ops',
     name: 'eu-region-ops',
     description: 'Europe Regional Operations',
     type: 'regional',
-    userIds: [/* 10 user IDs */],
+    userIds: [],
   },
 ];
 

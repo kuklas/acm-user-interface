@@ -625,3 +625,19 @@ input[type="checkbox"] {
   z-index: 10000 !important;
   position: absolute !important;
 }
+
+/* Custom tabs styling for wizard */
+.custom-tabs-selected .pf-v6-c-tabs__link {
+  position: relative;
+  border-bottom: 3px solid transparent;
+}
+
+.custom-tabs-selected .pf-v6-c-tabs__item.pf-m-current .pf-v6-c-tabs__link {
+  color: #0066cc !important;
+  font-weight: 600 !important;
+  border-bottom-color: #0066cc !important;
+}
+
+.custom-tabs-selected .pf-v6-c-tabs__link:hover {
+  color: #004080;
+}

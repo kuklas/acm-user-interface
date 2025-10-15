@@ -45,6 +45,7 @@ import { InfoCircleIcon, CheckIcon, ExclamationTriangleIcon } from '@patternfly/
 import { CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { ClusterSetRoleAssignmentWizard } from '@app/RoleAssignment/ClusterSetRoleAssignmentWizard';
 import { getAllClusterSets, getClustersByClusterSet } from '@app/data';
 
 // Interface for role assignment entries
@@ -90,22 +91,22 @@ const ClusterDetail: React.FunctionComponent = () => {
   };
 
   const handleWizardComplete = (wizardData: any) => {
-    // Determine clusters - use the cluster name if in single cluster context, otherwise use resource summary
+    // Determine clusters
     let clustersList: string[] = [];
-    if (clusterName && !isClusterSet) {
-      clustersList = [clusterName];
-    } else if (wizardData.resourceSummary) {
-      // For cluster sets, show the resource summary as the cluster info
-      clustersList = [wizardData.resourceSummary];
-    }
-    
-    // Determine namespaces/projects - use selected projects if available
     let namespacesList: string[] = [];
-    if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
-      // Map project IDs to names (you would typically fetch these from your data source)
-      namespacesList = wizardData.selectedProjects.map((id: number) => `project-${id}`);
+    
+    if (isClusterSet) {
+      // For cluster sets, show the resource scope
+      if (wizardData.resourceScope === 'all') {
+        clustersList = ['All clusters in cluster set'];
+        namespacesList = ['All namespaces'];
+      } else {
+        clustersList = [`${wizardData.selectedClusters?.length || 0} selected cluster(s)`];
+        namespacesList = ['All namespaces'];
+      }
     } else {
-      // Default to showing cluster-wide or resource summary
+      // For individual clusters
+      clustersList = [clusterName || ''];
       namespacesList = ['All namespaces'];
     }
     
@@ -1035,14 +1036,22 @@ const ClusterDetail: React.FunctionComponent = () => {
         </div>
       </div>
 
-          <RoleAssignmentWizard 
-            isOpen={isWizardOpen} 
-            onClose={() => setIsWizardOpen(false)} 
-            onComplete={handleWizardComplete}
-            clusterName={isClusterSet ? undefined : clusterName}
-            clusterSetName={isClusterSet ? clusterName : undefined}
-            context="clusters"
-          />
+          {isClusterSet ? (
+            <ClusterSetRoleAssignmentWizard
+              isOpen={isWizardOpen}
+              onClose={() => setIsWizardOpen(false)}
+              onComplete={handleWizardComplete}
+              clusterSetName={clusterName || ''}
+            />
+          ) : (
+            <RoleAssignmentWizard 
+              isOpen={isWizardOpen} 
+              onClose={() => setIsWizardOpen(false)} 
+              onComplete={handleWizardComplete}
+              clusterName={clusterName}
+              context="clusters"
+            />
+          )}
 
           {/* Success Alert */}
           <AlertGroup isToast isLiveRegion>

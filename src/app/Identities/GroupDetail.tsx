@@ -37,12 +37,15 @@ import {
   ToolbarGroup,
   Divider,
   ButtonVariant,
+  Alert,
+  AlertGroup,
+  AlertActionCloseButton,
 } from '@patternfly/react-core';
 import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
-import { getAllGroups, getUsersByGroup } from '@app/data';
+import { GroupRoleAssignmentWizard } from '@app/RoleAssignment/GroupRoleAssignmentWizard';
+import { getAllGroups, getUsersByGroup, getAllClusters, getAllClusterSets, getAllNamespaces } from '@app/data';
 
 const GroupDetail: React.FunctionComponent = () => {
   const { groupName } = useParams<{ groupName: string }>();
@@ -54,6 +57,23 @@ const GroupDetail: React.FunctionComponent = () => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
+  
+  // Role assignments state
+  interface RoleAssignment {
+    id: string;
+    name: string;
+    type: 'User' | 'Group';
+    clusters: string[];
+    projects: string[];
+    roles: string[];
+    status: 'Active' | 'Inactive';
+    assignedDate: string;
+    assignedBy: string;
+    origin: string;
+  }
+  
+  const [roleAssignments, setRoleAssignments] = React.useState<RoleAssignment[]>([]);
+  const [showSuccessAlert, setShowSuccessAlert] = React.useState(false);
   
   useDocumentTitle(`ACM | ${groupName}`);
 
@@ -71,6 +91,92 @@ const GroupDetail: React.FunctionComponent = () => {
 
   const onPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
     setPerPage(newPerPage);
+  };
+
+  const handleWizardComplete = (wizardData: any) => {
+    // Get data from database
+    const allClusters = getAllClusters();
+    const allClusterSets = getAllClusterSets();
+    const allNamespaces = getAllNamespaces();
+    
+    // Extract cluster names and project names from wizard data
+    const clusterNames: string[] = [];
+    const projectNames: string[] = [];
+    
+    if (wizardData.resourceScope === 'everything') {
+      clusterNames.push('All resources');
+      projectNames.push('All projects');
+    } else if (wizardData.resourceScope === 'cluster-sets') {
+      // Handle cluster sets
+      if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
+        const clusterSetNames = wizardData.selectedClusterSets
+          .map((id: number) => allClusterSets.find(cs => cs.id === id)?.name)
+          .filter(Boolean);
+        clusterNames.push(...clusterSetNames);
+        
+        if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+          const selectedClusterNames = wizardData.selectedClusters
+            .map((id: number) => allClusters.find(c => c.id === id)?.name)
+            .filter(Boolean);
+          clusterNames.length = 0; // Clear cluster set names
+          clusterNames.push(...selectedClusterNames);
+          
+          if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+            const selectedProjectNames = wizardData.selectedProjects
+              .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+              .filter(Boolean);
+            projectNames.push(...selectedProjectNames);
+          } else {
+            projectNames.push('All projects');
+          }
+        } else {
+          projectNames.push('All projects');
+        }
+      }
+    } else if (wizardData.resourceScope === 'clusters') {
+      // Handle individual clusters
+      if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+        const selectedClusterNames = wizardData.selectedClusters
+          .map((id: number) => allClusters.find(c => c.id === id)?.name)
+          .filter(Boolean);
+        clusterNames.push(...selectedClusterNames);
+        
+        if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+          const selectedProjectNames = wizardData.selectedProjects
+            .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+            .filter(Boolean);
+          projectNames.push(...selectedProjectNames);
+        } else {
+          projectNames.push('All projects');
+        }
+      }
+    }
+    
+    // Create new role assignment
+    const newAssignment: RoleAssignment = {
+      id: `ra-${Date.now()}`,
+      name: groupName || 'Unknown Group',
+      type: 'Group',
+      clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
+      projects: projectNames.length > 0 ? projectNames : ['All projects'],
+      roles: [wizardData.roleName || 'Unknown Role'],
+      status: 'Active',
+      assignedDate: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      }),
+      assignedBy: 'Walter Joseph Kovacs',
+      origin: 'Hub cluster',
+    };
+    
+    setRoleAssignments([...roleAssignments, newAssignment]);
+    setIsWizardOpen(false);
+    setShowSuccessAlert(true);
   };
 
   const DetailsTab = () => (
@@ -131,38 +237,22 @@ users:
   );
 
   const RoleAssignmentsTab = () => {
-    // Mock role assignments data - only for dev-team-alpha
-    const mockRoleAssignments = groupName === 'dev-team-alpha' ? [
-      { 
-        id: 1, 
-        name: 'dev-team-alpha',
-        type: 'Group',
-        clusters: ['dev-linux-a', 'dev-win-a'],
-        project: 'project-starlight-dev',
-        role: 'Virtualization admin',
-        status: 'Active',
-        assignedDate: '1/1/2025, 3:15:21 PM',
-        assignedBy: 'Walter',
-        origin: 'Hub cluster'
-      },
-    ] : [];
-
     const [isActionsOpen, setIsActionsOpen] = React.useState(false);
-    const [selectedAssignments, setSelectedAssignments] = React.useState<Set<number>>(new Set());
+    const [selectedAssignments, setSelectedAssignments] = React.useState<Set<string>>(new Set());
     const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
-    const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
+    const [openRowMenuId, setOpenRowMenuId] = React.useState<string | null>(null);
 
-    const isAllSelected = selectedAssignments.size === mockRoleAssignments.length && mockRoleAssignments.length > 0;
+    const isAllSelected = selectedAssignments.size === roleAssignments.length && roleAssignments.length > 0;
 
     const handleSelectAll = (isSelecting: boolean) => {
       if (isSelecting) {
-        setSelectedAssignments(new Set(mockRoleAssignments.map(a => a.id)));
+        setSelectedAssignments(new Set(roleAssignments.map(a => a.id)));
       } else {
         setSelectedAssignments(new Set());
       }
     };
 
-    const handleSelectAssignment = (assignmentId: number, isSelecting: boolean) => {
+    const handleSelectAssignment = (assignmentId: string, isSelecting: boolean) => {
       const newSelected = new Set(selectedAssignments);
       if (isSelecting) {
         newSelected.add(assignmentId);
@@ -177,16 +267,16 @@ users:
       setIsBulkActionOpen(false);
     };
 
-    const toggleRowMenu = (assignmentId: number) => {
+    const toggleRowMenu = (assignmentId: string) => {
       setOpenRowMenuId(openRowMenuId === assignmentId ? null : assignmentId);
     };
 
-    const handleDeleteAssignment = (assignmentId: number) => {
+    const handleDeleteAssignment = (assignmentId: string) => {
       console.log('Delete assignment:', assignmentId);
       setOpenRowMenuId(null);
     };
 
-    if (mockRoleAssignments.length === 0) {
+    if (roleAssignments.length === 0) {
       return (
         <Card>
           <CardBody>
@@ -346,7 +436,7 @@ users:
             </Tr>
           </Thead>
           <Tbody>
-            {mockRoleAssignments.map((assignment) => (
+            {roleAssignments.map((assignment) => (
               <Tr key={assignment.id}>
                 <Td
                   select={{
@@ -364,26 +454,43 @@ users:
                 <Td dataLabel="Scope">
                   <Flex spaceItems={{ default: 'spaceItemsMd' }} flexWrap={{ default: 'nowrap' }}>
                     <FlexItem>
-                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'nowrap' }}>
+                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
                         {assignment.clusters.map((cluster, idx) => (
-                          <FlexItem key={idx}>
-                            <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                              {cluster}
-                            </Button>
-                            {idx < assignment.clusters.length - 1 && <span>, </span>}
-                          </FlexItem>
+                          <React.Fragment key={idx}>
+                            <FlexItem>
+                              <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                {cluster}
+                              </Button>
+                            </FlexItem>
+                            {idx < assignment.clusters.length - 1 && <FlexItem>, </FlexItem>}
+                          </React.Fragment>
                         ))}
                       </Flex>
                     </FlexItem>
                     <FlexItem>
-                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                        {assignment.project}
-                      </Button>
+                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
+                        {assignment.projects.map((project, idx) => (
+                          <React.Fragment key={idx}>
+                            <FlexItem>
+                              <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                                {project}
+                              </Button>
+                            </FlexItem>
+                            {idx < assignment.projects.length - 1 && <FlexItem>, </FlexItem>}
+                          </React.Fragment>
+                        ))}
+                      </Flex>
                     </FlexItem>
                   </Flex>
                 </Td>
                 <Td dataLabel="Roles">
-                  <Label color="blue">{assignment.role}</Label>
+                  <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
+                    {assignment.roles.map((role, idx) => (
+                      <FlexItem key={idx}>
+                        <Label color="blue">{role}</Label>
+                      </FlexItem>
+                    ))}
+                  </Flex>
                 </Td>
                 <Td dataLabel="Status">
                   <Label color="green" icon={<Icon status="success" />}>
@@ -757,16 +864,27 @@ users:
         </div>
       </div>
 
-      <RoleAssignmentWizard 
+      <GroupRoleAssignmentWizard 
         isOpen={isWizardOpen} 
         onClose={() => setIsWizardOpen(false)}
-        context="identities"
-        preselectedIdentity={{
-          type: 'group',
-          id: 1,
-          name: groupName || 'Unknown'
-        }}
+        onComplete={handleWizardComplete}
+        groupName={groupName || 'Unknown'}
       />
+
+      {/* Success Alert */}
+      <AlertGroup isToast isLiveRegion>
+        {showSuccessAlert && (
+          <Alert
+            variant="success"
+            title="Role assignment created"
+            actionClose={
+              <AlertActionCloseButton onClose={() => setShowSuccessAlert(false)} />
+            }
+            timeout={10000}
+            onTimeout={() => setShowSuccessAlert(false)}
+          />
+        )}
+      </AlertGroup>
     </>
   );
 };
