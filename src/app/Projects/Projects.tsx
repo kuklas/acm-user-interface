@@ -182,11 +182,11 @@ const Projects: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {paginatedProjects.map((project) => (
+            {paginatedProjects.map((project, index) => (
               <Tr key={project.id}>
                 <Td
                   select={{
-                    rowIndex: project.id,
+                    rowIndex: index,
                     onSelect: (_event, isSelecting) => handleSelectProject(project.id, isSelecting),
                     isSelected: selectedProjects.has(project.id),
                   }}
