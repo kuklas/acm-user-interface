@@ -347,36 +347,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   }, [selectedClusters, projectSearch, mockProjects, mockClusters]);
 
   // Render step indicator to match the original wizard
-  const renderStepIndicator = (stepNum: number, label: string, isSubStep: boolean = false) => {
+  const renderStepIndicator = (stepNum: number, label: string) => {
     const isActive = currentStep === stepNum;
     const isCompleted = currentStep > stepNum;
-    
-    // Render substeps without circles
-    if (isSubStep) {
-      const isSubStepActive = 
-        (currentStep === 2 && stepNum === 2 && 
-          ((label === 'Select clusters' && showClusterSelection) ||
-           (label === 'Choose scope' && showScopeSelection) ||
-           (label === 'Select projects' && showProjectSelection)));
-      
-      return (
-        <div style={{ position: 'relative', marginBottom: '0.25rem', paddingLeft: '3.5rem' }}>
-          <span
-            style={{ 
-              display: 'inline-block',
-              padding: '0.5rem 0.75rem',
-              fontSize: '14px',
-              color: '#6a6e73',
-              cursor: 'default',
-              backgroundColor: isSubStepActive ? '#f0f0f0' : 'transparent',
-              borderRadius: '4px'
-            }}
-          >
-            {label}
-          </span>
-        </div>
-      );
-    }
     
     return (
       <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
@@ -439,7 +412,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     <Drawer isExpanded={isDrawerExpanded} onExpand={() => setIsDrawerExpanded(true)}>
       <DrawerContent
         panelContent={
-          <DrawerPanelContent widthPercentage={35}>
+          <DrawerPanelContent style={{ width: '35%' }}>
             <DrawerHead>
               <Title headingLevel="h3" size="xl">
                 Example scopes
@@ -610,9 +583,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                             </MenuToggle>
                           )}
                           popperProps={{
-                            appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            appendTo: () => document.body
                           }}
                         >
                           <DropdownList>
@@ -731,9 +702,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                             </MenuToggle>
                           )}
                           popperProps={{
-                            appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            appendTo: () => document.body
                           }}
                         >
                           <DropdownList>
@@ -953,10 +922,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <Tr>
                       <Th />
                       <Th>Name</Th>
+                      <Th>Status</Th>
                       <Th>Infrastructure</Th>
                       <Th>Control plane</Th>
-                      <Th>Distribution</Th>
-                      <Th>Labels</Th>
+                      <Th>Nodes</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -990,17 +959,14 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                             }}
                           />
                           <Td dataLabel="Name">{cluster.name}</Td>
-                          <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
-                          <Td dataLabel="Control plane">{cluster.controlPlane}</Td>
-                          <Td dataLabel="Distribution">{cluster.distribution}</Td>
-                          <Td dataLabel="Labels">
-                            {cluster.labels.slice(0, 2).map((label, idx) => (
-                              <Label key={idx} isCompact style={{ marginRight: '4px' }}>{label}</Label>
-                            ))}
-                            {cluster.labels.length > 2 && (
-                              <Label isCompact>+{cluster.labels.length - 2} more</Label>
-                            )}
+                          <Td dataLabel="Status">
+                            <Label color={cluster.status === 'Ready' ? 'green' : 'red'} isCompact>
+                              {cluster.status}
+                            </Label>
                           </Td>
+                          <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
+                          <Td dataLabel="Control plane">{cluster.controlPlaneType}</Td>
+                          <Td dataLabel="Nodes">{cluster.nodes}</Td>
                         </Tr>
                       );
                     })}
@@ -1085,11 +1051,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       <Th />
                       <Th>Name</Th>
                       <Th>Type</Th>
-                      <Th>Clusters</Th>
+                      <Th>Cluster</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {filteredProjectsForClusters.map((project, index) => {
+                    {filteredProjects.map((project, index) => {
                       const isSelected = selectedProjects.includes(project.id);
                       return (
                         <Tr
@@ -1118,9 +1084,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                               isSelected,
                             }}
                           />
-                          <Td dataLabel="Name">{project.name}</Td>
-                          <Td dataLabel="Type">{project.type}</Td>
-                          <Td dataLabel="Clusters">{project.clusters.join(', ')}</Td>
+                          <Td dataLabel="Name">{project.displayName}</Td>
+                          <Td dataLabel="Type">
+                            <Label isCompact>{project.type}</Label>
+                          </Td>
+                          <Td dataLabel="Cluster">{project.clusterName}</Td>
                         </Tr>
                       );
                     })}
@@ -1156,9 +1124,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       </MenuToggle>
                     )}
                     popperProps={{
-                      appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      appendTo: () => document.body
                     }}
                   >
                     <DropdownList>
@@ -1215,8 +1181,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       </div>
                     </Td>
                     <Td dataLabel="Type">
-                      <Label color={role.type === 'Default' ? 'blue' : 'purple'}>
-                        {role.type}
+                      <Label color={role.type === 'default' ? 'blue' : 'purple'}>
+                        {role.type === 'default' ? 'Default' : 'Custom'}
                       </Label>
                     </Td>
                   </Tr>
