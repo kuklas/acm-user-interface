@@ -398,7 +398,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
             {/* Content Area - scrollable */}
             <div style={{ 
               flex: '1 1 0',
-              padding: '1.5rem 0 1.5rem 1.5rem', 
+              padding: '1.5rem 1.5rem 1.5rem 1.5rem', 
               backgroundColor: '#ffffff',
               overflowY: 'auto',
               overflowX: 'hidden'
@@ -735,8 +735,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                         onSelect={() => setIsProjectBulkSelectorOpen(false)}
                         onOpenChange={(isOpen: boolean) => setIsProjectBulkSelectorOpen(isOpen)}
                         toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle
-                            ref={toggleRef}
+                          <MenuToggle 
+                            ref={toggleRef} 
                             onClick={() => setIsProjectBulkSelectorOpen(!isProjectBulkSelectorOpen)}
                             isExpanded={isProjectBulkSelectorOpen}
                             variant="default"
@@ -747,41 +747,41 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                               padding: '0 8px',
                             }}
                           >
-                            <Checkbox
+                          <Checkbox
                               isChecked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
                               onChange={(_event, checked) => {
                                 if (checked) {
                                   setSelectedProjects(filteredProjects.slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage).map(p => p.id));
-                                } else {
+                              } else {
                                   setSelectedProjects([]);
                                 }
                               }}
                               aria-label="Select all projects"
                               id="bulk-select-projects"
                             />
-                          </MenuToggle>
-                        )}
-                        popperProps={{
-                          appendTo: () => document.body,
+                      </MenuToggle>
+                    )}
+                    popperProps={{
+                      appendTo: () => document.body,
                           
                           
-                        }}
-                      >
-                        <DropdownList>
+                    }}
+                  >
+                    <DropdownList>
                           <DropdownItem onClick={() => {
                             setSelectedProjects(filteredProjects.slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage).map(p => p.id));
                             setIsProjectBulkSelectorOpen(false);
                           }}>
                             Select page ({Math.min(projectsPerPage, filteredProjects.length - (projectsPage - 1) * projectsPerPage)} items)
-                          </DropdownItem>
+                      </DropdownItem>
                           <DropdownItem onClick={() => {
                             setSelectedProjects(filteredProjects.map(p => p.id));
                             setIsProjectBulkSelectorOpen(false);
                           }}>
                             Select all ({filteredProjects.length} items)
-                          </DropdownItem>
-                        </DropdownList>
-                      </Dropdown>
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
                     </ToolbarItem>
                     <ToolbarItem>
                       <Dropdown
@@ -1081,28 +1081,28 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
                   Cluster: {clusterName}
-                </Content>
-                <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                    </Content>
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
                   Access: {resourceScope === 'full' ? 'Full access (all projects)' : 'Partial access (specific projects)'}
-                </Content>
-                
+                    </Content>
+
                 {resourceScope === 'partial' && selectedProjects.length > 0 && (
-                  <>
-                    <Content component="p" style={{ 
-                      marginBottom: '4px', 
-                      fontSize: '14px', 
-                      fontWeight: 600,
-                      color: '#151515',
-                      marginTop: '12px'
-                    }}>
+                      <>
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                          color: '#151515',
+                          marginTop: '12px'
+                        }}>
                       Selected projects
-                    </Content>
-                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
-                      {selectedProjects.map(id => {
-                        const project = mockProjects.find(p => p.id === id);
-                        return project?.name;
-                      }).filter(Boolean).join(', ')}
-                    </Content>
+                        </Content>
+                        <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
+                          {selectedProjects.map(id => {
+                            const project = mockProjects.find(p => p.id === id);
+                            return project?.name;
+                          }).filter(Boolean).join(', ')}
+                        </Content>
                   </>
                 )}
               </div>
@@ -1145,7 +1145,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
             {/* Footer with Buttons - only spans right content area */}
             <div style={{ 
               borderTop: '1px solid #d2d2d2', 
-              padding: '1rem 0 1rem 1.5rem', 
+              padding: '1rem 1.5rem 1rem 1.5rem', 
               backgroundColor: '#ffffff',
               flexShrink: 0
             }}>
