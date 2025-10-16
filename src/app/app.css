@@ -641,3 +641,8 @@ input[type="checkbox"] {
 .custom-tabs-selected .pf-v6-c-tabs__link:hover {
   color: #004080;
 }
+
+/* Remove modal box close button sibling margin */
+.pf-v6-c-modal-box__close + * {
+  margin-inline-end: 0 !important;
+}
