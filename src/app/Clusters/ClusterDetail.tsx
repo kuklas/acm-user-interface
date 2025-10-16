@@ -650,12 +650,6 @@ const ClusterDetail: React.FunctionComponent = () => {
         <Table aria-label="Role assignments table" variant="compact">
           <Thead>
             <Tr>
-              <Th style={{ backgroundColor: '#f0f0f0' }} />
-              <Th colSpan={2} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Subject</Th>
-              <Th colSpan={6} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
-              <Th style={{ backgroundColor: '#f0f0f0' }}></Th>
-            </Tr>
-            <Tr>
               <Th
                 select={{
                   onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
@@ -664,12 +658,13 @@ const ClusterDetail: React.FunctionComponent = () => {
               />
               <Th sort={{ sortBy: {}, columnIndex: 0 }}>Name</Th>
               <Th sort={{ sortBy: {}, columnIndex: 1 }}>Type</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Namespaces</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Roles</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Status</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Assigned date</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Assigned by</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 7 }}>Origin</Th>
+              {isClusterSet && <Th sort={{ sortBy: {}, columnIndex: 2 }}>Clusters</Th>}
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 3 : 2 }}>Namespaces</Th>
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 4 : 3 }}>Roles</Th>
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 5 : 4 }}>Status</Th>
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 6 : 5 }}>Assigned date</Th>
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 7 : 6 }}>Assigned by</Th>
+              <Th sort={{ sortBy: {}, columnIndex: isClusterSet ? 8 : 7 }}>Origin</Th>
               <Th></Th>
             </Tr>
           </Thead>
@@ -689,6 +684,22 @@ const ClusterDetail: React.FunctionComponent = () => {
                   </Button>
                 </Td>
                 <Td dataLabel="Type">{assignment.type}</Td>
+                {isClusterSet && (
+                  <Td dataLabel="Clusters">
+                    {assignment.clusters && assignment.clusters.length > 0 ? (
+                      assignment.clusters.map((cluster, idx) => (
+                        <span key={idx}>
+                          <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                            {cluster}
+                          </Button>
+                          {idx < assignment.clusters.length - 1 && ', '}
+                        </span>
+                      ))
+                    ) : (
+                      '-'
+                    )}
+                  </Td>
+                )}
                 <Td dataLabel="Namespaces">
                   {assignment.namespaces.map((ns, idx) => (
                     <span key={idx}>
