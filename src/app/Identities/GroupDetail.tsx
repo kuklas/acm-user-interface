@@ -110,20 +110,20 @@ const GroupDetail: React.FunctionComponent = () => {
       // Handle cluster sets
       if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
         const clusterSetNames = wizardData.selectedClusterSets
-          .map((id: number) => allClusterSets.find(cs => cs.id === id)?.name)
+          .map((id: string) => allClusterSets.find(cs => cs.id === id)?.name)
           .filter(Boolean);
         clusterNames.push(...clusterSetNames);
         
         if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
           const selectedClusterNames = wizardData.selectedClusters
-            .map((id: number) => allClusters.find(c => c.id === id)?.name)
+            .map((id: string) => allClusters.find(c => c.id === id)?.name)
             .filter(Boolean);
           clusterNames.length = 0; // Clear cluster set names
           clusterNames.push(...selectedClusterNames);
           
           if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
             const selectedProjectNames = wizardData.selectedProjects
-              .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+              .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
               .filter(Boolean);
             projectNames.push(...selectedProjectNames);
           } else {
@@ -137,13 +137,13 @@ const GroupDetail: React.FunctionComponent = () => {
       // Handle individual clusters
       if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
         const selectedClusterNames = wizardData.selectedClusters
-          .map((id: number) => allClusters.find(c => c.id === id)?.name)
+          .map((id: string) => allClusters.find(c => c.id === id)?.name)
           .filter(Boolean);
         clusterNames.push(...selectedClusterNames);
         
         if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
           const selectedProjectNames = wizardData.selectedProjects
-            .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+            .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
             .filter(Boolean);
           projectNames.push(...selectedProjectNames);
         } else {
