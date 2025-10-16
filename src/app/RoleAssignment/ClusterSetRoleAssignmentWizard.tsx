@@ -29,7 +29,7 @@ import {
   PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -650,7 +650,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
                       {/* Cluster Set (not fully selected) */}
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster set: {clusterSetName}</span>
                       </div>
                       
@@ -722,7 +722,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#6a6e73' }}>Cluster</span>
                       </div>
                     </div>
@@ -737,7 +737,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
                       {/* Cluster Set */}
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster set: {clusterSetName}</span>
                       </div>
                       
@@ -746,7 +746,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster</span>
                       </div>
                       
@@ -785,7 +785,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#6a6e73' }}>Project</span>
                       </div>
                       
@@ -793,7 +793,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#6a6e73' }}>Cluster</span>
                       </div>
                     </div>
@@ -808,7 +808,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
                       {/* Cluster Set */}
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster set: {clusterSetName}</span>
                       </div>
                       
@@ -856,7 +856,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#6a6e73' }}>Project</span>
                       </div>
                       
@@ -899,7 +899,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
-                        <CircleIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#6a6e73' }}>Project</span>
                       </div>
                     </div>
