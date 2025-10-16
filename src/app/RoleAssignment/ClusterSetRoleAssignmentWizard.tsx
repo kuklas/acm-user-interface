@@ -443,8 +443,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         '--pf-v6-c-modal-box--m-body--PaddingTop': '0',
         '--pf-v6-c-modal-box--m-body--PaddingRight': '0',
         '--pf-v6-c-modal-box--m-body--PaddingBottom': '0',
-        '--pf-v6-c-modal-box--m-body--PaddingLeft': '0',
-        '--pf-v6-c-modal-box__close--sibling--MarginInlineEnd': '0'
+        '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
       } as React.CSSProperties}
     >
       <div style={{ position: 'relative', height: '100%' }}>
