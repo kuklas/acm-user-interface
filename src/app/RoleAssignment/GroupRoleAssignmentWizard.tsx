@@ -2573,7 +2573,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               backgroundColor: '#ffffff',
               flexShrink: 0
             }}>
-              {currentStep > 1 && (
+              {(currentStep > 1 || showScopeSelection || showProjectSelection) && (
                 <Button variant="secondary" onClick={handleBack}>
                   Back
                 </Button>
