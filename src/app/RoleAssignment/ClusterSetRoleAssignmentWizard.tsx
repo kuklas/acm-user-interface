@@ -27,16 +27,9 @@ import {
   Alert,
   Pagination,
   PaginationVariant,
-  Drawer,
-  DrawerContent,
-  DrawerContentBody,
-  DrawerPanelContent,
-  DrawerHead,
-  DrawerActions,
-  DrawerCloseButton,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -435,62 +428,86 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
       } as React.CSSProperties}
     >
-      <Drawer isExpanded={isDrawerExpanded} isInline position="right">
-        <DrawerContent
-          panelContent={
-            <DrawerPanelContent style={{ width: '500px', maxWidth: '50%' }}>
-              <DrawerHead>
-                <Title headingLevel="h3" size="xl">
-                  Example scopes
-                </Title>
-                <DrawerActions>
-                  <DrawerCloseButton onClick={() => setIsDrawerExpanded(false)} />
-                </DrawerActions>
-              </DrawerHead>
-              <div style={{ padding: '16px' }}>
-                <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
-                  These examples show different ways to scope role assignments.
-                </Content>
-                {/* Carousel navigation */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                  <Button 
-                    variant="plain" 
-                    onClick={() => setExampleIndex(Math.max(0, exampleIndex - 1))}
-                    isDisabled={exampleIndex === 0}
-                    aria-label="Previous example"
-                  >
-                    <AngleLeftIcon />
-                  </Button>
-                  <span style={{ fontSize: '14px', color: '#6a6e73' }}>
-                    Example {exampleIndex + 1} of 3
-                  </span>
-                  <Button 
-                    variant="plain" 
-                    onClick={() => setExampleIndex(Math.min(2, exampleIndex + 1))}
-                    isDisabled={exampleIndex === 2}
-                    aria-label="Next example"
-                  >
-                    <AngleRightIcon />
-                  </Button>
-                </div>
-                {/* Example content - simplified placeholder */}
-                <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px', border: '1px solid #d2d2d2' }}>
-                  <Title headingLevel="h4" size="md" style={{ marginBottom: '12px' }}>
-                    {exampleIndex === 0 && 'Full cluster set access'}
-                    {exampleIndex === 1 && 'Specific clusters access'}
-                    {exampleIndex === 2 && 'Project-level access'}
-                  </Title>
-                  <Content component="p" style={{ fontSize: '13px', color: '#6a6e73' }}>
-                    {exampleIndex === 0 && 'Access to all clusters and resources in the cluster set.'}
-                    {exampleIndex === 1 && 'Access to selected clusters within the cluster set.'}
-                    {exampleIndex === 2 && 'Access to specific projects within selected clusters.'}
-                  </Content>
-                </div>
+      <div style={{ position: 'relative' }}>
+        {/* Overlay Drawer Panel */}
+        {isDrawerExpanded && (
+          <div 
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              width: '500px',
+              maxWidth: '50%',
+              height: '100%',
+              backgroundColor: 'white',
+              zIndex: 1000,
+              boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
+              overflow: 'auto'
+            }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '16px',
+              borderBottom: '1px solid #d2d2d2'
+            }}>
+              <Title headingLevel="h3" size="xl">
+                Example scopes
+              </Title>
+              <Button 
+                variant="plain" 
+                onClick={() => setIsDrawerExpanded(false)}
+                aria-label="Close drawer"
+              >
+                <TimesIcon />
+              </Button>
+            </div>
+            <div style={{ padding: '16px' }}>
+              <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
+                These examples show different ways to scope role assignments.
+              </Content>
+              {/* Carousel navigation */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                <Button 
+                  variant="plain" 
+                  onClick={() => setExampleIndex(Math.max(0, exampleIndex - 1))}
+                  isDisabled={exampleIndex === 0}
+                  aria-label="Previous example"
+                >
+                  <AngleLeftIcon />
+                </Button>
+                <span style={{ fontSize: '14px', color: '#6a6e73' }}>
+                  Example {exampleIndex + 1} of 3
+                </span>
+                <Button 
+                  variant="plain" 
+                  onClick={() => setExampleIndex(Math.min(2, exampleIndex + 1))}
+                  isDisabled={exampleIndex === 2}
+                  aria-label="Next example"
+                >
+                  <AngleRightIcon />
+                </Button>
               </div>
-            </DrawerPanelContent>
-          }
-        >
-          <DrawerContentBody>
+              {/* Example content - simplified placeholder */}
+              <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px', border: '1px solid #d2d2d2' }}>
+                <Title headingLevel="h4" size="md" style={{ marginBottom: '12px' }}>
+                  {exampleIndex === 0 && 'Full cluster set access'}
+                  {exampleIndex === 1 && 'Specific clusters access'}
+                  {exampleIndex === 2 && 'Project-level access'}
+                </Title>
+                <Content component="p" style={{ fontSize: '13px', color: '#6a6e73' }}>
+                  {exampleIndex === 0 && 'Access to all clusters and resources in the cluster set.'}
+                  {exampleIndex === 1 && 'Access to selected clusters within the cluster set.'}
+                  {exampleIndex === 2 && 'Access to specific projects within selected clusters.'}
+                </Content>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Main wizard content */}
+        <div>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header Section */}
         <div style={{ 
@@ -1418,9 +1435,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
           </div>
         </div>
       </div>
-          </DrawerContentBody>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </div>
     </Modal>
   );
 };
