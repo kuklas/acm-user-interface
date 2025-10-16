@@ -113,7 +113,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [clustersPage, setClustersPage] = React.useState(1);
   const [clustersPerPage, setClustersPerPage] = React.useState(10);
   
-  // Step 3: Access level for selected clusters
+  // Substep: Access level for selected clusters (only shown when clusters are selected)
+  const [showAccessLevel, setShowAccessLevel] = React.useState(false);
   const [clusterScope, setClusterScope] = React.useState<'everything' | 'projects'>('everything');
   const [isClusterScopeOpen, setIsClusterScopeOpen] = React.useState(false);
   const [selectedProjects, setSelectedProjects] = React.useState<number[]>([]);
@@ -121,7 +122,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
   const [projectFilterType, setProjectFilterType] = React.useState('Name');
   
-  // Step 4: Role
+  // Step 3: Role
   const [selectedRole, setSelectedRole] = React.useState<number | null>(null);
   const [roleSearch, setRoleSearch] = React.useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
@@ -152,6 +153,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     setIsResourceScopeOpen(false);
     setClustersPage(1);
     setClustersPerPage(10);
+    setShowAccessLevel(false);
     setClusterScope('everything');
     setIsClusterScopeOpen(false);
     setSelectedProjects([]);
@@ -166,10 +168,15 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   };
 
   const handleNext = () => {
-    // Simplified linear step progression
-    // Skip step 3 (access level) if resourceScope is 'all'
-    if (currentStep === 2 && resourceScope === 'all') {
-      setCurrentStep(4); // Skip to role selection
+    if (currentStep === 2) {
+      // Handle Step 2 substep navigation
+      if (resourceScope === 'clusters' && selectedClusters.length > 0 && !showAccessLevel) {
+        // Show access level substep
+        setShowAccessLevel(true);
+        return;
+      }
+      // Otherwise proceed to next step
+      setCurrentStep(currentStep + 1);
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -179,12 +186,14 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     if (currentStep === 1) {
       return;
     }
-    // Skip step 3 (access level) when going back if resourceScope is 'all'
-    if (currentStep === 4 && resourceScope === 'all') {
-      setCurrentStep(2); // Skip back to resources
-    } else {
-      setCurrentStep(currentStep - 1);
+    if (currentStep === 2 && showAccessLevel) {
+      // Go back from access level substep to cluster selection
+      setShowAccessLevel(false);
+      setClusterScope('everything');
+      setSelectedProjects([]);
+      return;
     }
+    setCurrentStep(currentStep - 1);
   };
 
   const handleFinish = () => {
@@ -214,20 +223,21 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       return activeTabKey === 0 ? selectedUser === null : selectedGroup === null;
     }
     if (currentStep === 2) {
-      // Resources: if clusters selected, need at least one cluster
-      if (resourceScope === 'clusters' && selectedClusters.length === 0) {
-        return true;
+      if (!showAccessLevel) {
+        // Initial resource selection: if clusters selected, need at least one cluster
+        if (resourceScope === 'clusters' && selectedClusters.length === 0) {
+          return true;
+        }
+        return false;
+      } else {
+        // Access level substep: if projects selected, need at least one project
+        if (clusterScope === 'projects' && selectedProjects.length === 0) {
+          return true;
+        }
+        return false;
       }
-      return false;
     }
     if (currentStep === 3) {
-      // Access level: if projects selected, need at least one project
-      if (clusterScope === 'projects' && selectedProjects.length === 0) {
-        return true;
-      }
-      return false;
-    }
-    if (currentStep === 4) {
       return selectedRole === null;
     }
     return false;
@@ -316,8 +326,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       // First, get all projects from the selected clusters
       projects = projects.filter(p => selectedClusterDbIds.includes(p.clusterId));
       
-      // SINGLE CLUSTER: Show ALL projects from that cluster (e.g., dev-team-a shows all its 3 projects)
+      // SINGLE CLUSTER: Show ALL projects from that cluster
       // MULTIPLE CLUSTERS: Show ONLY common projects (projects with same name across ALL selected clusters)
+      // Group as single entry with clusters column
       if (selectedClusters.length > 1) {
         // Group projects by name to find which ones exist in all selected clusters
         const projectsByName = new Map<string, typeof mockProjects>();
@@ -329,12 +340,15 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         });
         
         // Find project names that appear in ALL selected clusters
-        const commonProjectNames = Array.from(projectsByName.entries())
+        const commonProjectGroups = Array.from(projectsByName.entries())
           .filter(([_, projs]) => projs.length === selectedClusters.length)
-          .map(([name]) => name);
+          .map(([name, projs]) => ({
+            ...projs[0], // Use first project as base
+            clusterNames: projs.map(p => p.clusterName).join(', '), // Combine cluster names
+          }));
         
-        // Filter to show only common projects
-        projects = projects.filter(p => commonProjectNames.includes(p.name));
+        // Return grouped common projects
+        projects = commonProjectGroups as any;
       }
     }
     
@@ -519,9 +533,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
           }}>
             {renderStepIndicator(1, 'Select user or group')}
             {renderStepIndicator(2, 'Select resources')}
-            {resourceScope === 'clusters' && renderStepIndicator(3, 'Choose access level')}
-            {renderStepIndicator(4, 'Select role')}
-            {renderStepIndicator(5, 'Review')}
+            {renderStepIndicator(3, 'Select role')}
+            {renderStepIndicator(4, 'Review')}
           </div>
           
           {/* Right Content Area with Footer */}
@@ -804,303 +817,305 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         {/* Step 2: Select Resources */}
         {currentStep === 2 && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
-                Select resources
-              </Title>
-              <Button 
-                variant="link" 
-                onClick={() => setIsDrawerExpanded(true)}
-                style={{ padding: 0 }}
-              >
-                View examples
-              </Button>
-            </div>
-            <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-              Define the scope of access by selecting which resources this role will apply to.
-            </Content>
+            {!showAccessLevel ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
+                    Select resources
+                  </Title>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setIsDrawerExpanded(true)}
+                    style={{ padding: 0 }}
+                  >
+                    View examples
+                  </Button>
+                </div>
+                <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                  Define the scope of access by selecting which resources this role will apply to.
+                </Content>
 
-            <Dropdown
-              isOpen={isResourceScopeOpen}
-              onSelect={() => setIsResourceScopeOpen(false)}
-              onOpenChange={(isOpen: boolean) => setIsResourceScopeOpen(isOpen)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle 
-                  ref={toggleRef} 
-                  onClick={() => setIsResourceScopeOpen(!isResourceScopeOpen)} 
-                  isExpanded={isResourceScopeOpen}
-                  variant="default"
-                  style={{ width: '100%' }}
+                <Dropdown
+                  isOpen={isResourceScopeOpen}
+                  onSelect={() => setIsResourceScopeOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsResourceScopeOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle 
+                      ref={toggleRef} 
+                      onClick={() => setIsResourceScopeOpen(!isResourceScopeOpen)} 
+                      isExpanded={isResourceScopeOpen}
+                      variant="default"
+                      style={{ width: '100%' }}
+                    >
+                      {resourceScope === 'all' ? 'Everything in the cluster set' : 'Select specific clusters'}
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
                 >
-                  {resourceScope === 'all' ? 'Everything in the cluster set' : 'Select specific clusters'}
-                </MenuToggle>
-              )}
-              shouldFocusToggleOnSelect
-            >
-              <DropdownList>
-                <DropdownItem
-                  key="all"
-                  onClick={() => {
-                    setResourceScope('all');
-                    setSelectedClusters([]);
-                    setSelectedProjects([]);
-                    setIsResourceScopeOpen(false);
-                  }}
-                  description="Applies to all current and future clusters and resources in this cluster set"
-                >
-                  Everything in the cluster set
-                </DropdownItem>
-                <DropdownItem
-                  key="clusters"
-                  onClick={() => {
-                    setResourceScope('clusters');
-                    setSelectedClusters([]);
-                    setSelectedProjects([]);
-                    setIsResourceScopeOpen(false);
-                  }}
-                  description="Choose individual clusters, then optionally narrow down to specific projects"
-                >
-                  Select specific clusters
-                </DropdownItem>
-              </DropdownList>
-            </Dropdown>
+                  <DropdownList>
+                    <DropdownItem
+                      key="all"
+                      onClick={() => {
+                        setResourceScope('all');
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setIsResourceScopeOpen(false);
+                      }}
+                      description="Applies to all current and future clusters and resources in this cluster set"
+                    >
+                      Everything in the cluster set
+                    </DropdownItem>
+                    <DropdownItem
+                      key="clusters"
+                      onClick={() => {
+                        setResourceScope('clusters');
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setIsResourceScopeOpen(false);
+                      }}
+                      description="Choose individual clusters, then optionally narrow down to specific projects"
+                    >
+                      Select specific clusters
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
 
-            {/* Show clusters table inline when "Select specific clusters" is selected */}
-            {resourceScope === 'clusters' && (
-              <div style={{ marginTop: '24px' }}>
-                <Toolbar>
-                  <ToolbarContent>
-                    <ToolbarItem>
-                      <Dropdown
-                        isOpen={isClusterFilterOpen}
-                        onSelect={() => setIsClusterFilterOpen(false)}
-                        onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle
-                            ref={toggleRef}
-                            onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)}
-                            isExpanded={isClusterFilterOpen}
+                {/* Show clusters table inline when "Select specific clusters" is selected */}
+                {resourceScope === 'clusters' && (
+                  <div style={{ marginTop: '24px' }}>
+                    <Toolbar>
+                      <ToolbarContent>
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={isClusterFilterOpen}
+                            onSelect={() => setIsClusterFilterOpen(false)}
+                            onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle
+                                ref={toggleRef}
+                                onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)}
+                                isExpanded={isClusterFilterOpen}
+                              >
+                                <span style={{ marginRight: '8px' }}>Filter:</span> {clusterFilterType}
+                              </MenuToggle>
+                            )}
+                            shouldFocusToggleOnSelect
                           >
-                            <span style={{ marginRight: '8px' }}>Filter:</span> {clusterFilterType}
-                          </MenuToggle>
-                        )}
-                        shouldFocusToggleOnSelect
-                      >
-                        <DropdownList>
-                          <DropdownItem key="Name" onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>Name</DropdownItem>
-                          <DropdownItem key="Status" onClick={() => { setClusterFilterType('Status'); setIsClusterFilterOpen(false); }}>Status</DropdownItem>
-                        </DropdownList>
-                      </Dropdown>
-                    </ToolbarItem>
-                    <ToolbarItem>
-                      <SearchInput
-                        placeholder="Search clusters"
-                        value={clusterSearch}
-                        onChange={(_event, value) => setClusterSearch(value)}
-                        onClear={() => setClusterSearch('')}
-                      />
-                    </ToolbarItem>
-                    <ToolbarItem align={{ default: 'alignEnd' }}>
-                      <Pagination
-                        itemCount={filteredClusters.length}
-                        perPage={clustersPerPage}
-                        page={clustersPage}
-                        onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                        onPerPageSelect={(_event, newPerPage) => {
-                          setClustersPerPage(newPerPage);
-                          setClustersPage(1);
-                        }}
-                        variant="top"
-                        isCompact
-                      />
-                    </ToolbarItem>
-                  </ToolbarContent>
-                </Toolbar>
+                            <DropdownList>
+                              <DropdownItem key="Name" onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>Name</DropdownItem>
+                              <DropdownItem key="Status" onClick={() => { setClusterFilterType('Status'); setIsClusterFilterOpen(false); }}>Status</DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <SearchInput
+                            placeholder="Search clusters"
+                            value={clusterSearch}
+                            onChange={(_event, value) => setClusterSearch(value)}
+                            onClear={() => setClusterSearch('')}
+                          />
+                        </ToolbarItem>
+                        <ToolbarItem align={{ default: 'alignEnd' }}>
+                          <Pagination
+                            itemCount={filteredClusters.length}
+                            perPage={clustersPerPage}
+                            page={clustersPage}
+                            onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
+                            onPerPageSelect={(_event, newPerPage) => {
+                              setClustersPerPage(newPerPage);
+                              setClustersPage(1);
+                            }}
+                            variant="top"
+                            isCompact
+                          />
+                        </ToolbarItem>
+                      </ToolbarContent>
+                    </Toolbar>
 
-                <Table aria-label="Clusters table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th />
-                      <Th>Name</Th>
-                      <Th>Status</Th>
-                      <Th>Infrastructure</Th>
-                      <Th>Control plane</Th>
-                      <Th>Nodes</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredClusters.slice((clustersPage - 1) * clustersPerPage, clustersPage * clustersPerPage).map((cluster, index) => {
-                      const isSelected = selectedClusters.includes(cluster.id);
-                      return (
-                        <Tr
-                          key={index}
-                          isSelectable
-                          isClickable
-                          isRowSelected={isSelected}
-                          onRowClick={() => {
-                            if (isSelected) {
-                              setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
-                            } else {
-                              setSelectedClusters([...selectedClusters, cluster.id]);
-                            }
-                          }}
-                        >
-                          <Td
-                            select={{
-                              rowIndex: index,
-                              onSelect: (_event, isSelecting) => {
-                                if (isSelecting) {
-                                  setSelectedClusters([...selectedClusters, cluster.id]);
-                                } else {
+                    <Table aria-label="Clusters table" variant="compact">
+                      <Thead>
+                        <Tr>
+                          <Th />
+                          <Th>Name</Th>
+                          <Th>Status</Th>
+                          <Th>Infrastructure</Th>
+                          <Th>Control plane</Th>
+                          <Th>Nodes</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredClusters.slice((clustersPage - 1) * clustersPerPage, clustersPage * clustersPerPage).map((cluster, index) => {
+                          const isSelected = selectedClusters.includes(cluster.id);
+                          return (
+                            <Tr
+                              key={index}
+                              isSelectable
+                              isClickable
+                              isRowSelected={isSelected}
+                              onRowClick={() => {
+                                if (isSelected) {
                                   setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
-                                }
-                              },
-                              isSelected,
-                            }}
-                          />
-                          <Td dataLabel="Name">{cluster.name}</Td>
-                          <Td dataLabel="Status">
-                            <Label color={cluster.status === 'Ready' ? 'green' : 'red'} isCompact>
-                              {cluster.status}
-                            </Label>
-                          </Td>
-                          <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
-                          <Td dataLabel="Control plane">{cluster.controlPlaneType}</Td>
-                          <Td dataLabel="Nodes">{cluster.nodes}</Td>
-                        </Tr>
-                      );
-                    })}
-                  </Tbody>
-                </Table>
-
-                <Pagination
-                  itemCount={filteredClusters.length}
-                  perPage={clustersPerPage}
-                  page={clustersPage}
-                  onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                  onPerPageSelect={(_event, newPerPage) => {
-                    setClustersPerPage(newPerPage);
-                    setClustersPage(1);
-                  }}
-                  variant="bottom"
-                  style={{ paddingTop: '16px' }}
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Step 3: Choose access level (only if clusters selected) */}
-        {currentStep === 3 && (
-          <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-              Choose access level
-            </Title>
-            <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-              Define whether you want full access or partial access to specific projects on the selected clusters.
-            </Content>
-
-            <Dropdown
-              isOpen={isClusterScopeOpen}
-              onSelect={() => setIsClusterScopeOpen(false)}
-              onOpenChange={(isOpen: boolean) => setIsClusterScopeOpen(isOpen)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle 
-                  ref={toggleRef} 
-                  onClick={() => setIsClusterScopeOpen(!isClusterScopeOpen)} 
-                  isExpanded={isClusterScopeOpen}
-                  variant="default"
-                  style={{ width: '100%', marginBottom: '16px' }}
-                >
-                  {clusterScope === 'everything' ? 'Full access to selected clusters' : 'Limit to specific projects'}
-                </MenuToggle>
-              )}
-              shouldFocusToggleOnSelect
-            >
-              <DropdownList>
-                <DropdownItem
-                  key="everything"
-                  onClick={() => {
-                    setClusterScope('everything');
-                    setSelectedProjects([]);
-                    setIsClusterScopeOpen(false);
-                  }}
-                  description="Grants access to all current and future resources in the selected clusters"
-                >
-                  Full access to selected clusters
-                </DropdownItem>
-                <DropdownItem
-                  key="projects"
-                  onClick={() => {
-                    setClusterScope('projects');
-                    setIsClusterScopeOpen(false);
-                  }}
-                  description="Choose specific projects to limit the scope of access"
-                >
-                  Limit to specific projects
-                </DropdownItem>
-              </DropdownList>
-            </Dropdown>
-
-            {/* Show projects table if "Limit to specific projects" is selected */}
-            {clusterScope === 'projects' && (
-              <div style={{ marginTop: '16px' }}>
-                <Table aria-label="Projects table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th />
-                      <Th>Name</Th>
-                      <Th>Type</Th>
-                      <Th>Cluster</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredProjects.map((project, index) => {
-                      const isSelected = selectedProjects.includes(project.id);
-                      return (
-                        <Tr
-                          key={index}
-                          isSelectable
-                          isClickable
-                          isRowSelected={isSelected}
-                          onRowClick={() => {
-                            if (isSelected) {
-                              setSelectedProjects(selectedProjects.filter(id => id !== project.id));
-                            } else {
-                              setSelectedProjects([...selectedProjects, project.id]);
-                            }
-                          }}
-                        >
-                          <Td
-                            select={{
-                              rowIndex: index,
-                              onSelect: (_event, isSelecting) => {
-                                if (isSelecting) {
-                                  setSelectedProjects([...selectedProjects, project.id]);
                                 } else {
-                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                  setSelectedClusters([...selectedClusters, cluster.id]);
                                 }
-                              },
-                              isSelected,
-                            }}
-                          />
-                          <Td dataLabel="Name">{project.displayName}</Td>
-                          <Td dataLabel="Type">
-                            <Label isCompact>{project.type}</Label>
-                          </Td>
-                          <Td dataLabel="Cluster">{project.clusterName}</Td>
+                              }}
+                            >
+                              <Td
+                                select={{
+                                  rowIndex: index,
+                                  onSelect: (_event, isSelecting) => {
+                                    if (isSelecting) {
+                                      setSelectedClusters([...selectedClusters, cluster.id]);
+                                    } else {
+                                      setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
+                                    }
+                                  },
+                                  isSelected,
+                                }}
+                              />
+                              <Td dataLabel="Name">{cluster.name}</Td>
+                              <Td dataLabel="Status">
+                                <Label color={cluster.status === 'Ready' ? 'green' : 'red'} isCompact>
+                                  {cluster.status}
+                                </Label>
+                              </Td>
+                              <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
+                              <Td dataLabel="Control plane">{cluster.controlPlaneType}</Td>
+                              <Td dataLabel="Nodes">{cluster.nodes}</Td>
+                            </Tr>
+                          );
+                        })}
+                      </Tbody>
+                    </Table>
+
+                    <Pagination
+                      itemCount={filteredClusters.length}
+                      perPage={clustersPerPage}
+                      page={clustersPage}
+                      onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
+                      onPerPageSelect={(_event, newPerPage) => {
+                        setClustersPerPage(newPerPage);
+                        setClustersPage(1);
+                      }}
+                      variant="bottom"
+                      style={{ paddingTop: '16px' }}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Substep: Choose access level */}
+                <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                  Choose access level
+                </Title>
+                <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                  Define whether you want full access or partial access to specific projects on the selected clusters.
+                </Content>
+
+                <Dropdown
+                  isOpen={isClusterScopeOpen}
+                  onSelect={() => setIsClusterScopeOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterScopeOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle 
+                      ref={toggleRef} 
+                      onClick={() => setIsClusterScopeOpen(!isClusterScopeOpen)} 
+                      isExpanded={isClusterScopeOpen}
+                      variant="default"
+                      style={{ width: '100%', marginBottom: '16px' }}
+                    >
+                      {clusterScope === 'everything' ? 'Full access to selected clusters' : 'Limit to specific projects'}
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      key="everything"
+                      onClick={() => {
+                        setClusterScope('everything');
+                        setSelectedProjects([]);
+                        setIsClusterScopeOpen(false);
+                      }}
+                      description="Grants access to all current and future resources in the selected clusters"
+                    >
+                      Full access to selected clusters
+                    </DropdownItem>
+                    <DropdownItem
+                      key="projects"
+                      onClick={() => {
+                        setClusterScope('projects');
+                        setIsClusterScopeOpen(false);
+                      }}
+                      description="Choose specific projects to limit the scope of access"
+                    >
+                      Limit to specific projects
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+
+                {/* Show projects table if "Limit to specific projects" is selected */}
+                {clusterScope === 'projects' && (
+                  <div style={{ marginTop: '16px' }}>
+                    <Table aria-label="Projects table" variant="compact">
+                      <Thead>
+                        <Tr>
+                          <Th />
+                          <Th>Name</Th>
+                          <Th>Type</Th>
+                          <Th>{selectedClusters.length > 1 ? 'Clusters' : 'Cluster'}</Th>
                         </Tr>
-                      );
-                    })}
-                  </Tbody>
-                </Table>
-              </div>
+                      </Thead>
+                      <Tbody>
+                        {filteredProjects.map((project, index) => {
+                          const isSelected = selectedProjects.includes(project.id);
+                          return (
+                            <Tr
+                              key={index}
+                              isSelectable
+                              isClickable
+                              isRowSelected={isSelected}
+                              onRowClick={() => {
+                                if (isSelected) {
+                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                } else {
+                                  setSelectedProjects([...selectedProjects, project.id]);
+                                }
+                              }}
+                            >
+                              <Td
+                                select={{
+                                  rowIndex: index,
+                                  onSelect: (_event, isSelecting) => {
+                                    if (isSelecting) {
+                                      setSelectedProjects([...selectedProjects, project.id]);
+                                    } else {
+                                      setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                    }
+                                  },
+                                  isSelected,
+                                }}
+                              />
+                              <Td dataLabel="Name">{project.displayName}</Td>
+                              <Td dataLabel="Type">
+                                <Label isCompact>{project.type}</Label>
+                              </Td>
+                              <Td dataLabel="Cluster">{selectedClusters.length > 1 ? project.clusterNames : project.clusterName}</Td>
+                            </Tr>
+                          );
+                        })}
+                      </Tbody>
+                    </Table>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
 
-        {/* Step 4: Select Role */}
-        {currentStep === 4 && (
+        {/* Step 3: Select Role */}
+        {currentStep === 3 && (
           <>
             <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
               Select role
@@ -1192,8 +1207,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
           </>
         )}
 
-        {/* Step 5: Review */}
-        {currentStep === 5 && (
+        {/* Step 4: Review */}
+        {currentStep === 4 && (
           <>
             <Title headingLevel="h2" size="xl" style={{ marginBottom: '24px' }}>
               Review
@@ -1364,7 +1379,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   Back
                 </Button>
               )}{' '}
-              {currentStep < 5 ? (
+              {currentStep < 4 ? (
                 <Button variant="primary" onClick={handleNext} isDisabled={isNextDisabled()}>
                   Next
                 </Button>
