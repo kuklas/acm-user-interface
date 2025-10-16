@@ -37,9 +37,14 @@ import {
   ToolbarItem,
   ExpandableSection,
   Radio,
+  Dropdown,
+  DropdownList,
+  DropdownItem,
+  MenuToggle,
+  MenuToggleElement,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { PlusCircleIcon, MinusCircleIcon } from '@patternfly/react-icons';
+import { PlusCircleIcon, MinusCircleIcon, DownloadIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 
@@ -59,7 +64,8 @@ const CreateRole: React.FunctionComponent = () => {
   const [permissionRules, setPermissionRules] = React.useState<PermissionRule[]>([
     { id: 1, apiGroups: '', resources: '', verbs: ['get'] },
   ]);
-  const [isEditingYAML, setIsEditingYAML] = React.useState(false);
+  const [expandedRules, setExpandedRules] = React.useState<Record<number, boolean>>({ 1: true });
+  const [yamlCode, setYamlCode] = React.useState('');
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [drawerType, setDrawerType] = React.useState<'apiGroups' | 'resources'>('resources');
   const [activeRuleId, setActiveRuleId] = React.useState<number | null>(null);
@@ -70,13 +76,13 @@ const CreateRole: React.FunctionComponent = () => {
   
   // Navigation access control - perspectives and their pages
   interface PerspectiveAccess {
-    mode: 'bundle' | 'specific';
+    mode: 'full' | 'none' | 'partial';
     pages: Record<string, boolean>;
   }
 
   const [navigationAccess, setNavigationAccess] = React.useState<Record<string, PerspectiveAccess>>({
     'Fleet Management': {
-      mode: 'bundle',
+      mode: 'full',
       pages: {
         'Overview': true,
         'Clusters': true,
@@ -88,7 +94,7 @@ const CreateRole: React.FunctionComponent = () => {
       }
     },
     'Fleet Virtualization': {
-      mode: 'bundle',
+      mode: 'full',
       pages: {
         'Overview': true,
         'Catalog': true,
@@ -102,7 +108,7 @@ const CreateRole: React.FunctionComponent = () => {
       }
     },
     'Core Platforms': {
-      mode: 'bundle',
+      mode: 'full',
       pages: {
         'Overview': true,
         'Projects': true,
@@ -117,6 +123,25 @@ const CreateRole: React.FunctionComponent = () => {
       }
     },
   });
+
+  // State for perspective dropdown toggles
+  const [perspectiveDropdowns, setPerspectiveDropdowns] = React.useState<Record<string, boolean>>({});
+
+  const handleSelectAllPages = (perspective: string, selectAll: boolean) => {
+    const access = navigationAccess[perspective];
+    const updatedPages = Object.keys(access.pages).reduce((acc, page) => {
+      acc[page] = selectAll;
+      return acc;
+    }, {} as Record<string, boolean>);
+    
+    setNavigationAccess({
+      ...navigationAccess,
+      [perspective]: {
+        ...access,
+        pages: updatedPages
+      }
+    });
+  };
 
   const allVerbs = [
     { name: 'get', label: 'get - Read individual resources' },
@@ -250,11 +275,45 @@ const CreateRole: React.FunctionComponent = () => {
       verbs: [],
     };
     setPermissionRules([...permissionRules, newRule]);
+    setExpandedRules({ ...expandedRules, [newRule.id]: true });
   };
 
   const handleRemoveRule = (ruleId: number) => {
     setPermissionRules(permissionRules.filter(rule => rule.id !== ruleId));
+    const newExpandedRules = { ...expandedRules };
+    delete newExpandedRules[ruleId];
+    setExpandedRules(newExpandedRules);
   };
+
+  const toggleRuleExpansion = (ruleId: number) => {
+    setExpandedRules({
+      ...expandedRules,
+      [ruleId]: !expandedRules[ruleId]
+    });
+  };
+
+  const handleCopyYAML = () => {
+    const yaml = generateYAML();
+    navigator.clipboard.writeText(yaml);
+  };
+
+  const handleDownloadYAML = () => {
+    const yaml = generateYAML();
+    const blob = new Blob([yaml], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${roleName || 'role'}.yaml`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Update YAML code whenever form changes
+  React.useEffect(() => {
+    setYamlCode(generateYAML());
+  }, [roleName, description, permissionRules, navigationAccess]);
 
   const handleRuleChange = (ruleId: number, field: keyof PermissionRule, value: any) => {
     setPermissionRules(permissionRules.map(rule => 
@@ -284,13 +343,16 @@ const CreateRole: React.FunctionComponent = () => {
     const navigationAccessAnnotations = Object.entries(navigationAccess)
       .flatMap(([perspective, access]) => {
         const perspectiveKey = perspective.toLowerCase().replace(/\s+/g, '-');
-        if (access.mode === 'bundle') {
+        if (access.mode === 'full') {
           return [`    acm.io/nav-${perspectiveKey}: "bundle"`];
-        } else {
+        } else if (access.mode === 'partial') {
           const enabledPages = Object.entries(access.pages)
             .filter(([_, enabled]) => enabled)
             .map(([page, _]) => page);
           return [`    acm.io/nav-${perspectiveKey}: "${enabledPages.join(',')}"`];
+        } else {
+          // mode === 'none', so don't add this perspective
+          return [];
         }
       })
       .join('\n');
@@ -567,9 +629,22 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                 <BreadcrumbItem isActive>Create custom role</BreadcrumbItem>
               </Breadcrumb>
 
-              <Title headingLevel="h1" size="2xl" style={{ marginBottom: '16px' }}>
-                Create New Role
-              </Title>
+              <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                <SplitItem isFilled>
+                  <Title headingLevel="h1" size="2xl">
+                    Create New Role
+                  </Title>
+                </SplitItem>
+                <SplitItem>
+                  <Button variant="link" isInline onClick={() => setIsTemplateModalOpen(true)}>
+                    See all templates
+                  </Button>
+                </SplitItem>
+              </Split>
+
+              <Content component="p" className="pf-v6-u-color-200" style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
+                Create a custom role to control what users can see and do across your cluster resources. Define permissions, navigation access, and resource scopes to implement fine-grained access control.
+              </Content>
 
       <Grid hasGutter span={6}>
         <GridItem span={6}>
@@ -578,11 +653,6 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
               <Split hasGutter>
                 <SplitItem isFilled>
                   <Title headingLevel="h2" size="lg">Role Configuration</Title>
-                </SplitItem>
-                <SplitItem>
-                  <Button variant="link" isInline onClick={() => setIsTemplateModalOpen(true)}>
-                    See all templates
-                  </Button>
                 </SplitItem>
                 <SplitItem>
                   <Button variant="plain">Clear All</Button>
@@ -631,54 +701,122 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                     Control which perspectives and pages are visible to users with this role. You can grant access to entire perspectives or select specific pages within each perspective.
                   </Content>
                   
-                  {Object.entries(navigationAccess).map(([perspective, access]) => (
-                    <ExpandableSection
-                      key={perspective}
-                      toggleText={perspective}
-                      style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
-                    >
-                      <div style={{ paddingLeft: 'var(--pf-t--global--spacer--md)', paddingTop: 'var(--pf-t--global--spacer--sm)' }}>
-                        <Radio
-                          id={`${perspective}-bundle`}
-                          name={`${perspective}-mode`}
-                          label="Grant access to entire perspective (bundle)"
-                          description="Users will have access to all pages within this perspective"
-                          isChecked={access.mode === 'bundle'}
-                          onChange={() => {
-                            setNavigationAccess({
-                              ...navigationAccess,
-                              [perspective]: { ...access, mode: 'bundle' }
-                            });
-                          }}
-                          style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
-                        />
+                  {Object.entries(navigationAccess).map(([perspective, access]) => {
+                    const allPagesSelected = Object.values(access.pages).every(selected => selected);
+                    const isDropdownOpen = perspectiveDropdowns[perspective] || false;
+                    
+                    const getAccessModeLabel = (mode: 'full' | 'none' | 'partial') => {
+                      switch (mode) {
+                        case 'full': return 'Full access';
+                        case 'none': return 'No access';
+                        case 'partial': return 'Partial access';
+                      }
+                    };
+                    
+                    return (
+                      <div key={perspective} style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                        <Split hasGutter style={{ alignItems: 'center', marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                          <SplitItem>
+                            <Content component="p" style={{ fontWeight: 600, margin: 0 }}>
+                              {perspective}
+                            </Content>
+                          </SplitItem>
+                          <SplitItem>
+                            <Dropdown
+                              isOpen={isDropdownOpen}
+                              onSelect={() => {
+                                setPerspectiveDropdowns({
+                                  ...perspectiveDropdowns,
+                                  [perspective]: false
+                                });
+                              }}
+                              onOpenChange={(isOpen: boolean) => {
+                                setPerspectiveDropdowns({
+                                  ...perspectiveDropdowns,
+                                  [perspective]: isOpen
+                                });
+                              }}
+                              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                <MenuToggle
+                                  ref={toggleRef}
+                                  onClick={() => {
+                                    setPerspectiveDropdowns({
+                                      ...perspectiveDropdowns,
+                                      [perspective]: !isDropdownOpen
+                                    });
+                                  }}
+                                  isExpanded={isDropdownOpen}
+                                  variant="default"
+                                  style={{ minWidth: '160px' }}
+                                >
+                                  {getAccessModeLabel(access.mode)}
+                                </MenuToggle>
+                              )}
+                            >
+                              <DropdownList>
+                                <DropdownItem
+                                  key="full"
+                                  onClick={() => {
+                                    setNavigationAccess({
+                                      ...navigationAccess,
+                                      [perspective]: { ...access, mode: 'full' }
+                                    });
+                                  }}
+                                >
+                                  Full access
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="none"
+                                  onClick={() => {
+                                    setNavigationAccess({
+                                      ...navigationAccess,
+                                      [perspective]: { ...access, mode: 'none' }
+                                    });
+                                  }}
+                                >
+                                  No access
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="partial"
+                                  onClick={() => {
+                                    setNavigationAccess({
+                                      ...navigationAccess,
+                                      [perspective]: { ...access, mode: 'partial' }
+                                    });
+                                  }}
+                                >
+                                  Partial access
+                                </DropdownItem>
+                              </DropdownList>
+                            </Dropdown>
+                          </SplitItem>
+                        </Split>
                         
-                        <Radio
-                          id={`${perspective}-specific`}
-                          name={`${perspective}-mode`}
-                          label="Select specific pages"
-                          description="Choose which individual pages users can access"
-                          isChecked={access.mode === 'specific'}
-                          onChange={() => {
-                            setNavigationAccess({
-                              ...navigationAccess,
-                              [perspective]: { ...access, mode: 'specific' }
-                            });
-                          }}
-                          style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}
-                        />
-                        
-                        {access.mode === 'specific' && (
+                        {access.mode === 'partial' && (
                           <div style={{ 
                             paddingLeft: 'var(--pf-t--global--spacer--xl)', 
-                            marginTop: 'var(--pf-t--global--spacer--md)',
+                            marginTop: 'var(--pf-t--global--spacer--sm)',
                             borderLeft: '2px solid var(--pf-t--global--border--color--default)',
                             paddingTop: 'var(--pf-t--global--spacer--sm)',
                             paddingBottom: 'var(--pf-t--global--spacer--sm)',
                           }}>
-                            <Content component="p" className="pf-v6-u-font-size-sm pf-v6-u-font-weight-bold" style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
-                              Select pages:
-                            </Content>
+                            <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                              <SplitItem>
+                                <Content component="p" className="pf-v6-u-font-size-sm pf-v6-u-font-weight-bold">
+                                  Select pages:
+                                </Content>
+                              </SplitItem>
+                              <SplitItem>
+                                <Button
+                                  variant="link"
+                                  isInline
+                                  onClick={() => handleSelectAllPages(perspective, !allPagesSelected)}
+                                  style={{ paddingLeft: 0, fontSize: 'var(--pf-t--global--font--size--sm)' }}
+                                >
+                                  {allPagesSelected ? 'Deselect all' : 'Select all'}
+                                </Button>
+                              </SplitItem>
+                            </Split>
                             <Grid hasGutter span={6}>
                               {Object.keys(access.pages).map(page => (
                                 <GridItem span={6} key={page}>
@@ -705,8 +843,8 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                           </div>
                         )}
                       </div>
-                    </ExpandableSection>
-                  ))}
+                    );
+                  })}
                 </FormGroup>
 
                 <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
@@ -723,87 +861,90 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                 </Split>
 
                 {permissionRules.map((rule, index) => (
-                  <Card key={rule.id} style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
-                    <CardBody>
-                      <Split hasGutter>
-                        <SplitItem isFilled>
-                          <Title headingLevel="h4" size="md">Rule {index + 1}</Title>
-                        </SplitItem>
-                        {permissionRules.length > 1 && (
-                          <SplitItem>
-                            <Button 
-                              variant="plain" 
-                              icon={<MinusCircleIcon />} 
-                              onClick={() => handleRemoveRule(rule.id)}
-                              aria-label="Remove rule"
-                            />
-                          </SplitItem>
-                        )}
-                      </Split>
-
-                      <FormGroup 
-                        label="API Groups" 
-                        fieldId={`api-groups-${rule.id}`}
-                        style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}
-                      >
-                        <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
-                          Enter one or more API groups for this rule. Separate multiple values with commas.
-                        </Content>
-                        <TextInput
-                          type="text"
-                          id={`api-groups-${rule.id}`}
-                          value={rule.apiGroups}
-                          onChange={(_event, value) => handleRuleChange(rule.id, 'apiGroups', value)}
-                          placeholder="Enter API groups"
-                        />
-                        <Button 
-                          variant="link" 
-                          isInline 
-                          style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
-                          onClick={() => handleOpenDrawer(rule.id, 'apiGroups')}
-                        >
-                          Browse API catalog
-                        </Button>
-                      </FormGroup>
-
-                      <FormGroup label="Resources" fieldId={`resources-${rule.id}`}>
-                        <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
-                          Enter one or more resource types for the selected API groups. Separate multiple values with commas.
-                        </Content>
-                        <TextInput
-                          type="text"
-                          id={`resources-${rule.id}`}
-                          value={rule.resources}
-                          onChange={(_event, value) => handleRuleChange(rule.id, 'resources', value)}
-                          placeholder="Enter resources"
-                        />
-                        <Button 
-                          variant="link" 
-                          isInline 
-                          style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
-                          onClick={() => handleOpenDrawer(rule.id, 'resources')}
-                        >
-                          Browse resources catalog
-                        </Button>
-                      </FormGroup>
-
-                      <FormGroup label="Verbs (Permissions)" fieldId={`verbs-${rule.id}`}>
-                        <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
-                          Select the actions this rule allows on the chosen resources.
-                        </Content>
-                        <Grid hasGutter span={6} style={{ marginTop: 'var(--pf-t--global--spacer--sm)' }}>
-                          {allVerbs.map(verb => (
-                            <GridItem span={6} key={verb.name}>
-                              <Checkbox
-                                id={`verb-${rule.id}-${verb.name}`}
-                                label={verb.label}
-                                isChecked={rule.verbs.includes(verb.name)}
-                                onChange={(_event, checked) => handleVerbToggle(rule.id, verb.name, checked)}
+                  <Card key={rule.id} style={{ marginTop: 'var(--pf-t--global--spacer--md)', overflow: 'visible' }}>
+                    <CardBody style={{ overflow: 'visible' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--pf-t--global--spacer--md)', overflow: 'visible' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <ExpandableSection
+                            toggleText={`Rule ${index + 1}`}
+                            isExpanded={expandedRules[rule.id] || false}
+                            onToggle={() => toggleRuleExpansion(rule.id)}
+                          >
+                            <FormGroup 
+                              label="API Groups" 
+                              fieldId={`api-groups-${rule.id}`}
+                              style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}
+                            >
+                              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
+                                Enter one or more API groups for this rule. Separate multiple values with commas.
+                              </Content>
+                              <TextInput
+                                type="text"
+                                id={`api-groups-${rule.id}`}
+                                value={rule.apiGroups}
+                                onChange={(_event, value) => handleRuleChange(rule.id, 'apiGroups', value)}
+                                placeholder="Enter API groups"
                               />
-                            </GridItem>
-                          ))}
-                        </Grid>
-                      </FormGroup>
+                              <Button 
+                                variant="link" 
+                                isInline 
+                                style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
+                                onClick={() => handleOpenDrawer(rule.id, 'apiGroups')}
+                              >
+                                Browse API catalog
+                              </Button>
+                            </FormGroup>
+
+                            <FormGroup label="Resources" fieldId={`resources-${rule.id}`}>
+                              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
+                                Enter one or more resource types for the selected API groups. Separate multiple values with commas.
+                              </Content>
+                              <TextInput
+                                type="text"
+                                id={`resources-${rule.id}`}
+                                value={rule.resources}
+                                onChange={(_event, value) => handleRuleChange(rule.id, 'resources', value)}
+                                placeholder="Enter resources"
+                              />
+                              <Button 
+                                variant="link" 
+                                isInline 
+                                style={{ paddingLeft: 0, marginTop: 'var(--pf-t--global--spacer--sm)' }}
+                                onClick={() => handleOpenDrawer(rule.id, 'resources')}
+                              >
+                                Browse resources catalog
+                              </Button>
+                            </FormGroup>
+
+                            <FormGroup label="Verbs (Permissions)" fieldId={`verbs-${rule.id}`}>
+                              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
+                                Select the actions this rule allows on the chosen resources.
+                              </Content>
+                              <Grid hasGutter span={6} style={{ marginTop: 'var(--pf-t--global--spacer--sm)' }}>
+                                {allVerbs.map(verb => (
+                                  <GridItem span={6} key={verb.name}>
+                                    <Checkbox
+                                      id={`verb-${rule.id}-${verb.name}`}
+                                      label={verb.label}
+                                      isChecked={rule.verbs.includes(verb.name)}
+                                      onChange={(_event, checked) => handleVerbToggle(rule.id, verb.name, checked)}
+                                    />
+                                  </GridItem>
+                                ))}
+                              </Grid>
+                            </FormGroup>
+                          </ExpandableSection>
+                        </div>
+                        {permissionRules.length > 1 && (
+                          <Button 
+                            variant="plain" 
+                            icon={<MinusCircleIcon />} 
+                            onClick={() => handleRemoveRule(rule.id)}
+                            aria-label="Remove rule"
+                            style={{ marginTop: '4px' }}
+                          />
+                        )}
+                      </div>
                     </CardBody>
                   </Card>
                 ))}
@@ -824,31 +965,48 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
         <GridItem span={6}>
           <Card isFullHeight>
             <CardBody>
-              <Split hasGutter>
+              <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 <SplitItem isFilled>
                   <Title headingLevel="h2" size="lg">Live YAML</Title>
                 </SplitItem>
                 <SplitItem>
                   <Button 
-                    variant="link" 
-                    isInline 
-                    onClick={() => setIsEditingYAML(!isEditingYAML)}
-                  >
-                    {isEditingYAML ? 'Disable editing' : 'Enable editing'}
-                  </Button>
-                </SplitItem>
-                <SplitItem>
-                  <Button variant="plain">Copy YAML</Button>
+                    variant="plain" 
+                    icon={<DownloadIcon />}
+                    onClick={handleDownloadYAML}
+                    aria-label="Download YAML"
+                  />
                 </SplitItem>
               </Split>
-              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginTop: 'var(--pf-t--global--spacer--sm)' }}>
-                Auto-generated from the form. Enable editing to make manual adjustments.
+              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                Auto-generated from the form. You can manually edit the YAML directly.
               </Content>
-              <CodeBlock style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}>
-                <CodeBlockCode>
-                  {generateYAML()}
-                </CodeBlockCode>
-              </CodeBlock>
+              <div style={{ position: 'relative' }}>
+                <TextArea
+                  value={yamlCode}
+                  onChange={(_event, value) => setYamlCode(value)}
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    minHeight: '600px',
+                    resize: 'vertical',
+                  }}
+                  aria-label="YAML editor"
+                />
+                <Button
+                  variant="plain"
+                  onClick={handleCopyYAML}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    zIndex: 1,
+                  }}
+                  aria-label="Copy YAML"
+                >
+                  Copy
+                </Button>
+              </div>
             </CardBody>
           </Card>
         </GridItem>

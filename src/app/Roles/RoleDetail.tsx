@@ -22,11 +22,26 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateActions,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+  SearchInput,
+  Dropdown,
+  DropdownList,
+  DropdownItem,
+  MenuToggle,
+  MenuToggleElement,
+  Pagination,
+  PaginationVariant,
+  ToolbarGroup,
+  Divider,
 } from '@patternfly/react-core';
-import { CubesIcon } from '@patternfly/react-icons';
+import { CubesIcon, CheckIcon } from '@patternfly/react-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
+import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
+import { RoleDetailRoleAssignmentWizard } from '@app/RoleAssignment/RoleDetailRoleAssignmentWizard';
+import { getAllClusters, getAllClusterSets, getAllNamespaces } from '@app/data';
 
 const RoleDetail: React.FunctionComponent = () => {
   const { roleName } = useParams<{ roleName: string }>();
@@ -35,6 +50,27 @@ const RoleDetail: React.FunctionComponent = () => {
 
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
   const [isWizardOpen, setIsWizardOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState('');
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+
+  // Role assignments state
+  interface RoleAssignment {
+    id: string;
+    name: string;
+    type: 'User' | 'Group';
+    clusters: string[];
+    namespaces: string[];
+    roles: string[];
+    status: 'Active' | 'Inactive';
+    assignedDate: string;
+    assignedBy: string;
+    origin: string;
+  }
+
+  const [roleAssignments, setRoleAssignments] = React.useState<RoleAssignment[]>([]);
+  const [showSuccessAlert, setShowSuccessAlert] = React.useState(false);
 
   // Mock data for the role
   const roleData = {
@@ -80,6 +116,378 @@ rules:
   const handleEditRole = () => {
     console.log('Edit role:', roleName);
     // Navigate to edit page or open edit modal
+  };
+
+  const onSetPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const onPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
+    setPerPage(newPerPage);
+  };
+
+  const handleWizardComplete = (wizardData: any) => {
+    // Get data from database
+    const allClusters = getAllClusters();
+    const allClusterSets = getAllClusterSets();
+    const allNamespaces = getAllNamespaces();
+    
+    // Extract cluster names and project names from wizard data
+    const clusterNames: string[] = [];
+    const projectNames: string[] = [];
+    
+    if (wizardData.resourceScope === 'everything') {
+      clusterNames.push('All resources');
+      projectNames.push('All projects');
+    } else if (wizardData.resourceScope === 'cluster-sets') {
+      // Handle cluster sets
+      if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
+        const clusterSetNames = wizardData.selectedClusterSets
+          .map((id: number) => allClusterSets.find(cs => cs.id === id)?.name)
+          .filter(Boolean);
+        clusterNames.push(...clusterSetNames);
+        
+        if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+          const selectedClusterNames = wizardData.selectedClusters
+            .map((id: number) => allClusters.find(c => c.id === id)?.name)
+            .filter(Boolean);
+          clusterNames.length = 0; // Clear cluster set names
+          clusterNames.push(...selectedClusterNames);
+          
+          if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+            const selectedProjectNames = wizardData.selectedProjects
+              .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+              .filter(Boolean);
+            projectNames.push(...selectedProjectNames);
+          } else {
+            projectNames.push('All projects');
+          }
+        } else {
+          projectNames.push('All projects');
+        }
+      }
+    } else if (wizardData.resourceScope === 'clusters') {
+      // Handle individual clusters
+      if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+        const selectedClusterNames = wizardData.selectedClusters
+          .map((id: number) => allClusters.find(c => c.id === id)?.name)
+          .filter(Boolean);
+        clusterNames.push(...selectedClusterNames);
+        
+        if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+          const selectedProjectNames = wizardData.selectedProjects
+            .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+            .filter(Boolean);
+          projectNames.push(...selectedProjectNames);
+        } else {
+          projectNames.push('All projects');
+        }
+      }
+    }
+    
+    // Create new role assignment
+    // Note: For role detail, we use the groupName from wizard as subject name since it could be user or group
+    const newAssignment: RoleAssignment = {
+      id: `ra-${Date.now()}`,
+      name: wizardData.identityName || 'Unknown',
+      type: wizardData.identityType === 'group' ? 'Group' : 'User',
+      clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
+      namespaces: projectNames.length > 0 ? projectNames : ['All projects'],
+      roles: [roleName || 'Unknown Role'],
+      status: 'Active',
+      assignedDate: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      }),
+      assignedBy: 'Walter Joseph Kovacs',
+      origin: 'Hub cluster',
+    };
+    
+    setRoleAssignments([...roleAssignments, newAssignment]);
+    setIsWizardOpen(false);
+    setShowSuccessAlert(true);
+    
+    // Hide alert after 10 seconds
+    setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 10000);
+  };
+
+  const RoleAssignmentsTab = () => {
+    const [selectedAssignments, setSelectedAssignments] = React.useState<Set<string>>(new Set());
+    const [isBulkActionsOpen, setIsBulkActionsOpen] = React.useState(false);
+    const [filterValue, setFilterValue] = React.useState<string>('all');
+
+    const areAllSelected = selectedAssignments.size === roleAssignments.length && roleAssignments.length > 0;
+    const areSomeSelected = selectedAssignments.size > 0;
+
+    const handleSelectAll = (isSelecting: boolean) => {
+      if (isSelecting) {
+        setSelectedAssignments(new Set(roleAssignments.map(a => a.id)));
+      } else {
+        setSelectedAssignments(new Set());
+      }
+    };
+
+    const handleSelectAssignment = (assignmentId: string, isSelecting: boolean) => {
+      const newSelected = new Set(selectedAssignments);
+      if (isSelecting) {
+        newSelected.add(assignmentId);
+      } else {
+        newSelected.delete(assignmentId);
+      }
+      setSelectedAssignments(newSelected);
+    };
+
+    const handleBulkDelete = () => {
+      const updatedAssignments = roleAssignments.filter(a => !selectedAssignments.has(a.id));
+      setRoleAssignments(updatedAssignments);
+      setSelectedAssignments(new Set());
+      setIsBulkActionsOpen(false);
+    };
+
+    const handleDeleteAssignment = (assignmentId: string) => {
+      const updatedAssignments = roleAssignments.filter(a => a.id !== assignmentId);
+      setRoleAssignments(updatedAssignments);
+    };
+
+    // Filter and paginate assignments
+    const filteredAssignments = roleAssignments.filter(assignment => {
+      const matchesSearch = assignment.name.toLowerCase().includes(searchValue.toLowerCase());
+      const matchesFilter = filterValue === 'all' || 
+        (filterValue === 'user' && assignment.type === 'User') ||
+        (filterValue === 'group' && assignment.type === 'Group') ||
+        (filterValue === 'active' && assignment.status === 'Active');
+      return matchesSearch && matchesFilter;
+    });
+
+    const paginatedAssignments = filteredAssignments.slice(
+      (page - 1) * perPage,
+      page * perPage
+    );
+
+    if (roleAssignments.length === 0) {
+      return (
+        <Card>
+          <CardBody>
+            <EmptyState>
+              <CubesIcon />
+              <Title headingLevel="h2" size="lg">
+                No role assignments created yet
+              </Title>
+              <EmptyStateBody>
+                Control what users and groups can access or view by assigning them this role for your managed resources.
+              </EmptyStateBody>
+              <EmptyStateActions>
+                <Button variant="primary" onClick={() => setIsWizardOpen(true)}>
+                  Create role assignment
+                </Button>
+              </EmptyStateActions>
+              <EmptyStateBody>
+                <Button component="a" href="#" variant="link">
+                  Link to documentation
+                </Button>
+              </EmptyStateBody>
+            </EmptyState>
+          </CardBody>
+        </Card>
+      );
+    }
+
+    return (
+      <div className="table-content-card">
+        <Toolbar>
+          <ToolbarContent>
+            {selectedAssignments.size > 0 && (
+              <>
+                <ToolbarGroup>
+                  <ToolbarItem>
+                    <span style={{ fontWeight: 'bold', marginRight: '16px' }}>
+                      {selectedAssignments.size} selected
+                    </span>
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <Dropdown
+                      isOpen={isBulkActionsOpen}
+                      onSelect={() => setIsBulkActionsOpen(false)}
+                      onOpenChange={(isOpen) => setIsBulkActionsOpen(isOpen)}
+                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                        <MenuToggle
+                          ref={toggleRef}
+                          onClick={() => setIsBulkActionsOpen(!isBulkActionsOpen)}
+                          isExpanded={isBulkActionsOpen}
+                          variant="secondary"
+                          isDisabled={!areSomeSelected}
+                        >
+                          Actions {areSomeSelected ? `(${selectedAssignments.size} selected)` : ''}
+                        </MenuToggle>
+                      )}
+                    >
+                      <DropdownList>
+                        <DropdownItem key="delete" onClick={handleBulkDelete}>
+                          Delete selected
+                        </DropdownItem>
+                      </DropdownList>
+                    </Dropdown>
+                  </ToolbarItem>
+                </ToolbarGroup>
+                <ToolbarItem>
+                  <Divider orientation={{ default: 'vertical' }} />
+                </ToolbarItem>
+              </>
+            )}
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isFilterOpen}
+                onSelect={() => setIsFilterOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="plain"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    isExpanded={isFilterOpen}
+                  >
+                    Filter
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="all" onClick={() => setFilterValue('all')}>All</DropdownItem>
+                  <DropdownItem key="user" onClick={() => setFilterValue('user')}>User</DropdownItem>
+                  <DropdownItem key="group" onClick={() => setFilterValue('group')}>Group</DropdownItem>
+                  <DropdownItem key="active" onClick={() => setFilterValue('active')}>Active</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem>
+              <SearchInput
+                placeholder="Search role assignments"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button variant="primary" onClick={() => setIsWizardOpen(true)}>
+                Create role assignment
+              </Button>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+        
+        <Table aria-label="Role assignments table" variant="compact">
+          <Thead>
+            <Tr>
+              <Th style={{ backgroundColor: '#f0f0f0' }} />
+              <Th colSpan={2} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Subject</Th>
+              <Th colSpan={6} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
+              <Th style={{ backgroundColor: '#f0f0f0' }}></Th>
+            </Tr>
+            <Tr>
+              <Th
+                select={{
+                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                  isSelected: areAllSelected,
+                }}
+              />
+              <Th sort={{ sortBy: {}, columnIndex: 0 }}>Name</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 1 }}>Type</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Clusters</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Namespaces</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Status</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Assigned date</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Assigned by</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 7 }}>Origin</Th>
+              <Th></Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {paginatedAssignments.map((assignment, rowIndex) => (
+              <Tr key={assignment.id}>
+                <Td
+                  select={{
+                    rowIndex,
+                    onSelect: (_event, isSelecting) => handleSelectAssignment(assignment.id, isSelecting),
+                    isSelected: selectedAssignments.has(assignment.id),
+                  }}
+                />
+                <Td dataLabel="Name">
+                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                    {assignment.name}
+                  </Button>
+                </Td>
+                <Td dataLabel="Type">{assignment.type}</Td>
+                <Td dataLabel="Clusters">
+                  {assignment.clusters.map((cluster, idx) => (
+                    <span key={idx}>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {cluster}
+                      </Button>
+                      {idx < assignment.clusters.length - 1 && ', '}
+                    </span>
+                  ))}
+                </Td>
+                <Td dataLabel="Namespaces">
+                  {assignment.namespaces.map((ns, idx) => (
+                    <span key={idx}>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {ns}
+                      </Button>
+                      {idx < assignment.namespaces.length - 1 && ', '}
+                    </span>
+                  ))}
+                </Td>
+                <Td dataLabel="Status">
+                  <Label color="green" icon={<CheckIcon />}>
+                    {assignment.status}
+                  </Label>
+                </Td>
+                <Td dataLabel="Assigned date">{assignment.assignedDate}</Td>
+                <Td dataLabel="Assigned by">{assignment.assignedBy}</Td>
+                <Td dataLabel="Origin">{assignment.origin}</Td>
+                <Td isActionCell>
+                  <ActionsColumn
+                    items={[
+                      {
+                        title: 'Edit',
+                        onClick: () => console.log('Edit', assignment.id)
+                      },
+                      {
+                        isSeparator: true
+                      },
+                      {
+                        title: 'Delete',
+                        onClick: () => handleDeleteAssignment(assignment.id)
+                      }
+                    ]}
+                  />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={filteredAssignments.length}
+                page={page}
+                perPage={perPage}
+                onSetPage={onSetPage}
+                onPerPageSelect={onPerPageSelect}
+                variant={PaginationVariant.bottom}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+      </div>
+    );
   };
 
   return (
@@ -216,39 +624,15 @@ rules:
           </Card>
         )}
 
-        {activeTabKey === 3 && (
-          <Card>
-            <CardBody>
-              <EmptyState>
-                <CubesIcon />
-                <Title headingLevel="h2" size="lg">
-                  No role assignments created yet
-                </Title>
-                <EmptyStateBody>
-                  Control what users and groups can access or view by assigning them this role for your managed resources.
-                </EmptyStateBody>
-                <EmptyStateActions>
-                  <Button variant="primary" onClick={() => setIsWizardOpen(true)}>
-                    Create role assignment
-                  </Button>
-                </EmptyStateActions>
-                <EmptyStateBody>
-                  <Button component="a" href="#" variant="link">
-                    Link to documentation
-                  </Button>
-                </EmptyStateBody>
-              </EmptyState>
-            </CardBody>
-          </Card>
-        )}
+        {activeTabKey === 3 && <RoleAssignmentsTab />}
       </div>
       
       {/* Role Assignment Wizard */}
-      <RoleAssignmentWizard
+      <RoleDetailRoleAssignmentWizard
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
-        context="roles"
-        preselectedRole={{ id: 1, name: roleData.name, type: 'Custom' }}
+        onComplete={handleWizardComplete}
+        roleName={roleData.name}
       />
     </div>
   );

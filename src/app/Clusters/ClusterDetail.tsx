@@ -44,8 +44,8 @@ import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/reac
 import { InfoCircleIcon, CheckIcon, ExclamationTriangleIcon } from '@patternfly/react-icons';
 import { CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { RoleAssignmentWizard } from '@app/RoleAssignment/RoleAssignmentWizard';
 import { ClusterSetRoleAssignmentWizard } from '@app/RoleAssignment/ClusterSetRoleAssignmentWizard';
+import { ClusterRoleAssignmentWizard } from '@app/RoleAssignment/ClusterRoleAssignmentWizard';
 import { getAllClusterSets, getClustersByClusterSet } from '@app/data';
 
 // Interface for role assignment entries
@@ -652,7 +652,7 @@ const ClusterDetail: React.FunctionComponent = () => {
             <Tr>
               <Th style={{ backgroundColor: '#f0f0f0' }} />
               <Th colSpan={2} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Subject</Th>
-              <Th colSpan={7} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
+              <Th colSpan={6} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
               <Th style={{ backgroundColor: '#f0f0f0' }}></Th>
             </Tr>
             <Tr>
@@ -664,13 +664,12 @@ const ClusterDetail: React.FunctionComponent = () => {
               />
               <Th sort={{ sortBy: {}, columnIndex: 0 }}>Name</Th>
               <Th sort={{ sortBy: {}, columnIndex: 1 }}>Type</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Clusters</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Namespaces</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Roles</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Status</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Assigned date</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 7 }}>Assigned by</Th>
-              <Th sort={{ sortBy: {}, columnIndex: 8 }}>Origin</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Namespaces</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Roles</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Status</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Assigned date</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Assigned by</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 7 }}>Origin</Th>
               <Th></Th>
             </Tr>
           </Thead>
@@ -690,16 +689,6 @@ const ClusterDetail: React.FunctionComponent = () => {
                   </Button>
                 </Td>
                 <Td dataLabel="Type">{assignment.type}</Td>
-                <Td dataLabel="Clusters">
-                  {assignment.clusters.map((cluster, idx) => (
-                    <span key={idx}>
-                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                        {cluster}
-                      </Button>
-                      {idx < assignment.clusters.length - 1 && ', '}
-                    </span>
-                  ))}
-                </Td>
                 <Td dataLabel="Namespaces">
                   {assignment.namespaces.map((ns, idx) => (
                     <span key={idx}>
@@ -1044,12 +1033,11 @@ const ClusterDetail: React.FunctionComponent = () => {
               clusterSetName={clusterName || ''}
             />
           ) : (
-            <RoleAssignmentWizard 
+            <ClusterRoleAssignmentWizard 
               isOpen={isWizardOpen} 
-              onClose={() => setIsWizardOpen(false)} 
+              onClose={() => setIsWizardOpen(false)}
               onComplete={handleWizardComplete}
-              clusterName={clusterName}
-              context="clusters"
+              clusterName={clusterName || ''}
             />
           )}
 

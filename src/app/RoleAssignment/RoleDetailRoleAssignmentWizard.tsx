@@ -63,24 +63,39 @@ const mockRoles = dbRoles.map((role, index) => ({
   type: role.type,
 }));
 
-interface GroupRoleAssignmentWizardProps {
+interface RoleDetailRoleAssignmentWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (data: any) => void;
-  groupName: string;
+  roleName: string;
 }
 
-export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps> = ({
+export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWizardProps> = ({
   isOpen,
   onClose,
   onComplete,
-  groupName,
+  roleName,
 }) => {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [clustersPage, setClustersPage] = React.useState(1);
   const [clustersPerPage, setClustersPerPage] = React.useState(10);
   
-  // Step 1: Resources - Hierarchical structure for Group wizard
+  // Step 1: Select user or group
+  const [identityType, setIdentityType] = React.useState<'user' | 'group'>('user');
+  const [selectedUser, setSelectedUser] = React.useState<number | null>(null);
+  const [selectedGroup, setSelectedGroup] = React.useState<number | null>(null);
+  const [userSearch, setUserSearch] = React.useState('');
+  const [groupSearch, setGroupSearch] = React.useState('');
+  const [usersPage, setUsersPage] = React.useState(1);
+  const [usersPerPage, setUsersPerPage] = React.useState(10);
+  const [groupsPage, setGroupsPage] = React.useState(1);
+  const [groupsPerPage, setGroupsPerPage] = React.useState(10);
+  const [isUserFilterOpen, setIsUserFilterOpen] = React.useState(false);
+  const [userFilterType, setUserFilterType] = React.useState('Name');
+  const [isGroupFilterOpen, setIsGroupFilterOpen] = React.useState(false);
+  const [groupFilterType, setGroupFilterType] = React.useState('Name');
+  
+  // Step 2: Resources - Hierarchical structure
   const [resourceScope, setResourceScope] = React.useState<'everything' | 'cluster-sets' | 'clusters'>('everything');
   const [isResourceScopeOpen, setIsResourceScopeOpen] = React.useState(false);
   
@@ -129,14 +144,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   // Bulk selector dropdowns
   const [isClusterBulkSelectorOpen, setIsClusterBulkSelectorOpen] = React.useState(false);
   const [isProjectBulkSelectorOpen, setIsProjectBulkSelectorOpen] = React.useState(false);
-  
-  // Step 2: Role selection
-  const [selectedRole, setSelectedRole] = React.useState<number | null>(null);
-  const [roleSearch, setRoleSearch] = React.useState('');
-  const [rolesPage, setRolesPage] = React.useState(1);
-  const [rolesPerPage, setRolesPerPage] = React.useState(10);
-  const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
-  const [roleFilterType, setRoleFilterType] = React.useState('Type');
 
   // Ref for wizard content to enable scrolling
   const wizardContentRef = React.useRef<HTMLDivElement>(null);
@@ -150,6 +157,15 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
 
   const resetWizard = () => {
     setCurrentStep(1);
+    setIdentityType('user');
+    setSelectedUser(null);
+    setSelectedGroup(null);
+    setUserSearch('');
+    setGroupSearch('');
+    setUsersPage(1);
+    setUsersPerPage(10);
+    setGroupsPage(1);
+    setGroupsPerPage(10);
     setResourceScope('everything');
     setIsResourceScopeOpen(false);
     setSelectedClusterSets([]);
@@ -163,11 +179,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
     setShowClusterSelection(false);
     setShowScopeSelection(false);
     setShowProjectSelection(false);
-    setSelectedRole(null);
-    setRoleSearch('');
-    setRolesPage(1);
-    setRolesPerPage(10);
-    setRoleFilterType('Type');
     setIsEverythingExampleExpanded(false);
     setIsClusterSetExampleExpanded(false);
     setIsClusterExampleExpanded(false);
@@ -180,10 +191,13 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
 
   const handleNext = () => {
     if (currentStep === 1) {
-      // Handle hierarchical navigation within step 1 (resources)
+      // Step 1: Select user or group - simple progression
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Step 2 (was Step 1): Handle hierarchical navigation within resources
       if (resourceScope === 'everything') {
-        // No substeps needed, go directly to step 2 (role selection)
-        setCurrentStep(2);
+        // No substeps needed, go directly to step 3 (review)
+        setCurrentStep(3);
       } else if (resourceScope === 'cluster-sets') {
         if (!showClusterSetSelection) {
           // Show cluster set selection table
@@ -192,19 +206,19 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           // Cluster sets selected, show scope selection (full vs partial access)
           setShowScopeSelection(true);
         } else if (showScopeSelection && clusterSetScope === 'everything' && !showProjectSelection) {
-          // User chose full access to cluster sets, move to next step
-          setCurrentStep(2);
+          // User chose full access to cluster sets, move to review
+          setCurrentStep(3);
         } else if (showScopeSelection && clusterSetScope === 'partial' && selectedClusters.length > 0 && !showProjectSelection) {
           // User chose partial access and selected clusters (table shows inline), now show cluster-level access selection
           setClusterScope('everything'); // Reset to default for the new substep
           setSelectedProjects([]); // Clear any previous project selections
           setShowProjectSelection(true);
         } else if (showProjectSelection && clusterScope === 'everything') {
-          // User chose full cluster access, move to next step
-          setCurrentStep(2);
+          // User chose full cluster access, move to review
+          setCurrentStep(3);
         } else if (showProjectSelection && clusterScope === 'projects' && selectedProjects.length > 0) {
-          // User chose partial access and selected projects, move to next step
-          setCurrentStep(2);
+          // User chose partial access and selected projects, move to review
+          setCurrentStep(3);
         }
       } else if (resourceScope === 'clusters') {
         if (!showClusterSelection) {
@@ -214,22 +228,22 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           // Clusters selected, now show access level selection
           setShowScopeSelection(true);
         } else if (showScopeSelection && clusterScope === 'everything') {
-          // User chose full access, move to next step
-          setCurrentStep(2);
+          // User chose full access, move to review
+          setCurrentStep(3);
         } else if (showScopeSelection && clusterScope === 'projects' && selectedProjects.length > 0) {
-          // User chose partial access and selected projects, move to next step
-          setCurrentStep(2);
+          // User chose partial access and selected projects, move to review
+          setCurrentStep(3);
         }
       }
-    } else {
-      // Normal step progression
-      setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
     if (currentStep === 1) {
-      // Handle hierarchical navigation backwards within step 1 (resources)
+      // Step 1: Can't go back from first step
+      return;
+    } else if (currentStep === 2) {
+      // Step 2: Handle hierarchical navigation backwards within resources
       if (showProjectSelection) {
         // Go back from project selection to cluster/scope selection
         setShowProjectSelection(false);
@@ -257,27 +271,41 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         setShowClusterSetSelection(false);
         setSelectedClusterSets([]);
       } else {
-        // At the beginning of step 1, can't go back
-        return;
+        // At the beginning of resources step, go back to user/group selection
+        setCurrentStep(1);
       }
-    } else {
-      // Normal step progression
-      setCurrentStep(currentStep - 1);
+    } else if (currentStep === 3) {
+      // Go back from review to resources
+      setCurrentStep(2);
     }
   };
 
   const handleFinish = () => {
-    const roleName = mockRoles.find(r => r.id === selectedRole)?.name || 'Unknown Role';
+    // Get the identity name and type
+    let identityName = '';
+    let identityTypeValue = '';
+    
+    if (identityType === 'user' && selectedUser !== null) {
+      const user = mockUsers.find(u => u.id === selectedUser);
+      identityName = user?.name || 'Unknown User';
+      identityTypeValue = 'user';
+    } else if (identityType === 'group' && selectedGroup !== null) {
+      const group = mockGroups.find(g => g.id === selectedGroup);
+      identityName = group?.name || 'Unknown Group';
+      identityTypeValue = 'group';
+    }
 
     onComplete({
-      identityType: 'group',
-      identityId: null,
-      identityName: groupName,
+      identityType: identityTypeValue,
+      identityId: identityType === 'user' ? selectedUser : selectedGroup,
+      identityName,
+      roleName,
       resourceScope,
       selectedClusterSets,
       selectedClusters,
       selectedProjects,
-      roleName,
+      clusterScope,
+      clusterSetScope,
     });
     
     resetWizard();
@@ -286,7 +314,11 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const isNextDisabled = () => {
     const disabled = (() => {
     if (currentStep === 1) {
-        // Step 1: Resources - 'everything' doesn't require any selection
+        // Step 1: User or Group selection - must select either a user or group
+        return (identityType === 'user' && selectedUser === null) || (identityType === 'group' && selectedGroup === null);
+    }
+    if (currentStep === 2) {
+        // Step 2: Resources - 'everything' doesn't require any selection
         if (resourceScope === 'everything') return false;
         
         // For 'cluster-sets' path
@@ -326,15 +358,40 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         
       return false;
     }
-    if (currentStep === 2) {
-      // Step 2: Role selection - must select a role
-      return selectedRole === null;
-    }
       
     return false;
     })();
     
     return disabled;
+  };
+
+  // Filter functions for users and groups
+  const filteredUsers = mockUsers.filter(user =>
+    user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+    user.username.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const filteredGroups = mockGroups.filter(group =>
+    group.name.toLowerCase().includes(groupSearch.toLowerCase())
+  );
+
+  // Pagination handlers for users and groups
+  const onSetUsersPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
+    setUsersPage(newPage);
+  };
+
+  const onUsersPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
+    setUsersPerPage(newPerPage);
+    setUsersPage(1);
+  };
+
+  const onSetGroupsPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
+    setGroupsPage(newPage);
+  };
+
+  const onGroupsPerPageSelect = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPerPage: number) => {
+    setGroupsPerPage(newPerPage);
+    setGroupsPage(1);
   };
 
   // Mock cluster sets data
@@ -544,11 +601,11 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           borderBottom: '1px solid #d2d2d2',
           flexShrink: 0
         }}>
-          <Title headingLevel="h1" size="2xl" id="group-wizard-title">
-            Create role assignment for {groupName}
+          <Title headingLevel="h1" size="2xl" id="role-wizard-title">
+            Create role assignment
           </Title>
           <Content component="p" style={{ marginTop: '0.5rem', color: '#6a6e73' }}>
-            A role assignment specifies a distinct action users or groups can perform when associated with a particular role.{' '}
+            Assign the <strong>{roleName}</strong> role to a user or group for specific resources.{' '}
             <Button variant="link" isInline component="a" href="#" onClick={(e) => e.preventDefault()}>
               See example of the yaml file and learn more about User management
             </Button>
@@ -576,10 +633,11 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             flexShrink: 0,
             margin: 0
           }}>
-            {renderStepIndicator(1, 'Select resources')}
+            {renderStepIndicator(1, 'Select user or group')}
+            {renderStepIndicator(2, 'Select resources')}
             
             {/* Substeps for cluster-sets */}
-            {currentStep === 1 && resourceScope === 'cluster-sets' && (
+            {currentStep === 2 && resourceScope === 'cluster-sets' && (
               <>
                 {(showClusterSetSelection || showScopeSelection || showProjectSelection) && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
@@ -626,7 +684,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             )}
             
             {/* Substeps for clusters */}
-            {currentStep === 1 && resourceScope === 'clusters' && (
+            {currentStep === 2 && resourceScope === 'clusters' && (
               <>
                 {(showClusterSelection || showScopeSelection || showProjectSelection) && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
@@ -672,7 +730,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </>
             )}
             
-            {renderStepIndicator(2, 'Select role')}
             {renderStepIndicator(3, 'Review')}
           </div>
           
@@ -698,8 +755,235 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             }}>
 
 
-        {/* Step 1: Select Resources */}
+        {/* Step 1: Select User or Group */}
         {currentStep === 1 && (
+          <>
+            <Title headingLevel="h2" size="xl" style={{ marginBottom: '8px' }}>
+              Select user or group
+            </Title>
+            <Content component="p" style={{ marginBottom: '24px', color: '#6a6e73', fontSize: '14px' }}>
+              Choose whether to assign this role to a user or a group.
+            </Content>
+
+            <Tabs
+              activeKey={identityType}
+              onSelect={(_event, tabIndex) => {
+                setIdentityType(tabIndex as 'user' | 'group');
+                setSelectedUser(null);
+                setSelectedGroup(null);
+              }}
+              aria-label="Select user or group"
+              style={{ marginBottom: '24px' }}
+            >
+              <Tab 
+                eventKey="user" 
+                title={<TabTitleText>Users</TabTitleText>}
+                aria-label="Users tab"
+                style={{
+                  borderBottom: identityType === 'user' ? '3px solid #0066cc' : 'none',
+                  color: identityType === 'user' ? '#0066cc' : '#6a6e73',
+                  fontWeight: identityType === 'user' ? 600 : 400
+                }}
+              />
+              <Tab 
+                eventKey="group" 
+                title={<TabTitleText>Groups</TabTitleText>}
+                aria-label="Groups tab"
+                style={{
+                  borderBottom: identityType === 'group' ? '3px solid #0066cc' : 'none',
+                  color: identityType === 'group' ? '#0066cc' : '#6a6e73',
+                  fontWeight: identityType === 'group' ? 600 : 400
+                }}
+              />
+            </Tabs>
+
+            {identityType === 'user' && (
+              <>
+                <Toolbar>
+                  <ToolbarContent>
+                    <ToolbarItem>
+                      <Dropdown
+                        isOpen={isUserFilterOpen}
+                        onSelect={() => setIsUserFilterOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsUserFilterOpen(isOpen)}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle 
+                            ref={toggleRef} 
+                            onClick={() => setIsUserFilterOpen(!isUserFilterOpen)} 
+                            isExpanded={isUserFilterOpen}
+                            variant="default"
+                          >
+                            {userFilterType}
+                          </MenuToggle>
+                        )}
+                        popperProps={{
+                          appendTo: () => document.body,
+                          position: 'bottom-start',
+                          strategy: 'fixed',
+                        }}
+                      >
+                        <DropdownList>
+                          <DropdownItem onClick={() => { setUserFilterType('Name'); setIsUserFilterOpen(false); }}>
+                            Name
+                          </DropdownItem>
+                          <DropdownItem onClick={() => { setUserFilterType('Username'); setIsUserFilterOpen(false); }}>
+                            Username
+                          </DropdownItem>
+                        </DropdownList>
+                      </Dropdown>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                      <SearchInput
+                        placeholder="Search users"
+                        value={userSearch}
+                        onChange={(_event, value) => setUserSearch(value)}
+                        onClear={() => setUserSearch('')}
+                      />
+                    </ToolbarItem>
+                    <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                      <Pagination
+                        itemCount={filteredUsers.length}
+                        page={usersPage}
+                        perPage={usersPerPage}
+                        onSetPage={onSetUsersPage}
+                        onPerPageSelect={onUsersPerPageSelect}
+                        variant={PaginationVariant.top}
+                        isCompact
+                      />
+                    </ToolbarItem>
+                  </ToolbarContent>
+                </Toolbar>
+                <Table aria-label="Users table" variant="compact">
+                  <Thead>
+                    <Tr>
+                      <Th width={10}></Th>
+                      <Th>Name</Th>
+                      <Th>Username</Th>
+                      <Th>Identity provider</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {filteredUsers
+                      .slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage)
+                      .map((user) => (
+                        <Tr
+                          key={user.id}
+                          isSelectable
+                          isClickable
+                          isRowSelected={selectedUser === user.id}
+                          onRowClick={() => setSelectedUser(user.id)}
+                        >
+                          <Td>
+                            <Radio
+                              id={`user-${user.id}`}
+                              name="user-selection"
+                              isChecked={selectedUser === user.id}
+                              onChange={() => setSelectedUser(user.id)}
+                            />
+                          </Td>
+                          <Td dataLabel="Name">{user.name}</Td>
+                          <Td dataLabel="Username">{user.username}</Td>
+                          <Td dataLabel="Identity provider">{user.provider}</Td>
+                        </Tr>
+                      ))}
+                  </Tbody>
+                </Table>
+              </>
+            )}
+
+            {identityType === 'group' && (
+              <>
+                <Toolbar>
+                  <ToolbarContent>
+                    <ToolbarItem>
+                      <Dropdown
+                        isOpen={isGroupFilterOpen}
+                        onSelect={() => setIsGroupFilterOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsGroupFilterOpen(isOpen)}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle 
+                            ref={toggleRef} 
+                            onClick={() => setIsGroupFilterOpen(!isGroupFilterOpen)} 
+                            isExpanded={isGroupFilterOpen}
+                            variant="default"
+                          >
+                            {groupFilterType}
+                          </MenuToggle>
+                        )}
+                        popperProps={{
+                          appendTo: () => document.body,
+                          position: 'bottom-start',
+                          strategy: 'fixed',
+                        }}
+                      >
+                        <DropdownList>
+                          <DropdownItem onClick={() => { setGroupFilterType('Name'); setIsGroupFilterOpen(false); }}>
+                            Name
+                          </DropdownItem>
+                        </DropdownList>
+                      </Dropdown>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                      <SearchInput
+                        placeholder="Search groups"
+                        value={groupSearch}
+                        onChange={(_event, value) => setGroupSearch(value)}
+                        onClear={() => setGroupSearch('')}
+                      />
+                    </ToolbarItem>
+                    <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                      <Pagination
+                        itemCount={filteredGroups.length}
+                        page={groupsPage}
+                        perPage={groupsPerPage}
+                        onSetPage={onSetGroupsPage}
+                        onPerPageSelect={onGroupsPerPageSelect}
+                        variant={PaginationVariant.top}
+                        isCompact
+                      />
+                    </ToolbarItem>
+                  </ToolbarContent>
+                </Toolbar>
+                <Table aria-label="Groups table" variant="compact">
+                  <Thead>
+                    <Tr>
+                      <Th width={10}></Th>
+                      <Th>Name</Th>
+                      <Th>Users</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {filteredGroups
+                      .slice((groupsPage - 1) * groupsPerPage, groupsPage * groupsPerPage)
+                      .map((group) => (
+                        <Tr
+                          key={group.id}
+                          isSelectable
+                          isClickable
+                          isRowSelected={selectedGroup === group.id}
+                          onRowClick={() => setSelectedGroup(group.id)}
+                        >
+                          <Td>
+                            <Radio
+                              id={`group-${group.id}`}
+                              name="group-selection"
+                              isChecked={selectedGroup === group.id}
+                              onChange={() => setSelectedGroup(group.id)}
+                            />
+                          </Td>
+                          <Td dataLabel="Name">{group.name}</Td>
+                          <Td dataLabel="Users">{group.users}</Td>
+                        </Tr>
+                      ))}
+                  </Tbody>
+                </Table>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Step 2: Select Resources */}
+        {currentStep === 2 && (
           <>
             {/* Only show title, description, and initial dropdown when NOT in any substep */}
             {!showClusterSetSelection && !showClusterSelection && !showScopeSelection && (
@@ -3668,125 +3952,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           </>
         )}
 
-        {/* Step 2: Select Role */}
-        {currentStep === 2 && (
-          <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: '16px' }}>
-              Select role
-            </Title>
-            <Content component="p" style={{ marginBottom: '24px', color: '#6a6e73', fontSize: '14px' }}>
-              Select the role to assign to {groupName}.
-            </Content>
-            
-            <Toolbar>
-              <ToolbarContent>
-                <ToolbarItem>
-                  <Dropdown
-                    isOpen={isRoleFilterOpen}
-                    onSelect={() => setIsRoleFilterOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsRoleFilterOpen(isOpen)}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle 
-                        ref={toggleRef} 
-                        onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)} 
-                        isExpanded={isRoleFilterOpen}
-                        variant="default"
-                      >
-                        {roleFilterType}
-                      </MenuToggle>
-                    )}
-                    popperProps={{
-                      appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
-                    }}
-                  >
-                    <DropdownList>
-                      <DropdownItem onClick={() => { setRoleFilterType('Type'); setIsRoleFilterOpen(false); }}>
-                        Type
-                      </DropdownItem>
-                    </DropdownList>
-                  </Dropdown>
-                </ToolbarItem>
-                <ToolbarItem>
-                  <SearchInput
-                    placeholder="Search roles"
-                    value={roleSearch}
-                    onChange={(_event, value) => setRoleSearch(value)}
-                    onClear={() => setRoleSearch('')}
-                  />
-                </ToolbarItem>
-                <ToolbarItem align={{ default: 'alignEnd' }}>
-                  <Pagination
-                    itemCount={mockRoles.filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase())).length}
-                    perPage={rolesPerPage}
-                    page={rolesPage}
-                    onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
-                    onPerPageSelect={(_event, perPage) => {
-                      setRolesPerPage(perPage);
-                      setRolesPage(1);
-                    }}
-                    variant={PaginationVariant.top}
-                    isCompact
-                  />
-                </ToolbarItem>
-              </ToolbarContent>
-            </Toolbar>
-            
-            <Table aria-label="Roles table" variant="compact">
-              <Thead>
-                <Tr>
-                  <Th width={10}></Th>
-                  <Th>Role</Th>
-                  <Th>Type</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {mockRoles
-                  .filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase()))
-                  .slice((rolesPage - 1) * rolesPerPage, rolesPage * rolesPerPage)
-                  .map((role) => (
-                  <Tr
-                    key={role.id}
-                    isSelectable
-                    isClickable
-                    isRowSelected={selectedRole === role.id}
-                    onRowClick={() => setSelectedRole(role.id)}
-                  >
-                    <Td>
-                      <Radio
-                        id={`role-${role.id}`}
-                        name="role-selection"
-                        isChecked={selectedRole === role.id}
-                        onChange={() => setSelectedRole(role.id)}
-                      />
-                    </Td>
-                    <Td dataLabel="Role">
-                      <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                        {role.name}
-                      </div>
-                    </Td>
-                    <Td dataLabel="Type">{role.type}</Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-            
-            <Pagination
-              itemCount={mockRoles.filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase())).length}
-              perPage={rolesPerPage}
-              page={rolesPage}
-              onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
-              onPerPageSelect={(_event, perPage) => {
-                setRolesPerPage(perPage);
-                setRolesPage(1);
-              }}
-              variant={PaginationVariant.bottom}
-              style={{ marginTop: '16px' }}
-            />
-          </>
-        )}
-
         {/* Step 3: Review */}
         {currentStep === 3 && (
           <>
@@ -3794,15 +3959,25 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               Review
             </Title>
             
-            {/* Group section */}
+            {/* User or Group section */}
             <div style={{ 
               marginBottom: '32px',
               paddingBottom: '24px',
               borderBottom: '1px solid #d2d2d2'
             }}>
-              <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>
-                Group
-              </Title>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <Title headingLevel="h3" size="md" style={{ margin: 0 }}>
+                  {identityType === 'user' ? 'User' : 'Group'}
+                </Title>
+                <Button 
+                  variant="link" 
+                  isInline 
+                  onClick={() => setCurrentStep(1)}
+                  style={{ fontSize: '14px' }}
+                >
+                  Edit step
+                </Button>
+              </div>
               <div style={{ marginLeft: '16px' }}>
                 <Content component="p" style={{ 
                   marginBottom: '4px', 
@@ -3810,7 +3985,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   fontWeight: 600,
                   color: '#151515'
                 }}>
-                  {groupName}
+                  {identityType === 'user' 
+                    ? mockUsers.find(u => u.id === selectedUser)?.name || 'Unknown User'
+                    : mockGroups.find(g => g.id === selectedGroup)?.name || 'Unknown Group'
+                  }
                 </Content>
               </div>
             </div>
@@ -3828,7 +4006,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 <Button 
                   variant="link" 
                   isInline 
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => setCurrentStep(2)}
                   style={{ fontSize: '14px' }}
                 >
                   Edit step
@@ -3967,24 +4145,16 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </div>
             </div>
 
-            {/* Select role section */}
+            {/* Role section */}
             <div style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <Title headingLevel="h3" size="md" style={{ margin: 0 }}>
                   Role
                 </Title>
-                <Button 
-                  variant="link" 
-                  isInline 
-                  onClick={() => setCurrentStep(2)}
-                  style={{ fontSize: '14px' }}
-                >
-                  Edit step
-                </Button>
               </div>
               <div style={{ marginLeft: '16px' }}>
                 <Content component="p" style={{ fontSize: '14px', color: '#151515', fontWeight: 600 }}>
-                  {mockRoles.find(r => r.id === selectedRole)?.name || 'No role selected'}
+                  {roleName}
                 </Content>
               </div>
             </div>

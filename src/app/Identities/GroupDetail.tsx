@@ -41,8 +41,8 @@ import {
   AlertGroup,
   AlertActionCloseButton,
 } from '@patternfly/react-core';
-import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon } from '@patternfly/react-icons';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon, CheckIcon } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { GroupRoleAssignmentWizard } from '@app/RoleAssignment/GroupRoleAssignmentWizard';
 import { getAllGroups, getUsersByGroup, getAllClusters, getAllClusterSets, getAllNamespaces } from '@app/data';
@@ -64,7 +64,7 @@ const GroupDetail: React.FunctionComponent = () => {
     name: string;
     type: 'User' | 'Group';
     clusters: string[];
-    projects: string[];
+    namespaces: string[];
     roles: string[];
     status: 'Active' | 'Inactive';
     assignedDate: string;
@@ -158,7 +158,7 @@ const GroupDetail: React.FunctionComponent = () => {
       name: groupName || 'Unknown Group',
       type: 'Group',
       clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
-      projects: projectNames.length > 0 ? projectNames : ['All projects'],
+      namespaces: projectNames.length > 0 ? projectNames : ['All projects'],
       roles: [wizardData.roleName || 'Unknown Role'],
       status: 'Active',
       assignedDate: new Date().toLocaleString('en-US', {
@@ -237,12 +237,12 @@ users:
   );
 
   const RoleAssignmentsTab = () => {
-    const [isActionsOpen, setIsActionsOpen] = React.useState(false);
     const [selectedAssignments, setSelectedAssignments] = React.useState<Set<string>>(new Set());
-    const [isBulkActionOpen, setIsBulkActionOpen] = React.useState(false);
-    const [openRowMenuId, setOpenRowMenuId] = React.useState<string | null>(null);
+    const [isBulkActionsOpen, setIsBulkActionsOpen] = React.useState(false);
+    const [filterValue, setFilterValue] = React.useState<string>('all');
 
-    const isAllSelected = selectedAssignments.size === roleAssignments.length && roleAssignments.length > 0;
+    const areAllSelected = selectedAssignments.size === roleAssignments.length && roleAssignments.length > 0;
+    const areSomeSelected = selectedAssignments.size > 0;
 
     const handleSelectAll = (isSelecting: boolean) => {
       if (isSelecting) {
@@ -263,18 +263,31 @@ users:
     };
 
     const handleBulkDelete = () => {
-      console.log('Bulk delete assignments:', Array.from(selectedAssignments));
-      setIsBulkActionOpen(false);
-    };
-
-    const toggleRowMenu = (assignmentId: string) => {
-      setOpenRowMenuId(openRowMenuId === assignmentId ? null : assignmentId);
+      const updatedAssignments = roleAssignments.filter(a => !selectedAssignments.has(a.id));
+      setRoleAssignments(updatedAssignments);
+      setSelectedAssignments(new Set());
+      setIsBulkActionsOpen(false);
     };
 
     const handleDeleteAssignment = (assignmentId: string) => {
-      console.log('Delete assignment:', assignmentId);
-      setOpenRowMenuId(null);
+      const updatedAssignments = roleAssignments.filter(a => a.id !== assignmentId);
+      setRoleAssignments(updatedAssignments);
     };
+
+    // Filter and paginate assignments
+    const filteredAssignments = roleAssignments.filter(assignment => {
+      const matchesSearch = assignment.name.toLowerCase().includes(searchValue.toLowerCase());
+      const matchesFilter = filterValue === 'all' || 
+        (filterValue === 'user' && assignment.type === 'User') ||
+        (filterValue === 'group' && assignment.type === 'Group') ||
+        (filterValue === 'active' && assignment.status === 'Active');
+      return matchesSearch && matchesFilter;
+    });
+
+    const paginatedAssignments = filteredAssignments.slice(
+      (page - 1) * perPage,
+      page * perPage
+    );
 
     if (roleAssignments.length === 0) {
       return (
@@ -308,42 +321,6 @@ users:
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
-            {selectedAssignments.size > 0 && (
-              <>
-                <ToolbarGroup>
-                  <ToolbarItem>
-                    <span style={{ fontWeight: 'bold', marginRight: '16px' }}>
-                      {selectedAssignments.size} selected
-                    </span>
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <Dropdown
-                      isOpen={isBulkActionOpen}
-                      onSelect={() => setIsBulkActionOpen(false)}
-                      onOpenChange={(isOpen: boolean) => setIsBulkActionOpen(isOpen)}
-                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                        <MenuToggle
-                          ref={toggleRef}
-                          onClick={() => setIsBulkActionOpen(!isBulkActionOpen)}
-                          isExpanded={isBulkActionOpen}
-                        >
-                          Actions
-                        </MenuToggle>
-                      )}
-                    >
-                      <DropdownList>
-                        <DropdownItem key="delete" onClick={handleBulkDelete}>
-                          Delete role assignment
-                        </DropdownItem>
-                      </DropdownList>
-                    </Dropdown>
-                  </ToolbarItem>
-                </ToolbarGroup>
-                <ToolbarItem>
-                  <Divider orientation={{ default: 'vertical' }} />
-                </ToolbarItem>
-              </>
-            )}
             <ToolbarItem>
               <Dropdown
                 isOpen={isFilterOpen}
@@ -361,174 +338,170 @@ users:
                 )}
               >
                 <DropdownList>
-                  <DropdownItem key="all">All</DropdownItem>
+                  <DropdownItem key="all" onClick={() => setFilterValue('all')}>
+                    All
+                  </DropdownItem>
+                  <DropdownItem key="user" onClick={() => setFilterValue('user')}>
+                    User
+                  </DropdownItem>
+                  <DropdownItem key="group" onClick={() => setFilterValue('group')}>
+                    Group
+                  </DropdownItem>
+                  <DropdownItem key="active" onClick={() => setFilterValue('active')}>
+                    Active
+                  </DropdownItem>
                 </DropdownList>
               </Dropdown>
             </ToolbarItem>
             <ToolbarItem>
               <SearchInput
-                placeholder="Search for role assignment"
+                placeholder="Search role assignments"
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
               />
+            </ToolbarItem>
+            <ToolbarItem variant="separator" />
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isBulkActionsOpen}
+                onSelect={() => setIsBulkActionsOpen(false)}
+                onOpenChange={(isOpen) => setIsBulkActionsOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsBulkActionsOpen(!isBulkActionsOpen)}
+                    isExpanded={isBulkActionsOpen}
+                    variant="secondary"
+                    isDisabled={!areSomeSelected}
+                  >
+                    Actions {areSomeSelected ? `(${selectedAssignments.size} selected)` : ''}
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="delete" onClick={handleBulkDelete}>
+                    Delete selected
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
             </ToolbarItem>
             <ToolbarItem>
               <Button variant="primary" onClick={handleCreateRoleAssignment}>
                 Create role assignment
               </Button>
             </ToolbarItem>
-            <ToolbarItem>
-              <Dropdown
-                isOpen={isActionsOpen}
-                onSelect={() => setIsActionsOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={() => setIsActionsOpen(!isActionsOpen)}
-                    isExpanded={isActionsOpen}
-                  >
-                    Actions
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  <DropdownItem key="delete">Delete</DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
+        
         <Table aria-label="Role assignments table" variant="compact">
           <Thead>
+            <Tr>
+              <Th style={{ backgroundColor: '#f0f0f0' }} />
+              <Th colSpan={7} style={{ backgroundColor: '#f0f0f0', fontWeight: 600 }}>Scope</Th>
+              <Th style={{ backgroundColor: '#f0f0f0' }}></Th>
+            </Tr>
             <Tr>
               <Th
                 select={{
                   onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                  isSelected: isAllSelected,
+                  isSelected: areAllSelected,
                 }}
               />
-              <Th>
-                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
-                  <FlexItem style={{ fontWeight: 'bold' }}>Subject</FlexItem>
-                  <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Name</FlexItem>
-                </Flex>
-              </Th>
-              <Th width={10}>Type</Th>
-              <Th>
-                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsNone' }}>
-                  <FlexItem style={{ fontWeight: 'bold' }}>Scope</FlexItem>
-                  <FlexItem>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                      <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Clusters</FlexItem>
-                      <FlexItem style={{ color: '#6a6e73', fontSize: 'var(--pf-t--global--font--size--body--sm)' }}>Project</FlexItem>
-                    </Flex>
-                  </FlexItem>
-                </Flex>
-              </Th>
-              <Th width={15}>Roles</Th>
-              <Th width={10}>Status</Th>
-              <Th width={15}>Assigned date</Th>
-              <Th width={10}>Assigned by</Th>
-              <Th width={10}>Origin</Th>
-              <Th width={10}></Th>
+              <Th sort={{ sortBy: {}, columnIndex: 0 }}>Clusters</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 1 }}>Namespaces</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 2 }}>Roles</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 3 }}>Status</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 4 }}>Assigned date</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 5 }}>Assigned by</Th>
+              <Th sort={{ sortBy: {}, columnIndex: 6 }}>Origin</Th>
+              <Th></Th>
             </Tr>
           </Thead>
           <Tbody>
-            {roleAssignments.map((assignment) => (
+            {paginatedAssignments.map((assignment, rowIndex) => (
               <Tr key={assignment.id}>
                 <Td
                   select={{
-                    rowIndex: assignment.id,
+                    rowIndex,
                     onSelect: (_event, isSelecting) => handleSelectAssignment(assignment.id, isSelecting),
                     isSelected: selectedAssignments.has(assignment.id),
                   }}
                 />
-                <Td dataLabel="Name">
-                  <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                    {assignment.name}
-                  </Button>
+                <Td dataLabel="Clusters">
+                  {assignment.clusters.map((cluster, idx) => (
+                    <span key={idx}>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {cluster}
+                      </Button>
+                      {idx < assignment.clusters.length - 1 && ', '}
+                    </span>
+                  ))}
                 </Td>
-                <Td dataLabel="Type">{assignment.type}</Td>
-                <Td dataLabel="Scope">
-                  <Flex spaceItems={{ default: 'spaceItemsMd' }} flexWrap={{ default: 'nowrap' }}>
-                    <FlexItem>
-                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
-                        {assignment.clusters.map((cluster, idx) => (
-                          <React.Fragment key={idx}>
-                            <FlexItem>
-                              <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                                {cluster}
-                              </Button>
-                            </FlexItem>
-                            {idx < assignment.clusters.length - 1 && <FlexItem>, </FlexItem>}
-                          </React.Fragment>
-                        ))}
-                      </Flex>
-                    </FlexItem>
-                    <FlexItem>
-                      <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
-                        {assignment.projects.map((project, idx) => (
-                          <React.Fragment key={idx}>
-                            <FlexItem>
-                              <Button variant="link" isInline style={{ paddingLeft: 0 }}>
-                                {project}
-                              </Button>
-                            </FlexItem>
-                            {idx < assignment.projects.length - 1 && <FlexItem>, </FlexItem>}
-                          </React.Fragment>
-                        ))}
-                      </Flex>
-                    </FlexItem>
-                  </Flex>
+                <Td dataLabel="Namespaces">
+                  {assignment.namespaces.map((ns, idx) => (
+                    <span key={idx}>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {ns}
+                      </Button>
+                      {idx < assignment.namespaces.length - 1 && ', '}
+                    </span>
+                  ))}
                 </Td>
                 <Td dataLabel="Roles">
-                  <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
-                    {assignment.roles.map((role, idx) => (
-                      <FlexItem key={idx}>
-                        <Label color="blue">{role}</Label>
-                      </FlexItem>
-                    ))}
-                  </Flex>
+                  {assignment.roles.map((role, idx) => (
+                    <span key={idx}>
+                      <Button variant="link" isInline style={{ paddingLeft: 0 }}>
+                        {role}
+                      </Button>
+                      {idx < assignment.roles.length - 1 && ', '}
+                    </span>
+                  ))}
                 </Td>
                 <Td dataLabel="Status">
-                  <Label color="green" icon={<Icon status="success" />}>
+                  <Label color="green" icon={<span>✓</span>}>
                     {assignment.status}
                   </Label>
                 </Td>
                 <Td dataLabel="Assigned date">{assignment.assignedDate}</Td>
                 <Td dataLabel="Assigned by">{assignment.assignedBy}</Td>
                 <Td dataLabel="Origin">{assignment.origin}</Td>
-                <Td dataLabel="Actions" width={10}>
-                  <Dropdown
-                    isOpen={openRowMenuId === assignment.id}
-                    onSelect={() => setOpenRowMenuId(null)}
-                    onOpenChange={(isOpen: boolean) => {
-                      if (!isOpen) setOpenRowMenuId(null);
-                    }}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        variant="plain"
-                        onClick={() => toggleRowMenu(assignment.id)}
-                        isExpanded={openRowMenuId === assignment.id}
-                      >
-                        <EllipsisVIcon />
-                      </MenuToggle>
-                    )}
-                  >
-                    <DropdownList>
-                      <DropdownItem key="delete" onClick={() => handleDeleteAssignment(assignment.id)}>
-                        Delete role assignment
-                      </DropdownItem>
-                    </DropdownList>
-                  </Dropdown>
+                <Td isActionCell>
+                  <ActionsColumn
+                    items={[
+                      {
+                        title: 'Edit',
+                        onClick: () => console.log('Edit', assignment.id)
+                      },
+                      {
+                        isSeparator: true
+                      },
+                      {
+                        title: 'Delete',
+                        onClick: () => handleDeleteAssignment(assignment.id)
+                      }
+                    ]}
+                  />
                 </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
+        
+        <Toolbar>
+          <ToolbarContent>
+            <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={filteredAssignments.length}
+                page={page}
+                perPage={perPage}
+                onSetPage={onSetPage}
+                onPerPageSelect={onPerPageSelect}
+                variant={PaginationVariant.bottom}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
       </div>
     );
   };

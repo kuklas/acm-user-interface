@@ -60,25 +60,23 @@ const mockRoles = dbRoles.map((role, index) => ({
   type: role.type,
 }));
 
-interface ClusterSetRoleAssignmentWizardProps {
+interface ClusterRoleAssignmentWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (data: any) => void;
-  clusterSetName: string;
+  clusterName: string;
 }
 
-export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWizardProps> = ({
+export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardProps> = ({
   isOpen,
   onClose,
   onComplete,
-  clusterSetName,
+  clusterName,
 }) => {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [activeTabKey, setActiveTabKey] = React.useState(0);
   
   // Carousel for example tree views (0, 1, or 2 for three examples)
-  const [exampleIndex, setExampleIndex] = React.useState(0);
-  
   // Step 1: Identity
   const [selectedUser, setSelectedUser] = React.useState<number | null>(null);
   const [selectedGroup, setSelectedGroup] = React.useState<number | null>(null);
@@ -93,7 +91,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [isGroupFilterOpen, setIsGroupFilterOpen] = React.useState(false);
   const [groupFilterType, setGroupFilterType] = React.useState('Group');
   
-  // Step 2: Resources - Simplified for cluster set
+  // Step 2: Resources - Simplified for single cluster
   const [resourceScope, setResourceScope] = React.useState<'full' | 'partial'>('full');
   const [isResourceScopeOpen, setIsResourceScopeOpen] = React.useState(false);
   
@@ -116,7 +114,6 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [isUserBulkSelectorOpen, setIsUserBulkSelectorOpen] = React.useState(false);
   const [isGroupBulkSelectorOpen, setIsGroupBulkSelectorOpen] = React.useState(false);
   const [isClusterBulkSelectorOpen, setIsClusterBulkSelectorOpen] = React.useState(false);
-  const [isProjectBulkSelectorOpen, setIsProjectBulkSelectorOpen] = React.useState(false);
   
   // Selected items for bulk operations
   const [selectedUsers, setSelectedUsers] = React.useState<Set<number>>(new Set());
@@ -146,7 +143,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
 
   const handleNext = () => {
     // Simple step progression for simplified wizard
-    setCurrentStep(currentStep + 1);
+        setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
@@ -197,53 +194,45 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     return false;
   };
 
-  // Find the cluster set and filter clusters that belong to it
+  // Get the single cluster and its projects
   const mockClusters = React.useMemo(() => {
-    // Find the cluster set by name
-    const clusterSet = dbClusterSets.find(cs => cs.name === clusterSetName);
-    if (!clusterSet) return [];
+    // Find the cluster by name
+    const cluster = dbClusters.find(c => c.name === clusterName);
+    if (!cluster) return [];
     
-    // Filter clusters that belong to this cluster set
-    const clustersInSet = dbClusters.filter(cluster => cluster.clusterSetId === clusterSet.id);
-    
-    return clustersInSet.map((cluster, index) => ({
-      id: index + 1,
+    return [{
+      id: 1,
       dbId: cluster.id,
       name: cluster.name,
       status: cluster.status,
-      infrastructure: index % 3 === 0 ? 'Amazon Web Services' : index % 3 === 1 ? 'Microsoft Azure' : 'Google Cloud Platform',
+      infrastructure: 'Amazon Web Services', // Simplified for single cluster
       controlPlaneType: 'Standalone',
       kubernetesVersion: cluster.kubernetesVersion,
-      labels: Math.floor(Math.random() * 10) + 1,
+      labels: 5,
       nodes: cluster.nodes,
-    }));
-  }, [clusterSetName]);
+    }];
+  }, [clusterName]);
 
-  // Filter projects based on clusters in the cluster set
+  // Filter projects based on this specific cluster
   const mockProjects = React.useMemo(() => {
-    // Find the cluster set by name
-    const clusterSet = dbClusterSets.find(cs => cs.name === clusterSetName);
-    if (!clusterSet) return [];
+    // Find the cluster by name
+    const cluster = dbClusters.find(c => c.name === clusterName);
+    if (!cluster) return [];
     
-    // Get cluster IDs in this cluster set
-    const clusterIdsInSet = dbClusters
-      .filter(cluster => cluster.clusterSetId === clusterSet.id)
-      .map(cluster => cluster.id);
-    
-    // Filter namespaces that belong to clusters in this cluster set
-    const namespacesInSet = dbNamespaces.filter(namespace => 
-      clusterIdsInSet.includes(namespace.clusterId)
+    // Filter namespaces that belong to this cluster
+    const namespacesInCluster = dbNamespaces.filter(namespace => 
+      namespace.clusterId === cluster.id
     );
     
-    return namespacesInSet.map((namespace, index) => ({
+    return namespacesInCluster.map((namespace, index) => ({
       id: index + 1,
       name: namespace.name,
       displayName: namespace.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       type: namespace.type,
       clusterId: namespace.clusterId,
-      clusterName: dbClusters.find(c => c.id === namespace.clusterId)?.name || 'Unknown',
+      clusterName: cluster.name,
     }));
-  }, [clusterSetName]);
+  }, [clusterName]);
 
   const filteredUsers = mockUsers.filter(user =>
     user.name.toLowerCase().includes(userSearch.toLowerCase())
@@ -358,8 +347,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
           borderBottom: '1px solid #d2d2d2',
           flexShrink: 0
         }}>
-          <Title headingLevel="h1" size="2xl" id="cluster-set-wizard-title">
-            Create role assignment for {clusterSetName}
+          <Title headingLevel="h1" size="2xl" id="cluster-wizard-title">
+            Create role assignment for {clusterName}
           </Title>
           <Content component="p" style={{ marginTop: '0.5rem', color: '#6a6e73' }}>
             A role assignment specifies a distinct action users or groups can perform when associated with a particular role.{' '}
@@ -684,10 +673,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               Select resources
             </Title>
             <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-              Define the scope of access for this role assignment on the {clusterSetName} cluster set.
+              Define the scope of access for this role assignment on the {clusterName} cluster.
             </Content>
 
-            <Dropdown
+              <Dropdown
                 isOpen={isResourceScopeOpen}
                 onSelect={() => setIsResourceScopeOpen(false)}
                 onOpenChange={(isOpen: boolean) => setIsResourceScopeOpen(isOpen)}
@@ -699,7 +688,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     variant="default"
                     style={{ width: '100%' }}
                   >
-                    {resourceScope === 'full' ? 'Full cluster access' : 'Limit to specific projects'}
+                  {resourceScope === 'full' ? 'Full access' : 'Partial access'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -711,26 +700,26 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               >
                 <DropdownList>
                   <DropdownItem
-                    key="full"
+                  key="full"
                     onClick={() => {
-                      setResourceScope('full');
+                    setResourceScope('full');
                       setSelectedProjects([]);
                       setIsResourceScopeOpen(false);
                     }}
-                    description="Grant access to all current and future projects in this cluster set"
+                  description="Grant access to all current and future projects in this cluster"
                   >
-                    Full cluster access
+                  Full access
                   </DropdownItem>
                   <DropdownItem
-                    key="partial"
+                  key="partial"
                     onClick={() => {
-                      setResourceScope('partial');
+                    setResourceScope('partial');
                       setSelectedProjects([]);
                       setIsResourceScopeOpen(false);
                     }}
-                    description="Select specific projects to grant access to"
+                  description="Select specific projects to grant access to"
                   >
-                    Limit to specific projects
+                  Partial access
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
@@ -822,9 +811,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                           <DropdownItem onClick={() => { setProjectFilterType('Type'); setIsProjectFilterOpen(false); }}>
                             Type
                           </DropdownItem>
-                          <DropdownItem onClick={() => { setProjectFilterType('Display name'); setIsProjectFilterOpen(false); }}>
-                            Display name
-                          </DropdownItem>
+                            <DropdownItem onClick={() => { setProjectFilterType('Display name'); setIsProjectFilterOpen(false); }}>
+                              Display name
+                            </DropdownItem>
                         </DropdownList>
                       </Dropdown>
                     </ToolbarItem>
@@ -858,23 +847,23 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <Tr>
                       <Th width={10}></Th>
                       <Th>Project name</Th>
-                      <Th>Display name</Th>
-                      <Th>Type</Th>
+                          <Th>Display name</Th>
+                          <Th>Type</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {filteredProjects.length === 0 ? (
-                      <Tr>
-                        <Td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>
-                          <Content component="p" style={{ color: '#6a6e73' }}>
-                            No projects found in this cluster set.
-                          </Content>
-                        </Td>
-                      </Tr>
-                    ) : (
-                      filteredProjects
-                        .slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage)
-                        .map((project) => (
+                        <Tr>
+                          <Td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>
+                            <Content component="p" style={{ color: '#6a6e73' }}>
+                              No projects found in this cluster.
+                            </Content>
+                          </Td>
+                        </Tr>
+                      ) : (
+                        filteredProjects
+                          .slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage)
+                          .map((project) => (
                         <Tr key={project.id}>
                           <Td
                             select={{
@@ -884,7 +873,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                                   const newSelected = new Set(prev);
                                   if (isSelecting) {
                                     newSelected.add(project.id);
-                                  } else {
+                            } else {
                                     newSelected.delete(project.id);
                                   }
                                   return Array.from(newSelected);
@@ -896,7 +885,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                           <Td dataLabel="Project name">{project.name}</Td>
                           <Td dataLabel="Display name">{project.displayName}</Td>
                           <Td dataLabel="Type">{project.type}</Td>
-                        </Tr>
+                            </Tr>
                       ))
                     )}
                   </Tbody>
@@ -1091,7 +1080,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   Select resources
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                  Cluster set: {clusterSetName}
+                  Cluster: {clusterName}
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
                   Access: {resourceScope === 'full' ? 'Full access (all projects)' : 'Partial access (specific projects)'}
