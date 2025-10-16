@@ -1005,7 +1005,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
             {/* Content Area - scrollable */}
             <div style={{ 
               flex: '1 1 0',
-              padding: '1.5rem 0 1.5rem 1.5rem', 
+              padding: '1.5rem 1.5rem 1.5rem 1.5rem', 
               backgroundColor: '#ffffff',
               overflowY: 'auto',
               overflowX: 'hidden'
