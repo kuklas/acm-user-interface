@@ -130,12 +130,15 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     distribution: `Kubernetes ${cluster.kubernetesVersion}`,
     labels: ['12 labels'], // Placeholder
     dbId: cluster.id, // Keep track of database ID for filtering namespaces
+    clusterSetId: cluster.clusterSetId,
+    status: cluster.status,
   }));
 
   const mockClusterSets = dbClusterSets.map((clusterSet, index) => ({
     id: index + 1,
     name: clusterSet.name,
     clusters: clusterSet.clusterIds.length,
+    dbId: clusterSet.id, // Keep track of database ID
   }));
 
   const mockProjects = dbNamespaces.map((namespace, index) => ({
@@ -182,7 +185,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   // Step 2: Select resources
   const [resourceScope, setResourceScope] = React.useState<'all' | 'specific'>('specific');
   // Option B: Hierarchical dropdown states
-  const [clusterSetScope, setClusterSetScope] = React.useState<'everything' | 'select-clusters'>('everything');
+  const [clusterSetScope, setClusterSetScope] = React.useState<'all' | 'specific'>('all');
   const [clusterScope, setClusterScope] = React.useState<'everything' | 'narrow-down'>('everything');
   // In single cluster context (when clusterName is provided), skip cluster selection
   // In multi-cluster context (cluster set or no specific cluster), start with initial selection screen
@@ -216,7 +219,6 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [clusterSetSearchValue, setClusterSetSearchValue] = React.useState('');
   const [hasVisitedSpecifyClusterSets, setHasVisitedSpecifyClusterSets] = React.useState(false);
   const [showIncludeClusters, setShowIncludeClusters] = React.useState(false);
-  const [clusterSetScope, setClusterSetScope] = React.useState<'all' | 'specific'>('all');
   const [hasVisitedIncludeClusters, setHasVisitedIncludeClusters] = React.useState(false);
   
   // Step 3: Select role
@@ -240,7 +242,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     setShowIncludeClusters(false);
     setSelectedClusterSets([]);
     setResourceScope('specific');
-    setClusterSetScope('everything'); // Option B
+    setClusterSetScope('all'); // Option B
     setClusterScope('everything'); // Option B
     setProjectScope('cluster');
     // Reset hasVisited flags to ensure clean state on next wizard open
@@ -488,11 +490,11 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
     if (context === 'clusters' && currentStep === 2 && !isSingleClusterContext) {
       // SUB-STEP 1: Initial selection
       if (!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects) {
-        if (clusterSetScope === 'everything') {
+        if (clusterSetScope === 'all') {
           // "Everything in the cluster set" → skip to role selection (step 3)
           setCurrentStep(3);
           return;
-        } else if (clusterSetScope === 'select-clusters') {
+        } else if (clusterSetScope === 'specific') {
           // "Cluster or Clusters" → show SUB-STEP 2 (select clusters)
           setShowSpecifyClusters(true);
           return;
@@ -968,8 +970,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     )}
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed'
+                      
                     }}
                   >
                     <DropdownList>
@@ -1080,8 +1081,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     )}
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed'
+                      
                     }}
                   >
                     <DropdownList>
@@ -1315,8 +1315,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 )}
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed'
+                  
                 }}
               >
                 <DropdownList>
@@ -1445,8 +1444,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 )}
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed'
+                  
                 }}
               >
                 <DropdownList>
@@ -1597,24 +1595,24 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <FormSelect
               value={clusterSetScope}
               onChange={(_event, value) => {
-                setClusterSetScope(value as 'everything' | 'select-clusters');
+                setClusterSetScope(value as 'all' | 'specific');
                 setSelectedClusters([]);
                 setSelectedProjects([]);
                 setClusterScope('everything');
               }}
               aria-label="Resource scope selection"
             >
-              <FormSelectOption value="everything" label="Everything in the cluster set" />
-              <FormSelectOption value="select-clusters" label="Cluster or Clusters" />
+              <FormSelectOption value="all" label="Everything in the cluster set" />
+              <FormSelectOption value="specific" label="Cluster or Clusters" />
             </FormSelect>
             <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-              {clusterSetScope === 'everything' 
+              {clusterSetScope === 'all' 
                 ? 'Apply to all clusters and all resources within them, including any created in the future'
                 : 'Select specific clusters, then choose to apply to full clusters or narrow down to specific projects'}
             </div>
           </FormGroup>
 
-          {clusterSetScope === 'everything' && (
+          {clusterSetScope === 'all' && (
             <Content component="p" className="pf-v6-u-mt-md" style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
               This role assignment will apply to all clusters in the cluster set and all resources within them, including any resources created in the future.
             </Content>
@@ -1690,7 +1688,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                       />
                     </Td>
                     <Td dataLabel="Name">{cluster.name}</Td>
-                    <Td dataLabel="Namespace">{mockClusterSets.find(cs => cs.id === cluster.clusterSetId)?.name || 'N/A'}</Td>
+                    <Td dataLabel="Namespace">{mockClusterSets.find(cs => cs.dbId === cluster.clusterSetId)?.name || 'N/A'}</Td>
                     <Td dataLabel="Status">
                       <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
                         {cluster.status}
@@ -1980,8 +1978,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                 )}
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed'
+                  
                 }}
               >
                 <DropdownList>
@@ -2097,8 +2094,7 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               )}
               popperProps={{
                 appendTo: () => document.body,
-                position: 'bottom-start',
-                strategy: 'fixed'
+                
               }}
             >
               <DropdownList>
@@ -2735,14 +2731,14 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
                     <>
                       {/* Show initial selection screen as a sub-step */}
                       {!showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects ? (
-                        renderStepIndicator(2, clusterSetScope === 'everything' ? 'Everything in cluster set' : 'Choose resource scope', true, true)
+                        renderStepIndicator(2, clusterSetScope === 'all' ? 'Everything in cluster set' : 'Choose resource scope', true, true)
                       ) : (
                         // Show as visited if we're past this step
-                        clusterSetScope === 'select-clusters' && renderStepIndicator(2, 'Choose resource scope', true, true)
+                        clusterSetScope === 'specific' && renderStepIndicator(2, 'Choose resource scope', true, true)
                       )}
                       
                       {/* SUB-STEP 2: Select clusters - Show if "Cluster or Clusters" was chosen */}
-                      {clusterSetScope === 'select-clusters' && (
+                      {clusterSetScope === 'specific' && (
                         <>
                           {showSpecifyClusters && !showIncludeProjects && !showSpecifyProjects ? (
                             renderStepIndicator(2, 'Select clusters', true, true)

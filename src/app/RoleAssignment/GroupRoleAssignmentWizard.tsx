@@ -686,8 +686,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 shouldFocusToggleOnSelect
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed',
+                  
+                  
                 }}
               >
                 <DropdownList>
@@ -1912,8 +1912,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           )}
                           popperProps={{
                             appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            
+                            
                           }}
                         >
                           <DropdownList>
@@ -2351,8 +2351,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           )}
                           popperProps={{
                             appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            
+                            
                           }}
                         >
                           <DropdownList>
@@ -2912,8 +2912,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -2967,8 +2967,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3109,8 +3109,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -3191,8 +3191,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3380,8 +3380,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -3448,8 +3448,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3635,8 +3635,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     )}
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>

@@ -818,8 +818,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -912,8 +912,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -1015,8 +1015,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                 shouldFocusToggleOnSelect
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed',
+                  
+                  
                 }}
               >
                 <DropdownList>
@@ -3026,8 +3026,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3128,8 +3128,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -3183,8 +3183,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3325,8 +3325,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -3407,8 +3407,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3591,8 +3591,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -3726,8 +3726,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     shouldFocusToggleOnSelect
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -3794,8 +3794,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>

@@ -1620,7 +1620,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                                 <Td dataLabel="Type">
                                   <Label isCompact>{project.type}</Label>
                                 </Td>
-                                <Td dataLabel="Cluster">{selectedClusters.length > 1 ? project.clusterNames : project.clusterName}</Td>
+                                <Td dataLabel="Cluster">{selectedClusters.length > 1 ? (project as any).clusterNames : project.clusterName}</Td>
                               </Tr>
                             );
                           })
@@ -1688,7 +1688,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
             <Table aria-label="Roles table" variant="compact" style={{ tableLayout: 'fixed', width: '100%' }}>
               <Thead>
                 <Tr>
-                  <Th width={5}></Th>
+                  <Th width={10}></Th>
                   <Th width={35}>Role</Th>
                   <Th width={15}>Type</Th>
                   <Th width={25}>Resources</Th>

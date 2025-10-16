@@ -445,8 +445,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                           )}
                           popperProps={{
                             appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            
+                            
                           }}
                         >
                           <DropdownList>
@@ -566,8 +566,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                           )}
                           popperProps={{
                             appendTo: () => document.body,
-                            position: 'bottom-start',
-                            strategy: 'fixed',
+                            
+                            
                           }}
                         >
                           <DropdownList>
@@ -694,8 +694,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                 shouldFocusToggleOnSelect
                 popperProps={{
                   appendTo: () => document.body,
-                  position: 'bottom-start',
-                  strategy: 'fixed',
+                  
+                  
                 }}
               >
                 <DropdownList>
@@ -763,8 +763,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -800,8 +800,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                         )}
                         popperProps={{
                           appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
+                          
+                          
                         }}
                       >
                         <DropdownList>
@@ -939,8 +939,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                     )}
                     popperProps={{
                       appendTo: () => document.body,
-                      position: 'bottom-start',
-                      strategy: 'fixed',
+                      
+                      
                     }}
                   >
                     <DropdownList>
@@ -997,7 +997,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                       </div>
                     </Td>
                     <Td dataLabel="Type">
-                      <Label color={role.type === 'Default' ? 'blue' : 'purple'}>
+                      <Label color={role.type === 'default' ? 'blue' : 'purple'}>
                         {role.type}
                       </Label>
                     </Td>
