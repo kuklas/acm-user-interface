@@ -513,8 +513,102 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
       } as React.CSSProperties}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        {/* Header Section */}
+      <div style={{ position: 'relative', height: '100%' }}>
+        {/* Overlay Drawer Panel */}
+        {isDrawerExpanded && (
+          <div 
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              width: '500px',
+              maxWidth: '50%',
+              height: '100%',
+              backgroundColor: 'white',
+              zIndex: 1000,
+              boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
+              overflow: 'auto'
+            }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '16px',
+              borderBottom: '1px solid #d2d2d2'
+            }}>
+              <Title headingLevel="h3" size="xl">
+                Example scopes
+              </Title>
+              <Button 
+                variant="plain" 
+                onClick={() => setIsDrawerExpanded(false)}
+                aria-label="Close drawer"
+              >
+                <TimesIcon />
+              </Button>
+            </div>
+            <div style={{ padding: '16px' }}>
+              <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
+                These examples show different ways to scope role assignments.
+              </Content>
+              {/* Carousel navigation */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                <Button 
+                  variant="plain" 
+                  onClick={() => setExampleIndex(Math.max(0, exampleIndex - 1))}
+                  isDisabled={exampleIndex === 0}
+                  aria-label="Previous example"
+                >
+                  <AngleLeftIcon />
+                </Button>
+                <span style={{ fontSize: '14px', color: '#6a6e73' }}>
+                  Example {exampleIndex + 1} of 9
+                </span>
+                <Button 
+                  variant="plain" 
+                  onClick={() => setExampleIndex(Math.min(8, exampleIndex + 1))}
+                  isDisabled={exampleIndex === 8}
+                  aria-label="Next example"
+                >
+                  <AngleRightIcon />
+                </Button>
+              </div>
+              {/* Example content - will be populated next */}
+              <div style={{ 
+                padding: '16px', 
+                backgroundColor: '#f5f5f5', 
+                borderRadius: '6px',
+                border: '1px solid #d2d2d2',
+                maxHeight: '500px',
+                overflowY: 'auto'
+              }}>
+                <Content component="p" style={{ fontSize: '13px', marginBottom: '12px', color: '#151515', fontWeight: 600 }}>
+                  {exampleIndex === 0 && 'Example scope: Full access to all resources'}
+                  {exampleIndex === 1 && 'Example scope: Single cluster set → Single cluster → Partial access'}
+                  {exampleIndex === 2 && 'Example scope: Single cluster set → Multiple clusters → Common projects'}
+                  {exampleIndex === 3 && 'Example scope: Multiple cluster sets → Full access'}
+                  {exampleIndex === 4 && 'Example scope: Multiple cluster sets → Partial access → Common projects'}
+                  {exampleIndex === 5 && 'Example scope: Single cluster → Full access'}
+                  {exampleIndex === 6 && 'Example scope: Single cluster → Partial access'}
+                  {exampleIndex === 7 && 'Example scope: Multiple clusters → Full access'}
+                  {exampleIndex === 8 && 'Example scope: Multiple clusters → Common projects'}
+                </Content>
+                <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
+                  {/* Tree view examples will be added */}
+                  <Content component="p" style={{ fontSize: '12px', color: '#6a6e73' }}>
+                    Tree view example will appear here.
+                  </Content>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Main wizard content */}
+        <div style={{ height: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Header Section */}
         <div style={{ 
           backgroundColor: '#f0f0f0', 
           padding: '1.5rem', 
@@ -659,9 +753,18 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             {/* Only show title, description, and initial dropdown when NOT in any substep */}
             {!showClusterSetSelection && !showScopeSelection && (
           <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: '8px' }}>
-              Select resources
-            </Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
+                Select resources
+              </Title>
+              <Button 
+                variant="link" 
+                onClick={() => setIsDrawerExpanded(true)}
+                style={{ padding: 0 }}
+              >
+                View examples
+              </Button>
+            </div>
             <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
                   Define the scope of access by selecting which resources this role will apply to.
             </Content>
@@ -3957,6 +4060,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </Button>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </Modal>
