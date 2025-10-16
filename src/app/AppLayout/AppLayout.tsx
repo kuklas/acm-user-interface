@@ -37,6 +37,14 @@ import {
   Tabs,
   Tab,
   TabTitleText,
+  Card,
+  CardBody,
+  Label,
+  Divider,
+  DescriptionList,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  DescriptionListDescription,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
@@ -586,116 +594,96 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       {/* Task Details Modal */}
       <Modal
         variant={ModalVariant.large}
-        title="Use Case - Role Assignment Task"
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
+        aria-label="Research task instructions"
       >
-        <div style={{ 
-          padding: '16px 24px 8px 24px',
-          marginBottom: '0'
-        }}>
-          <p style={{ 
-            marginTop: '0', 
-            marginBottom: '24px',
-            fontSize: '14px',
-            color: 'var(--pf-t--global--text--color--subtle)',
-            fontStyle: 'italic'
+        <div style={{ padding: '24px' }}>
+          <Title headingLevel="h1" size="2xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+            Research Task
+          </Title>
+          
+          <Content component="p" style={{ 
+            marginBottom: 'var(--pf-t--global--spacer--lg)',
+            fontSize: '16px',
+            lineHeight: '1.6'
           }}>
-            Please complete the following role assignment task using this prototype interface.
-          </p>
-        </div>
-        <div style={{ lineHeight: '2', padding: '0 24px 16px 24px', fontSize: '15px' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>Tenant admin:</strong>{' '}
-            <span style={{ color: 'var(--pf-t--color--blue--60)', fontWeight: 500 }}>Walter Joseph Kovacs</span>
-          </div>
+            Complete this task naturally and think aloud. Share what you're looking for and what you expect to happen.
+          </Content>
 
-          <div style={{ marginBottom: '24px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>User / Group / Service account</strong>
-            <br />
-            <div style={{ marginTop: '8px' }}>
-              is setting up a permission for <strong>60 users</strong> that are in the group:{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--blue--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--blue--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "dev-team-alpha"
-            </span>
-            </div>
-          </div>
+          <Alert 
+            variant="info" 
+            isInline 
+            title="Your role"
+            style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}
+          >
+            <strong>Walter Joseph Kovacs</strong> — Tenant administrator
+          </Alert>
 
-          <div style={{ marginBottom: '24px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>Role</strong>
-            <br />
-            <div style={{ marginTop: '8px' }}>
-              to have role:{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--green--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--green--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "Virtualization admin"
-            </span>
-            </div>
-          </div>
+          <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+            Task
+          </Title>
 
-          <div style={{ marginBottom: '24px' }}>
-            <strong style={{ color: 'var(--pf-t--global--text--color--regular)', fontSize: '16px' }}>"Object" / "Context"</strong>
-            <br />
-            <div style={{ marginTop: '8px' }}>
-              on the Cluster set:{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--purple--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--purple--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "petemobile-dev-clusters"
-            </span>
-            <br /><br />
-            more specifically on the clusters:{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--orange--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--orange--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "dev-team-a"
-            </span>
-            ,{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--orange--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--orange--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "dev-team-b"
-            </span>
-            <br /><br />
-            that have common project called:{' '}
-            <span style={{ 
-              color: 'var(--pf-t--color--cyan--60)', 
-              fontWeight: 600,
-              backgroundColor: 'var(--pf-t--color--cyan--10)',
-              padding: '4px 12px',
-              borderRadius: '4px'
-            }}>
-              "project-starlight-dev"
-            </span>
-            </div>
-          </div>
+          <Content component="p" style={{ 
+            marginBottom: 'var(--pf-t--global--spacer--md)',
+            fontSize: '15px',
+          }}>
+            Grant virtual machine management permissions:
+          </Content>
 
-          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--pf-t--global--border--color--default)', display: 'flex', justifyContent: 'flex-end' }}>
+          <Card>
+            <CardBody>
+              <DescriptionList isHorizontal isCompact>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Group</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <Label color="blue" isCompact>dev-team-alpha</Label>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Role</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <Label color="green" isCompact>Virtualization admin</Label>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Scope</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <div style={{ marginBottom: '6px' }}>
+                      Cluster set: <Label color="purple" isCompact>petemobile-dev-clusters</Label>
+                    </div>
+                    <div style={{ marginBottom: '6px' }}>
+                      Clusters: <Label color="orange" isCompact>dev-team-a</Label> <Label color="orange" isCompact>dev-team-b</Label>
+                    </div>
+                    <div>
+                      Project: <Label color="teal" isCompact>project-starlight-dev</Label>
+                    </div>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              </DescriptionList>
+            </CardBody>
+          </Card>
+
+          <Alert 
+            variant="custom" 
+            isInline 
+            title="Note"
+            style={{ marginTop: 'var(--pf-t--global--spacer--lg)' }}
+          >
+            Navigate naturally. There are no wrong approaches.
+          </Alert>
+
+          <div style={{ 
+            marginTop: 'var(--pf-t--global--spacer--lg)', 
+            paddingTop: 'var(--pf-t--global--spacer--md)', 
+            borderTop: '1px solid var(--pf-t--global--border--color--default)',
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}>
             <Button variant="primary" onClick={() => setIsTaskModalOpen(false)}>
-              Close
+              Start task
             </Button>
           </div>
         </div>

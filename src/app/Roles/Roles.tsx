@@ -37,6 +37,7 @@ const dbRoles = getAllRoles();
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
+  displayName: role.displayName,
   type: role.type === 'default' ? 'Default' : 'Custom',
   resources: role.category === 'kubevirt' 
     ? ['VirtualMachines', 'VirtualMachineInstances'] 
@@ -105,7 +106,7 @@ const Roles: React.FunctionComponent = () => {
     const sorted = [...filtered];
     if (sortBy.index === 0) {
       sorted.sort((a, b) => {
-        const comparison = a.name.localeCompare(b.name);
+        const comparison = a.displayName.localeCompare(b.displayName);
         return sortBy.direction === 'asc' ? comparison : -comparison;
       });
     }
@@ -260,14 +261,19 @@ const Roles: React.FunctionComponent = () => {
                   }}
                 />
                 <Td dataLabel="Role" width={30} style={{ textAlign: 'left' }}>
-                  <Button 
-                    variant="link" 
-                    isInline 
-                    onClick={() => navigate(`/user-management/roles/${role.name}`)} 
-                    style={{ paddingLeft: 0 }}
-                  >
-                    {role.name}
-                  </Button>
+                  <div>
+                    <Button 
+                      variant="link" 
+                      isInline 
+                      onClick={() => navigate(`/user-management/roles/${role.name}`)} 
+                      style={{ paddingLeft: 0, display: 'block' }}
+                    >
+                      {role.displayName}
+                    </Button>
+                    <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                      {role.name}
+                    </div>
+                  </div>
                 </Td>
                 <Td dataLabel="Type" width={15}>
                   <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>

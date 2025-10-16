@@ -736,7 +736,8 @@ export const roles: Role[] = [
   // Default KubeVirt Roles
   {
     id: 'role-kubevirt-admin',
-    name: 'kubevirt-admin',
+    name: 'kubevirt.io:admin',
+    displayName: 'Virtualization admin',
     type: 'default',
     category: 'kubevirt',
     description: 'Full administrative access to KubeVirt resources',
@@ -744,7 +745,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-kubevirt-edit',
-    name: 'kubevirt-edit',
+    name: 'kubevirt.io:edit',
+    displayName: 'Virtualization edit',
     type: 'default',
     category: 'kubevirt',
     description: 'Edit access to KubeVirt resources',
@@ -752,7 +754,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-kubevirt-view',
-    name: 'kubevirt-view',
+    name: 'kubevirt.io:view',
+    displayName: 'Virtualization view',
     type: 'default',
     category: 'kubevirt',
     description: 'Read-only access to KubeVirt resources',
@@ -760,7 +763,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-virtualmachine-admin',
-    name: 'virtualmachine-admin',
+    name: 'kubevirt.io:vm:admin',
+    displayName: 'Virtual machine admin',
     type: 'default',
     category: 'kubevirt',
     description: 'Full administrative access to virtual machines',
@@ -768,7 +772,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-virtualmachine-editor',
-    name: 'virtualmachine-editor',
+    name: 'kubevirt.io:vm:editor',
+    displayName: 'Virtual machine editor',
     type: 'default',
     category: 'kubevirt',
     description: 'Edit virtual machines',
@@ -778,7 +783,8 @@ export const roles: Role[] = [
   // Custom Roles
   {
     id: 'role-starlight-developer',
-    name: 'starlight-project-developer',
+    name: 'petemobile.io:starlight:developer',
+    displayName: 'Starlight project developer',
     type: 'custom',
     category: 'application',
     description: 'Developer access for Project Starlight',
@@ -787,7 +793,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-billing-api-operator',
-    name: 'billing-api-operator',
+    name: 'petemobile.io:billing:operator',
+    displayName: 'Billing API operator',
     type: 'custom',
     category: 'application',
     description: 'Operator access for billing API services',
@@ -796,7 +803,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-network-infra-admin',
-    name: 'network-infrastructure-admin',
+    name: 'petemobile.io:network:admin',
+    displayName: 'Network infrastructure admin',
     type: 'custom',
     category: 'namespace',
     description: 'Administrative access to network infrastructure',
@@ -805,7 +813,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-5g-platform-maintainer',
-    name: '5g-platform-maintainer',
+    name: 'petemobile.io:5g:maintainer',
+    displayName: '5G platform maintainer',
     type: 'custom',
     category: 'application',
     description: 'Maintenance access for 5G platform services',
@@ -814,7 +823,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-edge-compute-operator',
-    name: 'edge-compute-operator',
+    name: 'petemobile.io:edge:operator',
+    displayName: 'Edge compute operator',
     type: 'custom',
     category: 'cluster',
     description: 'Operator access for edge computing clusters',
@@ -823,7 +833,8 @@ export const roles: Role[] = [
   },
   {
     id: 'role-database-admin',
-    name: 'database-admin',
+    name: 'petemobile.io:database:admin',
+    displayName: 'Database admin',
     type: 'custom',
     category: 'namespace',
     description: 'Administrative access to database virtual machines',

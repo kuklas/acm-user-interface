@@ -3,6 +3,7 @@
 export interface Role {
   id: string;
   name: string;
+  displayName: string; // Natural language name like "Virtualization admin"
   type: 'default' | 'custom';
   category: 'kubevirt' | 'cluster' | 'namespace' | 'application';
   description: string;
