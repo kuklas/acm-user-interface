@@ -1005,28 +1005,34 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               </>
             ) : (
               <>
-                {/* Substep: Choose access level */}
-                <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-                  Choose access level
-                </Title>
-                <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-                  Define whether you want full access or partial access to specific projects on the selected clusters.
-                </Content>
+                 {/* Substep: Choose access level */}
+                 <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+                   Choose access level
+                 </Title>
+                 <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                   {selectedClusters.length > 1 
+                     ? 'Define whether you want full access or partial access to common projects across the selected clusters.'
+                     : 'Define whether you want full access or partial access to specific projects on the selected cluster.'}
+                 </Content>
 
                 <Dropdown
                   isOpen={isClusterScopeOpen}
                   onSelect={() => setIsClusterScopeOpen(false)}
                   onOpenChange={(isOpen: boolean) => setIsClusterScopeOpen(isOpen)}
                   toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle 
-                      ref={toggleRef} 
-                      onClick={() => setIsClusterScopeOpen(!isClusterScopeOpen)} 
-                      isExpanded={isClusterScopeOpen}
-                      variant="default"
-                      style={{ width: '100%', marginBottom: '16px' }}
-                    >
-                      {clusterScope === 'everything' ? 'Full access to selected clusters' : 'Limit to specific projects'}
-                    </MenuToggle>
+                     <MenuToggle 
+                       ref={toggleRef} 
+                       onClick={() => setIsClusterScopeOpen(!isClusterScopeOpen)} 
+                       isExpanded={isClusterScopeOpen}
+                       variant="default"
+                       style={{ width: '100%', marginBottom: '16px' }}
+                     >
+                       {clusterScope === 'everything' 
+                         ? 'Full access to selected clusters' 
+                         : selectedClusters.length > 1 
+                           ? 'Limit to common projects' 
+                           : 'Limit to specific projects'}
+                     </MenuToggle>
                   )}
                   shouldFocusToggleOnSelect
                 >
@@ -1048,9 +1054,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         setClusterScope('projects');
                         setIsClusterScopeOpen(false);
                       }}
-                      description="Choose specific projects to limit the scope of access"
+                      description={selectedClusters.length > 1 
+                        ? "Choose common projects (same name across all selected clusters)" 
+                        : "Choose specific projects to limit the scope of access"}
                     >
-                      Limit to specific projects
+                      {selectedClusters.length > 1 ? 'Limit to common projects' : 'Limit to specific projects'}
                     </DropdownItem>
                   </DropdownList>
                 </Dropdown>
