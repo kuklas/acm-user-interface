@@ -159,8 +159,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
     setClusterScope('everything');
     setSelectedProjects([]);
     setProjectSearch('');
-    setShowClusterSetSelection(false);
-    setShowClusterSelection(false);
     setShowScopeSelection(false);
     setShowProjectSelection(false);
     setSelectedRole(null);
@@ -185,10 +183,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         // No substeps needed, go directly to step 2 (role selection)
         setCurrentStep(2);
       } else if (resourceScope === 'cluster-sets') {
-        if (!showClusterSetSelection) {
-          // Show cluster set selection table
-          setShowClusterSetSelection(true);
-        } else if (showClusterSetSelection && selectedClusterSets.length > 0 && !showScopeSelection) {
+        if (selectedClusterSets.length > 0 && !showScopeSelection) {
           // Cluster sets selected, show scope selection (full vs partial access)
           setShowScopeSelection(true);
         } else if (showScopeSelection && clusterSetScope === 'everything' && !showProjectSelection) {
@@ -233,14 +228,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         setClusterScope('everything');
         setSelectedProjects([]);
       } else if (showScopeSelection) {
-        // Go back from scope selection to initial dropdown (clusters are now inline)
+        // Go back from scope selection to initial dropdown (clusters and cluster sets are now inline)
         setShowScopeSelection(false);
         setClusterScope('everything');
         setSelectedProjects([]);
-      } else if (showClusterSetSelection) {
-        // Go back to initial dropdown
-        setShowClusterSetSelection(false);
-        setSelectedClusterSets([]);
       } else {
         // At the beginning of step 1, can't go back
         return;
@@ -276,10 +267,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         
         // For 'cluster-sets' path
         if (resourceScope === 'cluster-sets') {
-          // If table not shown yet, allow Next to show the table
-          if (!showClusterSetSelection) return false;
-          // Once table is shown, must select at least one cluster set
-          if (showClusterSetSelection && !showScopeSelection && selectedClusterSets.length === 0) return true;
+          // Must select at least one cluster set
+          if (!showScopeSelection && selectedClusterSets.length === 0) return true;
           // If scope selection shown with "everything", allow Next
           if (showScopeSelection && !showProjectSelection && clusterSetScope === 'everything') return false;
           // If partial access is selected with inline cluster table, must select at least one cluster
@@ -566,19 +555,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             {/* Substeps for cluster-sets */}
             {currentStep === 1 && resourceScope === 'cluster-sets' && (
               <>
-                {(showClusterSetSelection || showScopeSelection || showProjectSelection) && (
+                {(showScopeSelection || showProjectSelection) && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
-                    <div style={{ 
-                      padding: '0.5rem 0.75rem',
-                      fontSize: '14px',
-                      color: '#6a6e73',
-                      cursor: 'default',
-                      backgroundColor: showClusterSetSelection && !showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
-                      borderRadius: '4px',
-                      marginBottom: '0'
-                    }}>
-                      Select cluster sets
-                    </div>
                     {showScopeSelection && (
                       <div style={{ 
                         padding: '0.5rem 0.75rem',
@@ -710,15 +688,13 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 }}
               >
                 <DropdownList>
-                  <DropdownItem
+                    <DropdownItem
                       key="everything"
-                    onClick={() => {
+                      onClick={() => {
                         setResourceScope('everything');
-                        setSelectedClusterSets([]);
+                      setSelectedClusterSets([]);
                       setSelectedClusters([]);
                       setSelectedProjects([]);
-                        setShowClusterSetSelection(false);
-                      setShowClusterSelection(false);
                       setShowScopeSelection(false);
                       setIsResourceScopeOpen(false);
                     }}
@@ -733,8 +709,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         setSelectedClusterSets([]);
                         setSelectedClusters([]);
                         setSelectedProjects([]);
-                        setShowClusterSetSelection(false);
-                        setShowClusterSelection(false);
                         setShowScopeSelection(false);
                         setClusterSetScope('everything'); // Reset to default
                         setIsResourceScopeOpen(false);
@@ -750,8 +724,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         setSelectedClusterSets([]);
                       setSelectedClusters([]);
                       setSelectedProjects([]);
-                        setShowClusterSetSelection(false);
-                        setShowClusterSelection(false);
                       setShowScopeSelection(false);
                         setClusterScope('everything'); // Reset to default
                       setIsResourceScopeOpen(false);
@@ -764,7 +736,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </Dropdown>
 
                 {/* Cluster sets scope - show example immediately */}
-                {resourceScope === 'cluster-sets' && !showClusterSetSelection && (
+                {resourceScope === 'cluster-sets' && (
                   <ExpandableSection
                     toggleText="View example scope"
                     isExpanded={isClusterSetExampleExpanded}
@@ -1914,6 +1886,98 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   </div>
                   </ExpandableSection>
                 )}
+                
+                {/* Cluster sets table - inline below dropdown */}
+                {resourceScope === 'cluster-sets' && (
+                  <div style={{ marginTop: '16px' }}>
+                    <Toolbar>
+                      <ToolbarContent>
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={isClusterSetFilterOpen}
+                            onSelect={() => setIsClusterSetFilterOpen(false)}
+                            onOpenChange={(isOpen: boolean) => setIsClusterSetFilterOpen(isOpen)}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle 
+                                ref={toggleRef} 
+                                onClick={() => setIsClusterSetFilterOpen(!isClusterSetFilterOpen)} 
+                                isExpanded={isClusterSetFilterOpen}
+                                variant="default"
+                              >
+                                {clusterSetFilterType}
+                              </MenuToggle>
+                            )}
+                            popperProps={{
+                              appendTo: () => document.body,
+                              position: 'bottom-start',
+                              strategy: 'fixed',
+                            }}
+                          >
+                            <DropdownList>
+                              <DropdownItem onClick={() => { setClusterSetFilterType('Name'); setIsClusterSetFilterOpen(false); }}>
+                                Name
+                              </DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <SearchInput
+                            placeholder="Search cluster sets"
+                            value={clusterSetSearch}
+                            onChange={(_event, value) => setClusterSetSearch(value)}
+                            onClear={() => setClusterSetSearch('')}
+                          />
+                        </ToolbarItem>
+                      </ToolbarContent>
+                    </Toolbar>
+                    <Table aria-label="Cluster sets table" variant="compact">
+                      <Thead>
+                        <Tr>
+                          <Th width={10}></Th>
+                          <Th>Cluster set name</Th>
+                          <Th>Clusters</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredClusterSets.map((clusterSet) => (
+                          <Tr
+                            key={clusterSet.id}
+                            isSelectable
+                            isClickable
+                            isRowSelected={selectedClusterSets.includes(clusterSet.id)}
+                            onRowClick={() => {
+                              if (selectedClusterSets.includes(clusterSet.id)) {
+                                setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
+                              } else {
+                                setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
+                              }
+                            }}
+                          >
+                            <Td>
+                              <Checkbox
+                                id={`cluster-set-${clusterSet.id}`}
+                                isChecked={selectedClusterSets.includes(clusterSet.id)}
+                                onChange={() => {
+                                  if (selectedClusterSets.includes(clusterSet.id)) {
+                                    setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
+                                  } else {
+                                    setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
+                                  }
+                                }}
+                              />
+                            </Td>
+                            <Td dataLabel="Cluster set name">
+                              <div style={{ fontWeight: selectedClusterSets.includes(clusterSet.id) ? '600' : 'normal' }}>
+                                {clusterSet.name}
+                              </div>
+                            </Td>
+                            <Td dataLabel="Clusters">{clusterSet.clusterCount}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </div>
+                )}
 
                 {/* Clusters scope - show example with carousel */}
                 {resourceScope === 'clusters' && (
@@ -2811,104 +2875,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   </>
                 )}
               </>
-            )}
-
-            {/* SUB-STEP 1: Cluster Sets Table - for 'cluster-sets' path */}
-            {resourceScope === 'cluster-sets' && showClusterSetSelection && !showScopeSelection && (
-              <div>
-                <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
-                  Select cluster sets
-                </Title>
-                <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
-                  Select one or more cluster sets to limit the scope.
-                </Content>
-                <Toolbar>
-                  <ToolbarContent>
-                    <ToolbarItem>
-                      <Dropdown
-                        isOpen={isClusterSetFilterOpen}
-                        onSelect={() => setIsClusterSetFilterOpen(false)}
-                        onOpenChange={(isOpen: boolean) => setIsClusterSetFilterOpen(isOpen)}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle 
-                            ref={toggleRef} 
-                            onClick={() => setIsClusterSetFilterOpen(!isClusterSetFilterOpen)} 
-                            isExpanded={isClusterSetFilterOpen}
-                            variant="default"
-                          >
-                            {clusterSetFilterType}
-                          </MenuToggle>
-                        )}
-                        popperProps={{
-                          appendTo: () => document.body,
-                          position: 'bottom-start',
-                          strategy: 'fixed',
-                        }}
-                      >
-                        <DropdownList>
-                          <DropdownItem onClick={() => { setClusterSetFilterType('Name'); setIsClusterSetFilterOpen(false); }}>
-                            Name
-                          </DropdownItem>
-                        </DropdownList>
-                      </Dropdown>
-                    </ToolbarItem>
-                    <ToolbarItem>
-                      <SearchInput
-                        placeholder="Search cluster sets"
-                        value={clusterSetSearch}
-                        onChange={(_event, value) => setClusterSetSearch(value)}
-                        onClear={() => setClusterSetSearch('')}
-                      />
-                    </ToolbarItem>
-                  </ToolbarContent>
-                </Toolbar>
-                <Table aria-label="Cluster sets table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th width={10}></Th>
-                      <Th>Cluster set name</Th>
-                      <Th>Clusters</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredClusterSets.map((clusterSet) => (
-                      <Tr
-                        key={clusterSet.id}
-                        isSelectable
-                        isClickable
-                        isRowSelected={selectedClusterSets.includes(clusterSet.id)}
-                        onRowClick={() => {
-                          if (selectedClusterSets.includes(clusterSet.id)) {
-                            setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
-                          } else {
-                            setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
-                          }
-                        }}
-                      >
-                        <Td>
-                          <Checkbox
-                            id={`cluster-set-${clusterSet.id}`}
-                            isChecked={selectedClusterSets.includes(clusterSet.id)}
-                            onChange={() => {
-                              if (selectedClusterSets.includes(clusterSet.id)) {
-                                setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
-                              } else {
-                                setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
-                              }
-                            }}
-                          />
-                        </Td>
-                        <Td dataLabel="Cluster set name">
-                          <div style={{ fontWeight: selectedClusterSets.includes(clusterSet.id) ? '600' : 'normal' }}>
-                            {clusterSet.name}
-                          </div>
-                        </Td>
-                        <Td dataLabel="Clusters">{clusterSet.clusterCount}</Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </div>
             )}
 
             {/* SUB-STEP 2: Choose Access Level - separate substep after selecting cluster sets */}
