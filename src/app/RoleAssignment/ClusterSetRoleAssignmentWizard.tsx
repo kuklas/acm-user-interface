@@ -1685,11 +1685,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                 </ToolbarItem>
               </ToolbarContent>
             </Toolbar>
-            <Table aria-label="Roles table" variant="compact">
+            <Table aria-label="Roles table" variant="compact" style={{ tableLayout: 'fixed', width: '100%' }}>
               <Thead>
                 <Tr>
-                  <Th width={10}></Th>
-                  <Th width={30}>Role</Th>
+                  <Th width={5}></Th>
+                  <Th width={35}>Role</Th>
                   <Th width={15}>Type</Th>
                   <Th width={25}>Resources</Th>
                   <Th width={20}>Permissions</Th>
@@ -1712,7 +1712,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         onChange={() => setSelectedRole(role.id)}
                       />
                     </Td>
-                    <Td dataLabel="Role" width={30} style={{ textAlign: 'left' }}>
+                    <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
                       <div>
                         <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
                           {role.displayName}
@@ -1722,23 +1722,23 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         </div>
                       </div>
                     </Td>
-                    <Td dataLabel="Type" width={15}>
+                    <Td dataLabel="Type">
                       <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
                     </Td>
-                    <Td dataLabel="Resources" width={25}>{role.resources.join(', ')}</Td>
-                    <Td dataLabel="Permissions" width={20}>
-                      <Split hasGutter>
-                        {role.permissions.slice(0, 3).map((perm) => (
-                          <SplitItem key={perm}>
-                            <Label isCompact>{perm}</Label>
-                          </SplitItem>
+                    <Td dataLabel="Resources" style={{ wordBreak: 'break-word' }}>
+                      <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                        {role.resources.join(', ')}
+                      </div>
+                    </Td>
+                    <Td dataLabel="Permissions">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {role.permissions.slice(0, 2).map((perm) => (
+                          <Label key={perm} isCompact>{perm}</Label>
                         ))}
-                        {role.permissions.length > 3 && (
-                          <SplitItem>
-                            <Label isCompact>+{role.permissions.length - 3} more</Label>
-                          </SplitItem>
+                        {role.permissions.length > 2 && (
+                          <Label isCompact>+{role.permissions.length - 2} more</Label>
                         )}
-                      </Split>
+                      </div>
                     </Td>
                   </Tr>
                 ))}
