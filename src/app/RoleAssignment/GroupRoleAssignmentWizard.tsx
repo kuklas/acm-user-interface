@@ -1184,7 +1184,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               ref={wizardContentRef}
               style={{ 
               flex: '1 1 0',
-              padding: '1.5rem 0 1.5rem 1.5rem', 
+              padding: '1.5rem 1.5rem 1.5rem 1.5rem', 
               backgroundColor: '#ffffff',
               overflowY: 'auto',
               overflowX: 'hidden'
@@ -2569,7 +2569,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             {/* Footer with Buttons - only spans right content area */}
             <div style={{ 
               borderTop: '1px solid #d2d2d2', 
-              padding: '1rem 0 1rem 1.5rem', 
+              padding: '1rem 1.5rem 1rem 1.5rem', 
               backgroundColor: '#ffffff',
               flexShrink: 0
             }}>
