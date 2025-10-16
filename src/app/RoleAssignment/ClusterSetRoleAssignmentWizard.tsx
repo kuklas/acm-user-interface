@@ -27,6 +27,8 @@ import {
   Alert,
   Pagination,
   PaginationVariant,
+  Split,
+  SplitItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { CaretDownIcon, CheckCircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
@@ -57,7 +59,16 @@ const mockGroups = dbGroups.map((group, index) => ({
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
-  type: role.type,
+  displayName: role.displayName,
+  type: role.type === 'default' ? 'Default' : 'Custom',
+  resources: role.category === 'kubevirt' 
+    ? ['VirtualMachines', 'VirtualMachineInstances'] 
+    : role.category === 'cluster' 
+    ? ['Clusters', 'ClusterSets'] 
+    : role.category === 'namespace'
+    ? ['Namespaces', 'Projects']
+    : ['Applications', 'Deployments'],
+  permissions: role.permissions,
 }));
 
 interface ClusterSetRoleAssignmentWizardProps {
@@ -196,7 +207,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       ? mockUsers.find(u => u.id === selectedUser)?.name || 'Unknown'
       : mockGroups.find(g => g.id === selectedGroup)?.name || 'Unknown';
     
-    const roleName = mockRoles.find(r => r.id === selectedRole)?.name || 'Unknown';
+    const roleData = mockRoles.find(r => r.id === selectedRole);
+    const roleName = roleData?.name || 'Unknown';
+    const roleDisplayName = roleData?.displayName || roleName;
 
     onComplete({
       identityType,
@@ -297,8 +310,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   );
 
   const filteredRoles = mockRoles.filter(role => {
-    // Filter by search
-    const matchesSearch = role.name.toLowerCase().includes(roleSearch.toLowerCase());
+    // Filter by search (search both displayName and technical name)
+    const matchesSearch = role.displayName.toLowerCase().includes(roleSearch.toLowerCase()) ||
+                          role.name.toLowerCase().includes(roleSearch.toLowerCase());
     
     // Filter by type
     const matchesType = roleFilterType === 'All' || role.type === roleFilterType;
@@ -1670,12 +1684,14 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               <Thead>
                 <Tr>
                   <Th width={10}></Th>
-                  <Th>Role</Th>
-                  <Th>Type</Th>
+                  <Th width={30}>Role</Th>
+                  <Th width={15}>Type</Th>
+                  <Th width={25}>Resources</Th>
+                  <Th width={20}>Permissions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredRoles.slice(0, 10).map((role) => (
+                {filteredRoles.slice((rolesPage - 1) * rolesPerPage, rolesPage * rolesPerPage).map((role) => (
                   <Tr
                     key={role.id}
                     isSelectable
@@ -1691,20 +1707,49 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         onChange={() => setSelectedRole(role.id)}
                       />
                     </Td>
-                    <Td dataLabel="Role">
-                      <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                        {role.name}
+                    <Td dataLabel="Role" width={30} style={{ textAlign: 'left' }}>
+                      <div>
+                        <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
+                          {role.displayName}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                          {role.name}
+                        </div>
                       </div>
                     </Td>
-                    <Td dataLabel="Type">
-                      <Label color={role.type === 'default' ? 'blue' : 'purple'}>
-                        {role.type === 'default' ? 'Default' : 'Custom'}
-                      </Label>
+                    <Td dataLabel="Type" width={15}>
+                      <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
+                    </Td>
+                    <Td dataLabel="Resources" width={25}>{role.resources.join(', ')}</Td>
+                    <Td dataLabel="Permissions" width={20}>
+                      <Split hasGutter>
+                        {role.permissions.slice(0, 3).map((perm) => (
+                          <SplitItem key={perm}>
+                            <Label isCompact>{perm}</Label>
+                          </SplitItem>
+                        ))}
+                        {role.permissions.length > 3 && (
+                          <SplitItem>
+                            <Label isCompact>+{role.permissions.length - 3} more</Label>
+                          </SplitItem>
+                        )}
+                      </Split>
                     </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
+            <Pagination
+              itemCount={filteredRoles.length}
+              perPage={rolesPerPage}
+              page={rolesPage}
+              onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
+              onPerPageSelect={(_event, perPage) => {
+                setRolesPerPage(perPage);
+                setRolesPage(1);
+              }}
+              variant={PaginationVariant.bottom}
+            />
           </>
         )}
 
@@ -1858,7 +1903,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                 }}>
                   Role
                 </Content>
-                <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
+                <Content component="p" style={{ fontSize: '14px', color: '#151515' }}>
+                  {mockRoles.find(r => r.id === selectedRole)?.displayName}
+                </Content>
+                <Content component="p" style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                   {mockRoles.find(r => r.id === selectedRole)?.name}
                 </Content>
               </div>
