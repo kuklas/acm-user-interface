@@ -1051,9 +1051,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         )}
         
         {/* Main wizard content */}
-        <div style={{ height: '100%' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {/* Header Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Header Section */}
         <div style={{ 
           backgroundColor: '#f0f0f0', 
           padding: '1.5rem', 
@@ -1201,7 +1200,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
                 Select resources
-              </Title>
+            </Title>
               <Button 
                 variant="link" 
                 onClick={() => setIsDrawerExpanded(true)}
@@ -1377,7 +1376,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   </Table>
                 </div>
                 )}
-                
+              
                 {/* Clusters table - inline below dropdown */}
                 {resourceScope === 'clusters' && (
                   <div style={{ marginTop: '16px' }}>
@@ -1522,60 +1521,60 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               <div key="cluster-sets-scope-selection">
                 <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
                   Choose access level
-                </Title>
+            </Title>
                 <Content component="p" style={{ marginBottom: '24px', color: '#6a6e73', fontSize: '14px' }}>
                   Define the level of access for the {selectedClusterSets.length} selected cluster set{selectedClusterSets.length > 1 ? 's' : ''}.
-                </Content>
-                
+            </Content>
+
                 <FormGroup label="Access level" style={{ marginBottom: '16px' }}>
-                  <Dropdown
+              <Dropdown
                     isOpen={isClusterSetScopeOpen}
                     onSelect={() => setIsClusterSetScopeOpen(false)}
                     onOpenChange={(isOpen: boolean) => setIsClusterSetScopeOpen(isOpen)}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle 
-                        ref={toggleRef} 
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
                         onClick={() => setIsClusterSetScopeOpen(!isClusterSetScopeOpen)} 
                         isExpanded={isClusterSetScopeOpen}
-                        variant="default"
-                        style={{ width: '100%' }}
-                      >
+                    variant="default"
+                    style={{ width: '100%' }}
+                  >
                         {clusterSetScope === 'everything'
                           ? 'Full access to selected cluster sets'
                           : 'Partial access - Specify clusters'}
-                      </MenuToggle>
-                    )}
-                    shouldFocusToggleOnSelect
-                    popperProps={{
-                      appendTo: () => document.body,
+                  </MenuToggle>
+                )}
+                shouldFocusToggleOnSelect
+                popperProps={{
+                  appendTo: () => document.body,
                       
                       
-                    }}
-                  >
-                    <DropdownList>
-                      <DropdownItem
+                }}
+              >
+                <DropdownList>
+                  <DropdownItem
                         key="everything"
-                        onClick={() => {
+                    onClick={() => {
                           setClusterSetScope('everything');
-                          setSelectedClusters([]);
+                      setSelectedClusters([]);
                           setIsClusterSetScopeOpen(false);
                         }}
                         description="✓ Full access: All current and future clusters and their resources in the selected cluster sets"
                       >
                         Full access to selected cluster sets
-                      </DropdownItem>
-                      <DropdownItem
+                  </DropdownItem>
+                  <DropdownItem
                         key="partial"
-                        onClick={() => {
+                    onClick={() => {
                           setClusterSetScope('partial');
                           setIsClusterSetScopeOpen(false);
                         }}
                         description="→ Limited access: Choose specific clusters from the selected cluster sets"
                       >
                         Partial access - Specify clusters
-                      </DropdownItem>
-                    </DropdownList>
-                  </Dropdown>
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
                 </FormGroup>
 
                 {/* Show clusters table BELOW the dropdown if partial access is selected */}
@@ -2592,9 +2591,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 Cancel
               </Button>
             </div>
+            </div>
           </div>
-        </div>
-        </div>
         </div>
       </div>
     </Modal>
