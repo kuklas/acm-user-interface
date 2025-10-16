@@ -828,7 +828,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '30px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515', fontWeight: 600 }}>Common project: monitoring</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Common project</span>
                       </div>
                       
                       {/* VMs under monitoring on Cluster 1 */}
@@ -874,7 +874,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '30px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515', fontWeight: 600 }}>Common project: monitoring</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Common project</span>
                       </div>
                       
                       {/* VMs under monitoring on Cluster 2 */}
