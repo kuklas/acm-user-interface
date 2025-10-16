@@ -32,7 +32,7 @@ import {
   ExpandableSection,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -120,6 +120,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const [exampleIndex, setExampleIndex] = React.useState(0);
   const [clusterSetExampleIndex, setClusterSetExampleIndex] = React.useState(0);
   const [clusterExampleIndex, setClusterExampleIndex] = React.useState(0);
+  
+  // Drawer for examples
+  const [isDrawerExpanded, setIsDrawerExpanded] = React.useState(false);
   
   // Example expandable section states
   const [isEverythingExampleExpanded, setIsEverythingExampleExpanded] = React.useState(false);
@@ -234,7 +237,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         setSelectedProjects([]);
       } else {
         // At the beginning of step 1, can't go back
-        return;
+      return;
       }
     } else {
       // Normal step progression
@@ -558,17 +561,17 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 {(showScopeSelection || showProjectSelection) && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
                     {showScopeSelection && (
-                      <div style={{ 
-                        padding: '0.5rem 0.75rem',
-                        fontSize: '14px',
-                        color: '#6a6e73',
-                        cursor: 'default',
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
                         backgroundColor: showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
-                        borderRadius: '4px',
-                        marginBottom: '0'
-                      }}>
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
                         Choose access level
-                      </div>
+                    </div>
                     )}
                     {showProjectSelection && (
                       <div style={{ 
@@ -1890,93 +1893,93 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 {/* Cluster sets table - inline below dropdown */}
                 {resourceScope === 'cluster-sets' && (
                   <div style={{ marginTop: '16px' }}>
-                    <Toolbar>
-                      <ToolbarContent>
-                        <ToolbarItem>
-                          <Dropdown
+                  <Toolbar>
+                    <ToolbarContent>
+                      <ToolbarItem>
+                        <Dropdown
                             isOpen={isClusterSetFilterOpen}
                             onSelect={() => setIsClusterSetFilterOpen(false)}
                             onOpenChange={(isOpen: boolean) => setIsClusterSetFilterOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                              <MenuToggle 
-                                ref={toggleRef} 
+                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle 
+                              ref={toggleRef} 
                                 onClick={() => setIsClusterSetFilterOpen(!isClusterSetFilterOpen)} 
                                 isExpanded={isClusterSetFilterOpen}
-                                variant="default"
-                              >
+                              variant="default"
+                            >
                                 {clusterSetFilterType}
-                              </MenuToggle>
-                            )}
-                            popperProps={{
-                              appendTo: () => document.body,
-                              position: 'bottom-start',
-                              strategy: 'fixed',
-                            }}
-                          >
-                            <DropdownList>
+                            </MenuToggle>
+                          )}
+                          popperProps={{
+                            appendTo: () => document.body,
+                            position: 'bottom-start',
+                            strategy: 'fixed',
+                          }}
+                        >
+                          <DropdownList>
                               <DropdownItem onClick={() => { setClusterSetFilterType('Name'); setIsClusterSetFilterOpen(false); }}>
                                 Name
-                              </DropdownItem>
-                            </DropdownList>
-                          </Dropdown>
-                        </ToolbarItem>
-                        <ToolbarItem>
-                          <SearchInput
+                            </DropdownItem>
+                          </DropdownList>
+                        </Dropdown>
+                      </ToolbarItem>
+                      <ToolbarItem>
+                        <SearchInput
                             placeholder="Search cluster sets"
                             value={clusterSetSearch}
                             onChange={(_event, value) => setClusterSetSearch(value)}
                             onClear={() => setClusterSetSearch('')}
-                          />
-                        </ToolbarItem>
-                      </ToolbarContent>
-                    </Toolbar>
+                        />
+                      </ToolbarItem>
+                    </ToolbarContent>
+                  </Toolbar>
                     <Table aria-label="Cluster sets table" variant="compact">
-                      <Thead>
-                        <Tr>
-                          <Th width={10}></Th>
+                    <Thead>
+                      <Tr>
+                        <Th width={10}></Th>
                           <Th>Cluster set name</Th>
                           <Th>Clusters</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
                         {filteredClusterSets.map((clusterSet) => (
-                          <Tr
+                        <Tr
                             key={clusterSet.id}
-                            isSelectable
-                            isClickable
+                          isSelectable
+                          isClickable
                             isRowSelected={selectedClusterSets.includes(clusterSet.id)}
-                            onRowClick={() => {
+                          onRowClick={() => {
                               if (selectedClusterSets.includes(clusterSet.id)) {
                                 setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
                               } else {
                                 setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
                               }
-                            }}
-                          >
-                            <Td>
+                          }}
+                        >
+                          <Td>
                               <Checkbox
                                 id={`cluster-set-${clusterSet.id}`}
                                 isChecked={selectedClusterSets.includes(clusterSet.id)}
-                                onChange={() => {
+                              onChange={() => {
                                   if (selectedClusterSets.includes(clusterSet.id)) {
                                     setSelectedClusterSets(selectedClusterSets.filter(id => id !== clusterSet.id));
                                   } else {
                                     setSelectedClusterSets([...selectedClusterSets, clusterSet.id]);
                                   }
-                                }}
-                              />
-                            </Td>
+                              }}
+                            />
+                          </Td>
                             <Td dataLabel="Cluster set name">
                               <div style={{ fontWeight: selectedClusterSets.includes(clusterSet.id) ? '600' : 'normal' }}>
                                 {clusterSet.name}
-                              </div>
-                            </Td>
+                            </div>
+                          </Td>
                             <Td dataLabel="Clusters">{clusterSet.clusterCount}</Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </div>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </div>
                 )}
 
                 {/* Clusters scope - show example with carousel */}
@@ -2329,126 +2332,126 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 {/* Clusters table - inline below dropdown */}
                 {resourceScope === 'clusters' && (
                   <div style={{ marginTop: '16px' }}>
-                    <Toolbar>
-                      <ToolbarContent>
-                        <ToolbarItem>
-                          <Dropdown
+                  <Toolbar>
+                    <ToolbarContent>
+                      <ToolbarItem>
+                        <Dropdown
                             isOpen={isClusterFilterOpen}
                             onSelect={() => setIsClusterFilterOpen(false)}
                             onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                              <MenuToggle 
-                                ref={toggleRef} 
+                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle 
+                              ref={toggleRef} 
                                 onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} 
                                 isExpanded={isClusterFilterOpen}
-                                variant="default"
-                              >
+                              variant="default"
+                            >
                                 {clusterFilterType}
-                              </MenuToggle>
-                            )}
-                            popperProps={{
-                              appendTo: () => document.body,
-                              position: 'bottom-start',
-                              strategy: 'fixed',
-                            }}
-                          >
-                            <DropdownList>
+                            </MenuToggle>
+                          )}
+                          popperProps={{
+                            appendTo: () => document.body,
+                            position: 'bottom-start',
+                            strategy: 'fixed',
+                          }}
+                        >
+                          <DropdownList>
                               <DropdownItem onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>
                                 Name
-                              </DropdownItem>
-                            </DropdownList>
-                          </Dropdown>
-                        </ToolbarItem>
-                        <ToolbarItem>
-                          <SearchInput
+                            </DropdownItem>
+                          </DropdownList>
+                        </Dropdown>
+                      </ToolbarItem>
+                      <ToolbarItem>
+                        <SearchInput
                             placeholder="Search clusters"
                             value={clusterSearch}
                             onChange={(_event, value) => setClusterSearch(value)}
                             onClear={() => setClusterSearch('')}
-                          />
-                        </ToolbarItem>
-                        <ToolbarItem align={{ default: 'alignEnd' }}>
-                          <Pagination
+                        />
+                      </ToolbarItem>
+                      <ToolbarItem align={{ default: 'alignEnd' }}>
+                        <Pagination
                             itemCount={filteredClusters.length}
                             perPage={clustersPerPage}
                             page={clustersPage}
                             onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                            onPerPageSelect={(_event, perPage) => {
+                          onPerPageSelect={(_event, perPage) => {
                               setClustersPerPage(perPage);
                               setClustersPage(1);
-                            }}
+                          }}
                             variant="top"
-                            isCompact
-                          />
-                        </ToolbarItem>
-                      </ToolbarContent>
-                    </Toolbar>
+                          isCompact
+                        />
+                      </ToolbarItem>
+                    </ToolbarContent>
+                  </Toolbar>
                     <Table aria-label="Clusters table" variant="compact">
-                      <Thead>
-                        <Tr>
-                          <Th width={10}></Th>
+                    <Thead>
+                      <Tr>
+                        <Th width={10}></Th>
                           <Th>Cluster name</Th>
                           <Th>Cluster set</Th>
                           <Th>Status</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
                         {filteredClusters
                           .slice((clustersPage - 1) * clustersPerPage, clustersPage * clustersPerPage)
                           .map((cluster) => (
-                          <Tr
+                        <Tr
                             key={cluster.id}
-                            isSelectable
-                            isClickable
+                          isSelectable
+                          isClickable
                             isRowSelected={selectedClusters.includes(cluster.id)}
-                            onRowClick={() => {
+                          onRowClick={() => {
                               if (selectedClusters.includes(cluster.id)) {
                                 setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
                               } else {
                                 setSelectedClusters([...selectedClusters, cluster.id]);
                               }
-                            }}
-                          >
-                            <Td>
+                          }}
+                        >
+                          <Td>
                               <Checkbox
                                 id={`cluster-${cluster.id}`}
                                 isChecked={selectedClusters.includes(cluster.id)}
-                                onChange={() => {
+                              onChange={() => {
                                   if (selectedClusters.includes(cluster.id)) {
                                     setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
                                   } else {
                                     setSelectedClusters([...selectedClusters, cluster.id]);
                                   }
-                                }}
-                              />
-                            </Td>
+                              }}
+                            />
+                          </Td>
                             <Td dataLabel="Cluster name">
                               <div style={{ fontWeight: selectedClusters.includes(cluster.id) ? '600' : 'normal' }}>
                                 {cluster.name}
-                              </div>
-                            </Td>
+                            </div>
+                          </Td>
                             <Td dataLabel="Cluster set">{cluster.clusterSet}</Td>
                             <Td dataLabel="Status">
                               <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
                                 {cluster.status}
                               </Label>
                             </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                    <Pagination
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                  <Pagination
                       itemCount={filteredClusters.length}
                       perPage={clustersPerPage}
                       page={clustersPage}
                       onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                      onPerPageSelect={(_event, perPage) => {
+                    onPerPageSelect={(_event, perPage) => {
                         setClustersPerPage(perPage);
                         setClustersPage(1);
-                      }}
+                    }}
                       variant="bottom"
-                    />
-                  </div>
+                  />
+                </div>
                 )}
 
                 {/* Everything scope - no selection needed */}
@@ -2456,41 +2459,41 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   <>
                     <Content component="p" style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px', marginBottom: '16px' }}>
                       This role assignment will apply to all resources registered in Advanced Cluster Management.
-                    </Content>
-                    
+            </Content>
+
                     {/* Tree view example for "Everything" */}
                     <ExpandableSection
                       toggleText="View example scope"
                       isExpanded={isEverythingExampleExpanded}
                       onToggle={(_event, isExpanded) => setIsEverythingExampleExpanded(isExpanded)}
                     >
-                      <div style={{ 
+              <div style={{ 
                       padding: '16px', 
-                      backgroundColor: '#f5f5f5', 
-                      borderRadius: '6px',
+                backgroundColor: '#f5f5f5', 
+                borderRadius: '6px',
                       border: '1px solid #d2d2d2',
                       maxHeight: '400px',
                       overflowY: 'auto'
                     }}>
                       <Content component="p" style={{ fontSize: '13px', marginBottom: '12px', color: '#151515', fontWeight: 600 }}>
                         Example scope: Full access to all resources
-                      </Content>
-                      <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
+                  </Content>
+                <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
                         {/* CLUSTER SET 1 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster set</span>
-                        </div>
-                        
-                        {/* Cluster 1 in Set 1 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '20px' }}></span>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
+                        {/* Cluster 1 in Set 1 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
                         {/* Project 1 on Cluster 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
@@ -2525,10 +2528,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         {/* Project 2 on Cluster 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
                       </div>
                       
                       {/* VM 3 */}
@@ -2537,7 +2540,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
                         <span style={{ marginLeft: '60px' }}></span>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Virtual machine</span>
                       </div>
                       
@@ -2546,7 +2549,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
                         <span style={{ marginLeft: '60px' }}></span>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Virtual machine</span>
                       </div>
                       
@@ -2555,7 +2558,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster</span>
                       </div>
                       
@@ -2576,7 +2579,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
                         <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Virtual machine</span>
                       </div>
                       
@@ -2586,7 +2589,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
                         <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Virtual machine</span>
                       </div>
                       
@@ -2620,257 +2623,257 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         {/* CLUSTER SET 2 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', marginTop: '12px' }}>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster set</span>
-                </div>
-                
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
                         {/* Cluster 1 in Set 2 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                           <span style={{ marginLeft: '20px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                           <span style={{ color: '#151515' }}>Cluster</span>
-              </div>
-                        
+                      </div>
+                      
                         {/* Project 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                           <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                           <span style={{ marginLeft: '40px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                           <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
                         {/* Project 2 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
                         {/* Cluster 2 in Set 2 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '20px' }}></span>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
                         {/* Project 1 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
                         {/* Project 2 (last) */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
                         
                         {/* CLUSTER SET 3 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', marginTop: '12px' }}>
                           <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster set</span>
-                        </div>
-                        
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
                         {/* Cluster 1 in Set 3 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                           <span style={{ marginLeft: '20px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                           <span style={{ color: '#151515' }}>Cluster</span>
-                        </div>
-                        
+                      </div>
+                      
                         {/* Project 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                           <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                           <span style={{ marginLeft: '40px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                           <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
                         {/* Project 2 (last in set 3, cluster 1) */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
                           <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
                           <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
                           <span style={{ marginLeft: '40px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                           <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        {/* Cluster 2 in Set 3 (last) */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '20px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Cluster</span>
-                        </div>
-                        
-                        {/* Project 1 */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        {/* Project 2 (last) */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '40px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Project</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
-                          <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
-                          <span style={{ marginLeft: '60px' }}></span>
-                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                          <span style={{ color: '#151515' }}>Virtual machine</span>
-                        </div>
                       </div>
-                    </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                        {/* Cluster 2 in Set 3 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
+                        {/* Project 1 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                          <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                        {/* Project 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                </div>
+              </div>
                     </ExpandableSection>
                   </>
                 )}
@@ -3737,7 +3740,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             }}>
               <Title headingLevel="h3" size="md" style={{ marginBottom: '16px' }}>
                 Group
-              </Title>
+                </Title>
               <div style={{ marginLeft: '16px' }}>
                 <Content component="p" style={{ 
                   marginBottom: '4px', 
@@ -3772,38 +3775,38 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               <div style={{ marginLeft: '16px' }}>
                 {resourceScope === 'everything' && (
                   <>
-                    <Content component="p" style={{ 
+                <Content component="p" style={{ 
                       marginBottom: '4px', 
-                      fontSize: '14px', 
-                      fontWeight: 600,
-                      color: '#151515'
-                    }}>
+                  fontSize: '14px', 
+                  fontWeight: 600,
+                  color: '#151515'
+                }}>
                       Scope
-                    </Content>
-                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                </Content>
+                <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
                       Global / Applies to all resources registered in ACM
-                    </Content>
+                </Content>
                   </>
                 )}
                 
                 {resourceScope === 'cluster-sets' && (
                   <>
                     {selectedClusterSets.length > 0 && (
-                      <>
-                        <Content component="p" style={{ 
-                          marginBottom: '4px', 
-                          fontSize: '14px', 
-                          fontWeight: 600,
+                  <>
+                    <Content component="p" style={{ 
+                      marginBottom: '4px', 
+                      fontSize: '14px', 
+                      fontWeight: 600,
                           color: '#151515'
-                        }}>
+                    }}>
                           Cluster sets
-                        </Content>
+                    </Content>
                         <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '12px' }}>
                           {selectedClusterSets.map(id => mockClusterSets.find(cs => cs.id === id)?.name).filter(Boolean).join(', ')}
-                        </Content>
+                    </Content>
                       </>
                     )}
-                    
+
                     {selectedClusters.length > 0 && (
                       <>
                         <Content component="p" style={{ 
@@ -3834,8 +3837,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           {clusterScope === 'everything' ? 'Full access' : 
                             selectedProjects.length > 0 
                               ? selectedProjects.map(id => {
-                                  const project = mockProjects.find(p => p.id === id);
-                                  return project?.name;
+                            const project = mockProjects.find(p => p.id === id);
+                            return project?.name;
                                 }).filter(Boolean).join(', ')
                               : 'None selected'
                           }
