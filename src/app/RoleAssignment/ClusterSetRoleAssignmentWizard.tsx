@@ -507,7 +507,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       {/* Cluster Set */}
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515' }}>Cluster set: {clusterSetName}</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Cluster set</span>
                       </div>
                       
                       {/* Cluster 1 */}
@@ -660,7 +660,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '10px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515' }}>Cluster</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Cluster</span>
                       </div>
                       
                       {/* Project 1 on Cluster 1 (selected) */}
@@ -670,7 +670,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '30px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515' }}>Project</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Project</span>
                       </div>
                       
                       {/* VMs under Project 1 */}
@@ -757,7 +757,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '30px', top: '50%' }}></span>
                         <span style={{ marginLeft: '40px' }}></span>
                         <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
-                        <span style={{ color: '#151515' }}>Project</span>
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Project</span>
                       </div>
                       
                       {/* VMs under Project 1 */}
@@ -1502,6 +1502,51 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                 {/* Show projects table if "Limit to specific projects" is selected */}
                 {clusterScope === 'projects' && (
                   <div style={{ marginTop: '16px' }}>
+                    {/* Note alert for multiple clusters */}
+                    {selectedClusters.length > 1 && (
+                      <Alert
+                        variant="info"
+                        isInline
+                        title={`Note: ${filteredProjects.length === 0 ? 'No' : filteredProjects.length} common project${filteredProjects.length === 1 ? '' : 's'} found across all ${selectedClusters.length} selected clusters.`}
+                        style={{ marginBottom: '16px' }}
+                      />
+                    )}
+                    
+                    {/* Toolbar with Name dropdown and Search */}
+                    <Toolbar style={{ padding: 0, marginBottom: '8px' }}>
+                      <ToolbarContent style={{ padding: 0 }}>
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={false}
+                            onSelect={() => {}}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle
+                                ref={toggleRef}
+                                onClick={() => {}}
+                                isExpanded={false}
+                                style={{ width: '150px' }}
+                              >
+                                Name
+                              </MenuToggle>
+                            )}
+                          >
+                            <DropdownList>
+                              <DropdownItem key="name">Name</DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <SearchInput
+                            placeholder="Search projects"
+                            value={projectSearch}
+                            onChange={(_event, value) => setProjectSearch(value)}
+                            onClear={() => setProjectSearch('')}
+                            style={{ width: '300px' }}
+                          />
+                        </ToolbarItem>
+                      </ToolbarContent>
+                    </Toolbar>
+                    
                     <Table aria-label="Projects table" variant="compact">
                       <Thead>
                         <Tr>
@@ -1512,43 +1557,55 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {filteredProjects.map((project, index) => {
-                          const isSelected = selectedProjects.includes(project.id);
-                          return (
-                            <Tr
-                              key={index}
-                              isSelectable
-                              isClickable
-                              isRowSelected={isSelected}
-                              onRowClick={() => {
-                                if (isSelected) {
-                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
-                                } else {
-                                  setSelectedProjects([...selectedProjects, project.id]);
-                                }
-                              }}
-                            >
-                              <Td
-                                select={{
-                                  rowIndex: index,
-                                  onSelect: (_event, isSelecting) => {
-                                    if (isSelecting) {
-                                      setSelectedProjects([...selectedProjects, project.id]);
-                                    } else {
-                                      setSelectedProjects(selectedProjects.filter(id => id !== project.id));
-                                    }
-                                  },
-                                  isSelected,
+                        {filteredProjects.length === 0 ? (
+                          <Tr>
+                            <Td colSpan={4} style={{ textAlign: 'center', padding: '40px' }}>
+                              <Content>
+                                {selectedClusters.length > 1 
+                                  ? 'No common projects found across the selected clusters.'
+                                  : 'No projects found.'}
+                              </Content>
+                            </Td>
+                          </Tr>
+                        ) : (
+                          filteredProjects.map((project, index) => {
+                            const isSelected = selectedProjects.includes(project.id);
+                            return (
+                              <Tr
+                                key={index}
+                                isSelectable
+                                isClickable
+                                isRowSelected={isSelected}
+                                onRowClick={() => {
+                                  if (isSelected) {
+                                    setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                  } else {
+                                    setSelectedProjects([...selectedProjects, project.id]);
+                                  }
                                 }}
-                              />
-                              <Td dataLabel="Name">{project.displayName}</Td>
-                              <Td dataLabel="Type">
-                                <Label isCompact>{project.type}</Label>
-                              </Td>
-                              <Td dataLabel="Cluster">{selectedClusters.length > 1 ? project.clusterNames : project.clusterName}</Td>
-                            </Tr>
-                          );
-                        })}
+                              >
+                                <Td
+                                  select={{
+                                    rowIndex: index,
+                                    onSelect: (_event, isSelecting) => {
+                                      if (isSelecting) {
+                                        setSelectedProjects([...selectedProjects, project.id]);
+                                      } else {
+                                        setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                      }
+                                    },
+                                    isSelected,
+                                  }}
+                                />
+                                <Td dataLabel="Name">{project.displayName}</Td>
+                                <Td dataLabel="Type">
+                                  <Label isCompact>{project.type}</Label>
+                                </Td>
+                                <Td dataLabel="Cluster">{selectedClusters.length > 1 ? project.clusterNames : project.clusterName}</Td>
+                              </Tr>
+                            );
+                          })
+                        )}
                       </Tbody>
                     </Table>
                   </div>
