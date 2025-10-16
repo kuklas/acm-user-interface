@@ -423,10 +423,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   };
 
   return (
-    <Drawer isExpanded={isDrawerExpanded} onExpand={() => setIsDrawerExpanded(true)}>
+    <Drawer isExpanded={isDrawerExpanded} isInline position="right">
       <DrawerContent
         panelContent={
-          <DrawerPanelContent style={{ width: '35%' }}>
+          <DrawerPanelContent style={{ width: '500px', maxWidth: '50%' }}>
             <DrawerHead>
               <Title headingLevel="h3" size="xl">
                 Example scopes
