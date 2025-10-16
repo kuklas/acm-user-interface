@@ -428,7 +428,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         '--pf-v6-c-modal-box--m-body--PaddingLeft': '0'
       } as React.CSSProperties}
     >
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', height: '100%' }}>
         {/* Overlay Drawer Panel */}
         {isDrawerExpanded && (
           <div 
@@ -507,7 +507,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         )}
         
         {/* Main wizard content */}
-        <div>
+        <div style={{ height: '100%' }}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header Section */}
         <div style={{ 
