@@ -131,6 +131,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [roleSearch, setRoleSearch] = React.useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
   const [roleFilterType, setRoleFilterType] = React.useState('All');
+  const [rolesPage, setRolesPage] = React.useState(1);
+  const [rolesPerPage, setRolesPerPage] = React.useState(10);
   
   // Bulk selector dropdowns
   const [isUserBulkSelectorOpen, setIsUserBulkSelectorOpen] = React.useState(false);
@@ -164,6 +166,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     setProjectSearch('');
     setSelectedRole(null);
     setRoleSearch('');
+    setRolesPage(1);
+    setRolesPerPage(10);
   };
 
   const handleClose = () => {
