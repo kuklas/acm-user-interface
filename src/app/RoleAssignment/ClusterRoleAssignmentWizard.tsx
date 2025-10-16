@@ -57,7 +57,16 @@ const mockGroups = dbGroups.map((group, index) => ({
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
-  type: role.type,
+  displayName: role.displayName,
+  type: role.type === 'default' ? 'Default' : 'Custom',
+  resources: role.category === 'kubevirt' 
+    ? ['VirtualMachines', 'VirtualMachineInstances'] 
+    : role.category === 'cluster' 
+    ? ['Clusters', 'ClusterSets'] 
+    : role.category === 'namespace'
+    ? ['Namespaces', 'Projects']
+    : ['Applications', 'Deployments'],
+  permissions: role.permissions,
 }));
 
 interface ClusterRoleAssignmentWizardProps {
@@ -107,6 +116,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
   // Step 3: Role
   const [selectedRole, setSelectedRole] = React.useState<number | null>(null);
   const [roleSearch, setRoleSearch] = React.useState('');
+  const [rolesPage, setRolesPage] = React.useState(1);
+  const [rolesPerPage, setRolesPerPage] = React.useState(10);
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
   const [roleFilterType, setRoleFilterType] = React.useState('All');
   
@@ -134,6 +145,8 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
     setProjectsPerPage(10);
     setSelectedRole(null);
     setRoleSearch('');
+    setRolesPage(1);
+    setRolesPerPage(10);
   };
 
   const handleClose = () => {
@@ -243,8 +256,9 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
   );
 
   const filteredRoles = mockRoles.filter(role => {
-    // Filter by search
-    const matchesSearch = role.name.toLowerCase().includes(roleSearch.toLowerCase());
+    // Filter by search (search both displayName and technical name)
+    const matchesSearch = role.displayName.toLowerCase().includes(roleSearch.toLowerCase()) ||
+                          role.name.toLowerCase().includes(roleSearch.toLowerCase());
     
     // Filter by type
     const matchesType = roleFilterType === 'All' || role.type === roleFilterType;
@@ -966,16 +980,18 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                 </ToolbarItem>
               </ToolbarContent>
             </Toolbar>
-            <Table aria-label="Roles table" variant="compact">
+            <Table aria-label="Roles table" variant="compact" style={{ tableLayout: 'fixed', width: '100%' }}>
               <Thead>
                 <Tr>
                   <Th width={10}></Th>
-                  <Th>Role</Th>
-                  <Th>Type</Th>
+                  <Th width={35}>Role</Th>
+                  <Th width={15}>Type</Th>
+                  <Th width={25}>Resources</Th>
+                  <Th width={20}>Permissions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredRoles.slice(0, 10).map((role) => (
+                {filteredRoles.slice((rolesPage - 1) * rolesPerPage, rolesPage * rolesPerPage).map((role) => (
                   <Tr
                     key={role.id}
                     isSelectable
@@ -991,20 +1007,49 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                         onChange={() => setSelectedRole(role.id)}
                       />
                     </Td>
-                    <Td dataLabel="Role">
-                      <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                        {role.name}
+                    <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
+                      <div>
+                        <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
+                          {role.displayName}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                          {role.name}
+                        </div>
                       </div>
                     </Td>
                     <Td dataLabel="Type">
-                      <Label color={role.type === 'default' ? 'blue' : 'purple'}>
-                        {role.type}
-                      </Label>
+                      <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
+                    </Td>
+                    <Td dataLabel="Resources" style={{ wordBreak: 'break-word' }}>
+                      <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                        {role.resources.join(', ')}
+                      </div>
+                    </Td>
+                    <Td dataLabel="Permissions">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {role.permissions.slice(0, 2).map((perm) => (
+                          <Label key={perm} isCompact>{perm}</Label>
+                        ))}
+                        {role.permissions.length > 2 && (
+                          <Label isCompact>+{role.permissions.length - 2} more</Label>
+                        )}
+                      </div>
                     </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
+            <Pagination
+              itemCount={filteredRoles.length}
+              perPage={rolesPerPage}
+              page={rolesPage}
+              onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
+              onPerPageSelect={(_event, perPage) => {
+                setRolesPerPage(perPage);
+                setRolesPage(1);
+              }}
+              variant={PaginationVariant.bottom}
+            />
           </>
         )}
 

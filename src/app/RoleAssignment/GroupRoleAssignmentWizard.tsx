@@ -59,7 +59,16 @@ const mockGroups = dbGroups.map((group, index) => ({
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
-  type: role.type,
+  displayName: role.displayName,
+  type: role.type === 'default' ? 'Default' : 'Custom',
+  resources: role.category === 'kubevirt' 
+    ? ['VirtualMachines', 'VirtualMachineInstances'] 
+    : role.category === 'cluster' 
+    ? ['Clusters', 'ClusterSets'] 
+    : role.category === 'namespace'
+    ? ['Namespaces', 'Projects']
+    : ['Applications', 'Deployments'],
+  permissions: role.permissions,
 }));
 
 interface GroupRoleAssignmentWizardProps {
@@ -131,7 +140,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const [rolesPage, setRolesPage] = React.useState(1);
   const [rolesPerPage, setRolesPerPage] = React.useState(10);
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
-  const [roleFilterType, setRoleFilterType] = React.useState('Type');
+  const [roleFilterType, setRoleFilterType] = React.useState('All');
 
   // Ref for wizard content to enable scrolling
   const wizardContentRef = React.useRef<HTMLDivElement>(null);
@@ -160,13 +169,25 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
     setRoleSearch('');
     setRolesPage(1);
     setRolesPerPage(10);
-    setRoleFilterType('Type');
+    setRoleFilterType('All');
   };
 
   const handleClose = () => {
     resetWizard();
     onClose();
   };
+
+  // Filter roles based on search and type
+  const filteredRoles = mockRoles.filter(role => {
+    // Filter by search (search both displayName and technical name)
+    const matchesSearch = role.displayName.toLowerCase().includes(roleSearch.toLowerCase()) ||
+                          role.name.toLowerCase().includes(roleSearch.toLowerCase());
+    
+    // Filter by type
+    const matchesType = roleFilterType === 'All' || role.type === roleFilterType;
+    
+    return matchesSearch && matchesType;
+  });
 
   const handleNext = () => {
     if (currentStep === 1) {
@@ -2244,12 +2265,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         {/* Step 2: Select Role */}
         {currentStep === 2 && (
           <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: '16px' }}>
+            <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
               Select role
             </Title>
-            <Content component="p" style={{ marginBottom: '24px', color: '#6a6e73', fontSize: '14px' }}>
-              Select the role to assign to {groupName}.
-            </Content>
             
             <Toolbar>
               <ToolbarContent>
@@ -2269,14 +2287,18 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                       </MenuToggle>
                     )}
                     popperProps={{
-                      appendTo: () => document.body,
-                      
-                      
+                      appendTo: () => document.body
                     }}
                   >
                     <DropdownList>
-                      <DropdownItem onClick={() => { setRoleFilterType('Type'); setIsRoleFilterOpen(false); }}>
-                        Type
+                      <DropdownItem onClick={() => { setRoleFilterType('All'); setIsRoleFilterOpen(false); }}>
+                        All
+                      </DropdownItem>
+                      <DropdownItem onClick={() => { setRoleFilterType('Default'); setIsRoleFilterOpen(false); }}>
+                        Default
+                      </DropdownItem>
+                      <DropdownItem onClick={() => { setRoleFilterType('Custom'); setIsRoleFilterOpen(false); }}>
+                        Custom
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -2289,36 +2311,20 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     onClear={() => setRoleSearch('')}
                   />
                 </ToolbarItem>
-                <ToolbarItem align={{ default: 'alignEnd' }}>
-                  <Pagination
-                    itemCount={mockRoles.filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase())).length}
-                    perPage={rolesPerPage}
-                    page={rolesPage}
-                    onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
-                    onPerPageSelect={(_event, perPage) => {
-                      setRolesPerPage(perPage);
-                      setRolesPage(1);
-                    }}
-                    variant={PaginationVariant.top}
-                    isCompact
-                  />
-                </ToolbarItem>
               </ToolbarContent>
             </Toolbar>
-            
-            <Table aria-label="Roles table" variant="compact">
+            <Table aria-label="Roles table" variant="compact" style={{ tableLayout: 'fixed', width: '100%' }}>
               <Thead>
                 <Tr>
                   <Th width={10}></Th>
-                  <Th>Role</Th>
-                  <Th>Type</Th>
+                  <Th width={35}>Role</Th>
+                  <Th width={15}>Type</Th>
+                  <Th width={25}>Resources</Th>
+                  <Th width={20}>Permissions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {mockRoles
-                  .filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase()))
-                  .slice((rolesPage - 1) * rolesPerPage, rolesPage * rolesPerPage)
-                  .map((role) => (
+                {filteredRoles.slice((rolesPage - 1) * rolesPerPage, rolesPage * rolesPerPage).map((role) => (
                   <Tr
                     key={role.id}
                     isSelectable
@@ -2334,19 +2340,40 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         onChange={() => setSelectedRole(role.id)}
                       />
                     </Td>
-                    <Td dataLabel="Role">
-                      <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                        {role.name}
+                    <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
+                      <div>
+                        <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
+                          {role.displayName}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                          {role.name}
+                        </div>
                       </div>
                     </Td>
-                    <Td dataLabel="Type">{role.type}</Td>
+                    <Td dataLabel="Type">
+                      <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
+                    </Td>
+                    <Td dataLabel="Resources" style={{ wordBreak: 'break-word' }}>
+                      <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                        {role.resources.join(', ')}
+                      </div>
+                    </Td>
+                    <Td dataLabel="Permissions">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {role.permissions.slice(0, 2).map((perm) => (
+                          <Label key={perm} isCompact>{perm}</Label>
+                        ))}
+                        {role.permissions.length > 2 && (
+                          <Label isCompact>+{role.permissions.length - 2} more</Label>
+                        )}
+                      </div>
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
-            
             <Pagination
-              itemCount={mockRoles.filter(role => role.name.toLowerCase().includes(roleSearch.toLowerCase())).length}
+              itemCount={filteredRoles.length}
               perPage={rolesPerPage}
               page={rolesPage}
               onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
@@ -2355,7 +2382,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 setRolesPage(1);
               }}
               variant={PaginationVariant.bottom}
-              style={{ marginTop: '16px' }}
             />
           </>
         )}
