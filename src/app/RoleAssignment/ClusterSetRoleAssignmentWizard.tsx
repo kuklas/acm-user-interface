@@ -812,12 +812,12 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ color: '#151515' }}>Cluster set: {clusterSetName}</span>
                       </div>
                       
-                      {/* Cluster 1 (selected) */}
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative', backgroundColor: '#E7F1FA', padding: '2px 4px', marginLeft: '-4px', borderRadius: '4px' }}>
-                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '10px', top: '-6px' }}></span>
-                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '10px', top: '50%' }}></span>
+                      {/* Cluster 1 (partially selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster</span>
                       </div>
                       
@@ -860,11 +860,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         <span style={{ color: '#6a6e73' }}>Project</span>
                       </div>
                       
-                      {/* Cluster 2 (selected) */}
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative', backgroundColor: '#E7F1FA', padding: '2px 4px', marginLeft: '-4px', borderRadius: '4px' }}>
-                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '10px', top: '50%' }}></span>
+                      {/* Cluster 2 (partially selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
                         <span style={{ marginLeft: '20px' }}></span>
-                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
                         <span style={{ color: '#151515' }}>Cluster</span>
                       </div>
                       
