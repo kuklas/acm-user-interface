@@ -93,18 +93,26 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [isGroupFilterOpen, setIsGroupFilterOpen] = React.useState(false);
   const [groupFilterType, setGroupFilterType] = React.useState('Group');
   
-  // Step 2: Resources - Simplified for cluster set
-  const [resourceScope, setResourceScope] = React.useState<'full' | 'partial'>('full');
+  // Step 2: Resources - Option B hierarchical structure
+  const [resourceScope, setResourceScope] = React.useState<'all' | 'clusters'>('all');
+  const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
+  const [clusterSearch, setClusterSearch] = React.useState('');
+  const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
+  const [clusterFilterType, setClusterFilterType] = React.useState('Name');
   const [isResourceScopeOpen, setIsResourceScopeOpen] = React.useState(false);
   
-  // Project selection for partial access
+  // Sub-level states for hierarchical navigation
+  const [clusterScope, setClusterScope] = React.useState<'everything' | 'projects'>('everything');
+  const [isClusterScopeOpen, setIsClusterScopeOpen] = React.useState(false);
   const [selectedProjects, setSelectedProjects] = React.useState<number[]>([]);
   const [projectSearch, setProjectSearch] = React.useState('');
   const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
   const [projectFilterType, setProjectFilterType] = React.useState('Name');
-  const [projectsPage, setProjectsPage] = React.useState(1);
-  const [projectsPerPage, setProjectsPerPage] = React.useState(10);
-  const [isProjectBulkSelectorOpen, setIsProjectBulkSelectorOpen] = React.useState(false);
+  
+  // Track which sub-step we're on
+  const [showClusterSelection, setShowClusterSelection] = React.useState(false);
+  const [showScopeSelection, setShowScopeSelection] = React.useState(false);
+  const [showProjectSelection, setShowProjectSelection] = React.useState(false);
   
   // Step 3: Role
   const [selectedRole, setSelectedRole] = React.useState<number | null>(null);
@@ -129,12 +137,17 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     setSelectedGroup(null);
     setUserSearch('');
     setGroupSearch('');
-    setResourceScope('full');
+    setResourceScope('all');
+    setSelectedClusters([]);
+    setClusterSearch('');
     setIsResourceScopeOpen(false);
+    setClusterScope('everything');
+    setIsClusterScopeOpen(false);
     setSelectedProjects([]);
     setProjectSearch('');
-    setProjectsPage(1);
-    setProjectsPerPage(10);
+    setShowClusterSelection(false);
+    setShowScopeSelection(false);
+    setShowProjectSelection(false);
     setSelectedRole(null);
     setRoleSearch('');
   };
@@ -145,17 +158,58 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   };
 
   const handleNext = () => {
-    // Simple step progression for simplified wizard
-    setCurrentStep(currentStep + 1);
+    if (currentStep === 2 && resourceScope === 'clusters') {
+      // Handle hierarchical navigation within step 2
+      if (!showClusterSelection && !showScopeSelection) {
+        // User selected "Select specific clusters" but hasn't started substeps yet
+        // Show the cluster selection substep
+        setShowClusterSelection(true);
+      } else if (showClusterSelection && !showScopeSelection) {
+        // Clusters selected - move to scope selection
+        if (selectedClusters.length > 0) {
+          setShowClusterSelection(false);
+          setShowScopeSelection(true);
+          setClusterScope('everything');
+        }
+      } else if (showScopeSelection) {
+        // Scope selection made (projects table may be shown inline or not)
+        // Move to next step regardless
+        setCurrentStep(currentStep + 1);
+      } else {
+        // Should not reach here, but fallback to next step
+        setCurrentStep(currentStep + 1);
+      }
+    } else {
+      // Normal step progression
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const handleBack = () => {
-    if (currentStep === 1) {
+    if (currentStep === 2 && resourceScope === 'clusters') {
+      // Handle hierarchical navigation backwards within step 2
+      if (showScopeSelection) {
+        // Go back to cluster selection
+        setShowScopeSelection(false);
+        setShowClusterSelection(true);
+        setClusterScope('everything');
+        setSelectedProjects([]);
+      } else if (showClusterSelection) {
+        // Go back to initial dropdown - but stay on step 2
+        setShowClusterSelection(false);
+        setSelectedClusters([]);
+        setResourceScope('all'); // Reset to initial state
+      } else {
+        // At the beginning of step 2 - go to previous step
+        setCurrentStep(currentStep - 1);
+      }
+    } else if (currentStep === 1) {
       // Don't go back before step 1
       return;
+    } else {
+      // Normal step progression
+      setCurrentStep(currentStep - 1);
     }
-    // Simple step back
-    setCurrentStep(currentStep - 1);
   };
 
   const handleFinish = () => {
@@ -174,7 +228,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       roleId: selectedRole,
       roleName,
       resourceScope,
-      selectedProjects,
+      selectedClusters,
     });
     
     resetWizard();
@@ -185,9 +239,15 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       return activeTabKey === 0 ? selectedUser === null : selectedGroup === null;
     }
     if (currentStep === 2) {
-      // For partial access, must select at least one project
-      if (resourceScope === 'partial' && selectedProjects.length === 0) {
-        return true;
+      // For Option B: Check hierarchical requirements
+      if (resourceScope === 'clusters') {
+        if (!showClusterSelection) return false; // Initial dropdown selection is valid
+        if (selectedClusters.length === 0) return true; // Need at least one cluster
+        if (showScopeSelection) {
+          // If "Limit to specific projects" is selected, validate that projects are selected
+          if (clusterScope === 'projects' && selectedProjects.length === 0) return true;
+          return false; // Otherwise scope selection is valid
+        }
       }
       return false;
     }
@@ -253,6 +313,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     group.name.toLowerCase().includes(groupSearch.toLowerCase())
   );
 
+  const filteredClusters = mockClusters.filter(cluster =>
+    cluster.name.toLowerCase().includes(clusterSearch.toLowerCase())
+  );
+
   const filteredRoles = mockRoles.filter(role => {
     // Filter by search
     const matchesSearch = role.name.toLowerCase().includes(roleSearch.toLowerCase());
@@ -267,18 +331,76 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const filteredProjects = React.useMemo(() => {
     let projects = mockProjects;
     
+    // Filter by selected clusters
+    if (selectedClusters.length > 0) {
+      const selectedClusterDbIds = selectedClusters
+        .map(id => mockClusters.find(c => c.id === id)?.dbId)
+        .filter(Boolean) as string[];
+      
+      // First, get all projects from the selected clusters
+      projects = projects.filter(p => selectedClusterDbIds.includes(p.clusterId));
+      
+      // SINGLE CLUSTER: Show ALL projects from that cluster (e.g., dev-team-a shows all its 3 projects)
+      // MULTIPLE CLUSTERS: Show ONLY common projects (projects with same name across ALL selected clusters)
+      if (selectedClusters.length > 1) {
+        // Group projects by name to find which ones exist in all selected clusters
+        const projectsByName = new Map<string, typeof mockProjects>();
+        projects.forEach(project => {
+          if (!projectsByName.has(project.name)) {
+            projectsByName.set(project.name, []);
+          }
+          projectsByName.get(project.name)?.push(project);
+        });
+        
+        // Find project names that appear in ALL selected clusters
+        const commonProjectNames = Array.from(projectsByName.entries())
+          .filter(([_, projs]) => projs.length === selectedClusters.length)
+          .map(([name]) => name);
+        
+        // Filter to show only common projects
+        projects = projects.filter(p => commonProjectNames.includes(p.name));
+      }
+    }
+    
     // Filter by search
     if (projectSearch) {
       projects = projects.filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase()));
     }
     
     return projects;
-  }, [projectSearch, mockProjects]);
+  }, [selectedClusters, projectSearch, mockProjects, mockClusters]);
 
   // Render step indicator to match the original wizard
-  const renderStepIndicator = (stepNum: number, label: string) => {
+  const renderStepIndicator = (stepNum: number, label: string, isSubStep: boolean = false) => {
     const isActive = currentStep === stepNum;
     const isCompleted = currentStep > stepNum;
+    
+    // Render substeps without circles
+    if (isSubStep) {
+      const isSubStepActive = 
+        (currentStep === 2 && stepNum === 2 && 
+          ((label === 'Select clusters' && showClusterSelection) ||
+           (label === 'Choose scope' && showScopeSelection) ||
+           (label === 'Select projects' && showProjectSelection)));
+      
+      return (
+        <div style={{ position: 'relative', marginBottom: '0.25rem', paddingLeft: '3.5rem' }}>
+          <span
+            style={{ 
+              display: 'inline-block',
+              padding: '0.5rem 0.75rem',
+              fontSize: '14px',
+              color: '#6a6e73',
+              cursor: 'default',
+              backgroundColor: isSubStepActive ? '#f0f0f0' : 'transparent',
+              borderRadius: '4px'
+            }}
+          >
+            {label}
+          </span>
+        </div>
+      );
+    }
     
     return (
       <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
@@ -392,6 +514,38 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
           }}>
             {renderStepIndicator(1, 'Select user or group')}
             {renderStepIndicator(2, 'Select resources')}
+            {currentStep === 2 && resourceScope === 'clusters' && (
+              <>
+                {(showClusterSelection || showScopeSelection) && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: showClusterSelection ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Select clusters
+                    </div>
+                    {showScopeSelection && (
+                      <div style={{ 
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '14px',
+                        color: '#6a6e73',
+                        cursor: 'default',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '4px',
+                        marginBottom: '0'
+                      }}>
+                        Define access level
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
             {renderStepIndicator(3, 'Select role')}
             {renderStepIndicator(4, 'Review')}
           </div>
@@ -684,10 +838,12 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               Select resources
             </Title>
             <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-              Define the scope of access for this role assignment on the {clusterSetName} cluster set.
+              Define the scope of access by selecting which resources this role will apply to. You can grant access to the entire cluster set or narrow it down to specific clusters and projects.
             </Content>
 
-            <Dropdown
+            {/* Only show dropdown when NOT in any substep */}
+            {!showClusterSelection && !showScopeSelection && !showProjectSelection && (
+              <Dropdown
                 isOpen={isResourceScopeOpen}
                 onSelect={() => setIsResourceScopeOpen(false)}
                 onOpenChange={(isOpen: boolean) => setIsResourceScopeOpen(isOpen)}
@@ -699,7 +855,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     variant="default"
                     style={{ width: '100%' }}
                   >
-                    {resourceScope === 'full' ? 'Full cluster access' : 'Limit to specific projects'}
+                    {resourceScope === 'all' ? 'Everything in the cluster set' : 'Select specific clusters'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -707,69 +863,642 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   appendTo: () => document.body,
                   position: 'bottom-start',
                   strategy: 'fixed',
+                  modifiers: [
+                    {
+                      name: 'preventOverflow',
+                      enabled: true,
+                    },
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 8],
+                      },
+                    },
+                  ],
                 }}
               >
                 <DropdownList>
                   <DropdownItem
-                    key="full"
+                    key="all"
                     onClick={() => {
-                      setResourceScope('full');
+                      setResourceScope('all');
+                      setSelectedClusters([]);
                       setSelectedProjects([]);
+                      setShowClusterSelection(false);
+                      setShowScopeSelection(false);
+                      setShowProjectSelection(false);
                       setIsResourceScopeOpen(false);
                     }}
-                    description="Grant access to all current and future projects in this cluster set"
+                    description="Applies to all current and future clusters and resources in this cluster set"
                   >
-                    Full cluster access
+                    Everything in the cluster set
                   </DropdownItem>
                   <DropdownItem
-                    key="partial"
+                    key="clusters"
                     onClick={() => {
-                      setResourceScope('partial');
+                      setResourceScope('clusters');
+                      setShowClusterSelection(false);
+                      setSelectedClusters([]);
                       setSelectedProjects([]);
+                      setShowScopeSelection(false);
+                      setShowProjectSelection(false);
                       setIsResourceScopeOpen(false);
                     }}
-                    description="Select specific projects to grant access to"
+                    description="Choose individual clusters, then optionally narrow down to specific projects"
                   >
-                    Limit to specific projects
+                    Select specific clusters
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
+            )}
 
-            {/* Projects table for partial access */}
-            {resourceScope === 'partial' && (
+            {/* Tree view - Visual representation of selection scope */}
+            {!showClusterSelection && !showScopeSelection && !showProjectSelection && (
+              <div style={{ 
+                marginTop: '16px', 
+                padding: '16px 16px 8px 16px', 
+                backgroundColor: '#f5f5f5', 
+                borderRadius: '6px',
+                border: '1px solid #d2d2d2'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  {/* Example title on the left */}
+                  <Content component="p" style={{ fontSize: '11px', color: '#6a6e73', margin: 0, fontStyle: 'italic' }}>
+                    {resourceScope === 'all' && 'Example scope: Full cluster set access'}
+                    {resourceScope === 'clusters' && exampleIndex === 0 && 'Example scope: Partial single cluster access'}
+                    {resourceScope === 'clusters' && exampleIndex === 1 && 'Example scope: Full single cluster access'}
+                    {resourceScope === 'clusters' && exampleIndex === 2 && 'Example scope: Common projects across multiple clusters'}
+                  </Content>
+                  
+                  {/* Carousel navigation on the right */}
+                  {resourceScope === 'clusters' && (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <Button 
+                        variant="plain" 
+                        onClick={() => setExampleIndex(Math.max(0, exampleIndex - 1))}
+                        isDisabled={exampleIndex === 0}
+                        aria-label="Previous example"
+                      >
+                        <AngleLeftIcon />
+                      </Button>
+                      <span style={{ fontSize: '12px', color: '#6a6e73' }}>
+                        {exampleIndex + 1} of 3
+                      </span>
+                      <Button 
+                        variant="plain" 
+                        onClick={() => setExampleIndex(Math.min(2, exampleIndex + 1))}
+                        isDisabled={exampleIndex === 2}
+                        aria-label="Next example"
+                      >
+                        <AngleRightIcon />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div style={{ paddingLeft: '8px', fontSize: '12px', lineHeight: '1.6' }}>
+                  {resourceScope === 'all' || (resourceScope === 'clusters' && exampleIndex === 2) ? (
+                    <>
+                      {/* Example for "Everything" OR Example 3: Common projects across clusters */}
+                      
+                      {/* Cluster set */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
+                      {/* Cluster 1 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
+                      {/* Project (highlighted if in "clusters" mode for common project) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        ...(resourceScope === 'clusters' && { 
+                          backgroundColor: '#E7F1FA', 
+                          marginLeft: '20px', 
+                          marginRight: '-8px', 
+                          padding: '4px 8px 4px 0', 
+                          borderRadius: '4px' 
+                        })
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: resourceScope === 'clusters' ? '-14px' : '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: resourceScope === 'clusters' ? '-14px' : '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: resourceScope === 'clusters' ? '6px' : '40px' }}></span>
+                        {resourceScope === 'all' || (resourceScope === 'clusters' && exampleIndex === 2) ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515', fontWeight: resourceScope === 'clusters' ? 600 : 'normal' }}>
+                          {resourceScope === 'clusters' ? 'Common project' : 'Project'}
+                        </span>
+                      </div>
+                      
+                      {/* VM 1 under project */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 2 under project (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 on Cluster 1 (not selected in Example 1) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative'
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(50% + 3px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 3 under project 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 under project 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
+                      {/* Common project (highlighted again if in "clusters" mode) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        ...(resourceScope === 'clusters' && { 
+                          backgroundColor: '#E7F1FA', 
+                          marginLeft: '20px', 
+                          marginRight: '-8px', 
+                          padding: '4px 8px 4px 0', 
+                          borderRadius: '4px' 
+                        })
+                      }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: resourceScope === 'clusters' ? '-14px' : '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: resourceScope === 'clusters' ? '6px' : '40px' }}></span>
+                        {resourceScope === 'all' || (resourceScope === 'clusters' && exampleIndex === 2) ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515', fontWeight: resourceScope === 'clusters' ? 600 : 'normal' }}>
+                          {resourceScope === 'clusters' ? 'Common project' : 'Project'}
+                        </span>
+                      </div>
+                      
+                      {/* VM 3 under project on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 under project on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 on Cluster 2 (not selected in Example 1) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative'
+                      }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 5 under project 2 on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 6 under project 2 on cluster 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        {resourceScope === 'all' ? (
+                          <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        ) : (
+                          <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        )}
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                    </>
+                  ) : resourceScope === 'clusters' && exampleIndex === 1 ? (
+                    <>
+                      {/* Example 2: Whole cluster selected */}
+                      
+                      {/* Cluster set */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
+                      {/* Cluster 1 (highlighted) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        backgroundColor: '#E7F1FA', 
+                        marginLeft: '20px', 
+                        marginRight: '-8px', 
+                        padding: '4px 8px 4px 0', 
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '6px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Cluster</span>
+                      </div>
+                      
+                      {/* Project (highlighted) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        backgroundColor: '#E7F1FA', 
+                        marginLeft: '20px', 
+                        marginRight: '-8px', 
+                        padding: '4px 8px 4px 0', 
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '26px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Project</span>
+                      </div>
+                      
+                      {/* VM 1 under project */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 2 under project (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 (not highlighted) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(50% + 3px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 3 under project 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 under project 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Cluster 2 (not selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
+                      {/* Project under Cluster 2 (not selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 3 under project on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 under project on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 under Cluster 2 (not selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 5 under project 2 on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 6 under project 2 on cluster 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                    </>
+                  ) : resourceScope === 'clusters' && exampleIndex === 0 ? (
+                    <>
+                      {/* Example 1: Single cluster and single project selected */}
+                      
+                      {/* Cluster set */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster set</span>
+                      </div>
+                      
+                      {/* Cluster (highlighted) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        backgroundColor: '#E7F1FA', 
+                        marginLeft: '20px', 
+                        marginRight: '-8px', 
+                        padding: '4px 8px 4px 0', 
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '6px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Cluster</span>
+                      </div>
+                      
+                      {/* Project 1 (highlighted) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        backgroundColor: '#E7F1FA', 
+                        marginLeft: '20px', 
+                        marginRight: '-8px', 
+                        padding: '4px 8px 4px 0', 
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '6px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Project</span>
+                      </div>
+                      
+                      {/* VM 1 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 2 (last under project 1) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 (highlighted) */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        marginBottom: '6px', 
+                        position: 'relative',
+                        backgroundColor: '#E7F1FA', 
+                        marginLeft: '20px', 
+                        marginRight: '-8px', 
+                        padding: '4px 8px 4px 0', 
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '-14px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '6px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515', fontWeight: 600 }}>Project</span>
+                      </div>
+                      
+                      {/* VM 3 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <CheckCircleIcon style={{ color: '#3E8635', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Cluster 2 (not selected) */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '6px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '20px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Cluster</span>
+                      </div>
+                      
+                      {/* Project 1 under Cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 1 under project 1 on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 2 under project 1 on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* Project 2 under Cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '40px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Project</span>
+                      </div>
+                      
+                      {/* VM 3 under project 2 on cluster 2 */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', position: 'relative' }}>
+                        <span style={{ width: '1px', height: 'calc(100% + 6px)', borderLeft: '1px solid #d2d2d2', position: 'absolute', left: '26px', top: '-6px' }}></span>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                      
+                      {/* VM 4 under project 2 on cluster 2 (last) */}
+                      <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                        <span style={{ width: '14px', height: '1px', borderTop: '1px solid #d2d2d2', position: 'absolute', left: '46px', top: '50%' }}></span>
+                        <span style={{ marginLeft: '60px' }}></span>
+                        <ResourcesEmptyIcon style={{ color: '#151515', marginRight: '8px', fontSize: '12px', flexShrink: 0 }} />
+                        <span style={{ color: '#151515' }}>Virtual machine</span>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+                
+              </div>
+            )}
+
+            {/* SUB-STEP 1: Select Clusters - Only shows after user clicks Continue */}
+            {showClusterSelection && !showScopeSelection && (
               <div style={{ marginTop: '24px' }}>
                 <Toolbar style={{ marginBottom: '16px' }}>
                   <ToolbarContent>
                     <ToolbarItem>
                       <Dropdown
-                        isOpen={isProjectBulkSelectorOpen}
-                        onSelect={() => setIsProjectBulkSelectorOpen(false)}
-                        onOpenChange={(isOpen: boolean) => setIsProjectBulkSelectorOpen(isOpen)}
+                        isOpen={isClusterFilterOpen}
+                        onSelect={() => setIsClusterFilterOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
                         toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle
-                            ref={toggleRef}
-                            onClick={() => setIsProjectBulkSelectorOpen(!isProjectBulkSelectorOpen)}
-                            isExpanded={isProjectBulkSelectorOpen}
+                          <MenuToggle 
+                            ref={toggleRef} 
+                            onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} 
+                            isExpanded={isClusterFilterOpen}
                             variant="default"
-                            style={{
-                              borderRadius: '8px',
-                              height: '36px',
-                              minWidth: '50px',
-                              padding: '0 8px',
-                            }}
                           >
-                            <Checkbox
-                              isChecked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
-                              onChange={(_event, checked) => {
-                                if (checked) {
-                                  setSelectedProjects(filteredProjects.slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage).map(p => p.id));
-                                } else {
-                                  setSelectedProjects([]);
-                                }
-                              }}
-                              aria-label="Select all projects"
-                              id="bulk-select-projects"
-                            />
+                            {clusterFilterType}
                           </MenuToggle>
                         )}
                         popperProps={{
@@ -779,21 +1508,187 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => {
-                            setSelectedProjects(filteredProjects.slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage).map(p => p.id));
-                            setIsProjectBulkSelectorOpen(false);
-                          }}>
-                            Select page ({Math.min(projectsPerPage, filteredProjects.length - (projectsPage - 1) * projectsPerPage)} items)
+                          <DropdownItem onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>
+                            Name
                           </DropdownItem>
-                          <DropdownItem onClick={() => {
-                            setSelectedProjects(filteredProjects.map(p => p.id));
-                            setIsProjectBulkSelectorOpen(false);
-                          }}>
-                            Select all ({filteredProjects.length} items)
+                          <DropdownItem onClick={() => { setClusterFilterType('Status'); setIsClusterFilterOpen(false); }}>
+                            Status
+                          </DropdownItem>
+                          <DropdownItem onClick={() => { setClusterFilterType('Infrastructure'); setIsClusterFilterOpen(false); }}>
+                            Infrastructure
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
                     </ToolbarItem>
+                    <ToolbarItem>
+                      <SearchInput
+                        placeholder="Search clusters"
+                        value={clusterSearch}
+                        onChange={(_event, value) => setClusterSearch(value)}
+                        onClear={() => setClusterSearch('')}
+                      />
+                    </ToolbarItem>
+                  </ToolbarContent>
+                </Toolbar>
+
+                <Table aria-label="Clusters table" variant="compact">
+                  <Thead>
+                    <Tr>
+                      <Th width={10}></Th>
+                      <Th>Name</Th>
+                      <Th>Namespace</Th>
+                      <Th>Status</Th>
+                      <Th>Infrastructure</Th>
+                      <Th>Control plane type</Th>
+                      <Th>Distribution version</Th>
+                      <Th>Labels</Th>
+                      <Th>Nodes</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {filteredClusters.map((cluster) => (
+                      <Tr
+                        key={cluster.id}
+                        isSelectable
+                        isClickable
+                        isRowSelected={selectedClusters.includes(cluster.id)}
+                        onRowClick={() => {
+                          if (selectedClusters.includes(cluster.id)) {
+                            setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
+                          } else {
+                            setSelectedClusters([...selectedClusters, cluster.id]);
+                          }
+                        }}
+                      >
+                        <Td>
+                          <Checkbox
+                            id={`cluster-${cluster.id}`}
+                            isChecked={selectedClusters.includes(cluster.id)}
+                            onChange={() => {
+                              if (selectedClusters.includes(cluster.id)) {
+                                setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
+                              } else {
+                                setSelectedClusters([...selectedClusters, cluster.id]);
+                              }
+                            }}
+                          />
+                        </Td>
+                        <Td>{cluster.name}</Td>
+                        <Td>{clusterSetName}</Td>
+                        <Td>
+                          <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
+                            {cluster.status}
+                          </Label>
+                        </Td>
+                        <Td>{cluster.infrastructure || 'N/A'}</Td>
+                        <Td>{cluster.controlPlaneType || 'Standalone'}</Td>
+                        <Td>{cluster.kubernetesVersion || 'N/A'}</Td>
+                        <Td>{cluster.labels || 0}</Td>
+                        <Td>{cluster.nodes}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+                
+                {selectedClusters.length > 0 && (
+                  <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f0f9ff', borderRadius: '6px', border: '1px solid #0066cc' }}>
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
+                      <strong>✓ {selectedClusters.length} cluster{selectedClusters.length > 1 ? 's' : ''} selected</strong>
+                    </Content>
+                    <Content component="p" style={{ fontSize: '13px', color: '#6a6e73', marginTop: '4px', fontStyle: 'italic' }}>
+                      Click "Next" below to define the access level for {selectedClusters.length === 1 ? 'this cluster' : 'these clusters'}.
+                    </Content>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-STEP 2: Choose Scope */}
+            {showScopeSelection && (
+              <div style={{ marginTop: '24px' }}>
+                <FormGroup label="Access level" style={{ marginBottom: '16px' }}>
+                  <Dropdown
+                    isOpen={isClusterScopeOpen}
+                    onSelect={() => setIsClusterScopeOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsClusterScopeOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle 
+                        ref={toggleRef} 
+                        onClick={() => setIsClusterScopeOpen(!isClusterScopeOpen)} 
+                        isExpanded={isClusterScopeOpen}
+                        variant="default"
+                        style={{ width: '100%' }}
+                      >
+                        {clusterScope === 'everything'
+                          ? (selectedClusters.length === 1 ? 'Full cluster access' : 'Full access on all clusters')
+                          : (selectedClusters.length === 1 ? 'Select specific projects (multiple)' : 'Select common projects (multiple)')}
+                      </MenuToggle>
+                    )}
+                    shouldFocusToggleOnSelect
+                    popperProps={{
+                      appendTo: () => document.body,
+                      position: 'bottom-start',
+                      strategy: 'fixed',
+                      modifiers: [
+                        {
+                          name: 'preventOverflow',
+                          enabled: true,
+                        },
+                        {
+                          name: 'offset',
+                          options: {
+                            offset: [0, 8],
+                          },
+                        },
+                      ],
+                    }}
+                  >
+                    <DropdownList>
+                      <DropdownItem
+                        key="everything"
+                        onClick={() => {
+                          setClusterScope('everything');
+                          setSelectedProjects([]);
+                          setShowProjectSelection(false);
+                          setIsClusterScopeOpen(false);
+                        }}
+                        description={selectedClusters.length === 1
+                          ? '✓ Full access: All current and future projects/namespaces on this cluster'
+                          : `✓ Full access: All current and future projects/namespaces across all ${selectedClusters.length} clusters`}
+                      >
+                        {selectedClusters.length === 1 ? 'Full cluster access' : 'Full access on all clusters'}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="projects"
+                        onClick={() => {
+                          setClusterScope('projects');
+                          setShowProjectSelection(true);
+                          setSelectedProjects([]);
+                          setIsClusterScopeOpen(false);
+                        }}
+                        description={selectedClusters.length === 1
+                          ? '→ Limited access: Choose specific projects/namespaces from this cluster'
+                          : `→ Limited access: Choose projects/namespaces that exist across all ${selectedClusters.length} clusters`}
+                      >
+                        {selectedClusters.length === 1 ? 'Limit to specific projects' : 'Limit to common projects'}
+                      </DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </FormGroup>
+              </div>
+            )}
+
+            {/* Projects Table - appears inline when "Limit to specific projects" is selected */}
+            {showScopeSelection && clusterScope === 'projects' && (
+              <div style={{ marginTop: '24px' }}>
+                {selectedClusters.length > 1 && (
+                  <Content component="p" style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', fontSize: '13px' }}>
+                    <strong>Note:</strong> Only projects that exist in <strong>all {selectedClusters.length} clusters</strong> are shown below.
+                  </Content>
+                )}
+                
+                <Toolbar style={{ marginBottom: '16px' }}>
+                  <ToolbarContent>
                     <ToolbarItem>
                       <Dropdown
                         isOpen={isProjectFilterOpen}
@@ -822,9 +1717,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                           <DropdownItem onClick={() => { setProjectFilterType('Type'); setIsProjectFilterOpen(false); }}>
                             Type
                           </DropdownItem>
-                          <DropdownItem onClick={() => { setProjectFilterType('Display name'); setIsProjectFilterOpen(false); }}>
-                            Display name
-                          </DropdownItem>
+                          {selectedClusters.length === 1 && (
+                            <DropdownItem onClick={() => { setProjectFilterType('Display name'); setIsProjectFilterOpen(false); }}>
+                              Display name
+                            </DropdownItem>
+                          )}
                         </DropdownList>
                       </Dropdown>
                     </ToolbarItem>
@@ -836,20 +1733,6 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         onClear={() => setProjectSearch('')}
                       />
                     </ToolbarItem>
-                    <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
-                      <Pagination
-                        itemCount={filteredProjects.length}
-                        perPage={projectsPerPage}
-                        page={projectsPage}
-                        onSetPage={(_event, page) => setProjectsPage(page)}
-                        onPerPageSelect={(_event, perPage) => {
-                          setProjectsPerPage(perPage);
-                          setProjectsPage(1);
-                        }}
-                        variant={PaginationVariant.top}
-                        isCompact
-                      />
-                    </ToolbarItem>
                   </ToolbarContent>
                 </Toolbar>
 
@@ -858,67 +1741,144 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <Tr>
                       <Th width={10}></Th>
                       <Th>Project name</Th>
-                      <Th>Display name</Th>
-                      <Th>Type</Th>
+                      {selectedClusters.length === 1 ? (
+                        <>
+                          <Th>Display name</Th>
+                          <Th>Type</Th>
+                        </>
+                      ) : (
+                        <Th>Clusters</Th>
+                      )}
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {filteredProjects.length === 0 ? (
-                      <Tr>
-                        <Td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>
-                          <Content component="p" style={{ color: '#6a6e73' }}>
-                            No projects found in this cluster set.
-                          </Content>
-                        </Td>
-                      </Tr>
-                    ) : (
-                      filteredProjects
-                        .slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage)
-                        .map((project) => (
-                        <Tr key={project.id}>
-                          <Td
-                            select={{
-                              rowIndex: project.id,
-                              onSelect: (_event, isSelecting) => {
-                                setSelectedProjects(prev => {
-                                  const newSelected = new Set(prev);
-                                  if (isSelecting) {
-                                    newSelected.add(project.id);
-                                  } else {
-                                    newSelected.delete(project.id);
-                                  }
-                                  return Array.from(newSelected);
-                                });
-                              },
-                              isSelected: selectedProjects.includes(project.id),
-                            }}
-                          />
-                          <Td dataLabel="Project name">{project.name}</Td>
-                          <Td dataLabel="Display name">{project.displayName}</Td>
-                          <Td dataLabel="Type">{project.type}</Td>
+                    {selectedClusters.length === 1 ? (
+                      // Single cluster - show all project details
+                      filteredProjects.length === 0 ? (
+                        <Tr>
+                          <Td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>
+                            <Content component="p" style={{ color: '#6a6e73' }}>
+                              No projects found in this cluster.
+                            </Content>
+                          </Td>
                         </Tr>
-                      ))
+                      ) : (
+                        filteredProjects.map((project) => (
+                        <Tr
+                          key={project.id}
+                          isSelectable
+                          isClickable
+                          isRowSelected={selectedProjects.includes(project.id)}
+                          onRowClick={() => {
+                            if (selectedProjects.includes(project.id)) {
+                              setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                            } else {
+                              setSelectedProjects([...selectedProjects, project.id]);
+                            }
+                          }}
+                        >
+                          <Td>
+                            <Checkbox
+                              id={`project-${project.id}`}
+                              isChecked={selectedProjects.includes(project.id)}
+                              onChange={() => {
+                                if (selectedProjects.includes(project.id)) {
+                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                } else {
+                                  setSelectedProjects([...selectedProjects, project.id]);
+                                }
+                              }}
+                            />
+                          </Td>
+                          <Td>{project.name}</Td>
+                          <Td>{project.displayName}</Td>
+                          <Td>
+                            <Label color="blue">{project.type}</Label>
+                          </Td>
+                        </Tr>
+                        ))
+                      )
+                    ) : (
+                      // Multiple clusters - show common projects with cluster list
+                      (() => {
+                        const commonProjectsMap = new Map<string, { projects: typeof mockProjects, clusterNames: string[] }>();
+                        
+                        filteredProjects.forEach(project => {
+                          if (!commonProjectsMap.has(project.name)) {
+                            commonProjectsMap.set(project.name, { projects: [], clusterNames: [] });
+                          }
+                          const entry = commonProjectsMap.get(project.name)!;
+                          entry.projects.push(project);
+                          if (!entry.clusterNames.includes(project.clusterName)) {
+                            entry.clusterNames.push(project.clusterName);
+                          }
+                        });
+
+                        const commonProjects = Array.from(commonProjectsMap.entries())
+                          .filter(([_, entry]) => entry.clusterNames.length === selectedClusters.length)
+                          .map(([name, entry]) => ({
+                            name,
+                            projects: entry.projects,
+                            clusterNames: entry.clusterNames.sort()
+                          }));
+
+                        if (commonProjects.length === 0) {
+                          return (
+                            <Tr>
+                              <Td colSpan={3} style={{ textAlign: 'center', padding: '24px' }}>
+                                <Content component="p" style={{ color: '#6a6e73' }}>
+                                  No common projects found in the selected clusters.
+                                </Content>
+                              </Td>
+                            </Tr>
+                          );
+                        }
+
+                        return commonProjects.map((item, index) => {
+                          const isSelected = item.projects.every(p => selectedProjects.includes(p.id));
+                          
+                          return (
+                            <Tr
+                              key={index}
+                              isSelectable
+                              isClickable
+                              isRowSelected={isSelected}
+                              onRowClick={() => {
+                                if (isSelected) {
+                                  setSelectedProjects(selectedProjects.filter(id => !item.projects.some(p => p.id === id)));
+                                } else {
+                                  setSelectedProjects([...selectedProjects, ...item.projects.map(p => p.id)]);
+                                }
+                              }}
+                            >
+                              <Td>
+                                <Checkbox
+                                  id={`common-project-${index}`}
+                                  isChecked={isSelected}
+                                  onChange={() => {
+                                    if (isSelected) {
+                                      setSelectedProjects(selectedProjects.filter(id => !item.projects.some(p => p.id === id)));
+                                    } else {
+                                      setSelectedProjects([...selectedProjects, ...item.projects.map(p => p.id)]);
+                                    }
+                                  }}
+                                />
+                              </Td>
+                              <Td>{item.name}</Td>
+                              <Td>
+                                {item.clusterNames.map((clusterName, idx) => (
+                                  <Label key={idx} color="blue" style={{ marginRight: '4px' }}>
+                                    {clusterName}
+                                  </Label>
+                                ))}
+                              </Td>
+                            </Tr>
+                          );
+                        });
+                      })()
                     )}
                   </Tbody>
                 </Table>
-                
-                <Toolbar>
-                  <ToolbarContent>
-                    <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
-                      <Pagination
-                        itemCount={filteredProjects.length}
-                        perPage={projectsPerPage}
-                        page={projectsPage}
-                        onSetPage={(_event, page) => setProjectsPage(page)}
-                        onPerPageSelect={(_event, perPage) => {
-                          setProjectsPerPage(perPage);
-                          setProjectsPage(1);
-                        }}
-                        variant={PaginationVariant.bottom}
-                      />
-                    </ToolbarItem>
-                  </ToolbarContent>
-                </Toolbar>
               </div>
             )}
           </>
@@ -1091,13 +2051,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   Select resources
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                  Cluster set: {clusterSetName}
-                </Content>
-                <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                  Access: {resourceScope === 'full' ? 'Full access (all projects)' : 'Partial access (specific projects)'}
+                  {resourceScope === 'all' ? 'Everything in the cluster set' : 'Assign to specific'}
                 </Content>
                 
-                {resourceScope === 'partial' && selectedProjects.length > 0 && (
+                {resourceScope === 'clusters' && (
                   <>
                     <Content component="p" style={{ 
                       marginBottom: '4px', 
@@ -1106,14 +2063,43 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       color: '#151515',
                       marginTop: '12px'
                     }}>
-                      Selected projects
+                      Specify clusters
                     </Content>
-                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
-                      {selectedProjects.map(id => {
-                        const project = mockProjects.find(p => p.id === id);
-                        return project?.name;
-                      }).filter(Boolean).join(', ')}
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                      {selectedClusters.map(id => mockClusters.find(c => c.id === id)?.name).join(', ')}
                     </Content>
+
+                    {clusterScope === 'projects' && selectedProjects.length > 0 && (
+                      <>
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                          color: '#151515',
+                          marginTop: '12px'
+                        }}>
+                          Include projects
+                        </Content>
+                        <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '4px' }}>
+                          {selectedClusters.length > 1 ? 'Common projects' : 'Projects'}
+                        </Content>
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                          color: '#151515',
+                          marginTop: '8px'
+                        }}>
+                          Projects
+                        </Content>
+                        <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
+                          {selectedProjects.map(id => {
+                            const project = mockProjects.find(p => p.id === id);
+                            return project?.name;
+                          }).filter(Boolean).join(', ')}
+                        </Content>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -1160,7 +2146,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
               backgroundColor: '#ffffff',
               flexShrink: 0
             }}>
-              {currentStep > 1 && (
+              {(currentStep > 1 || 
+                (currentStep === 2 && (showClusterSelection || showScopeSelection || showProjectSelection))) && (
                 <Button variant="secondary" onClick={handleBack}>
                   Back
                 </Button>
