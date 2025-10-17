@@ -50,6 +50,7 @@ import {
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
+import { HubVirtualMachines } from '@app/CorePlatforms/HubVirtualMachines';
 import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
 import { OverviewPage, CatalogPage, InstanceTypesPage, TemplatesPage } from '@app/FleetVirtualization/EmptyPages';
 import {
@@ -175,7 +176,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       routes: [
         { element: <></>, label: 'Overview', path: '/core/virtualization/overview', title: 'Overview' },
         { element: <></>, label: 'Catalog', path: '/core/virtualization/catalog', title: 'Catalog' },
-        { element: <></>, label: 'VirtualMachines', path: '/core/virtualization/vms', title: 'VirtualMachines' },
+        { element: <HubVirtualMachines />, label: 'VirtualMachines', path: '/core/virtualization/vms', title: 'VirtualMachines' },
         { element: <></>, label: 'Templates', path: '/core/virtualization/templates', title: 'Templates' },
         { element: <></>, label: 'InstanceTypes', path: '/core/virtualization/instancetypes', title: 'InstanceTypes' },
         { element: <></>, label: 'Preferences', path: '/core/virtualization/preferences', title: 'Preferences' },

@@ -12,6 +12,7 @@ import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDe
 import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
 import { ProjectDetail } from '@app/Projects/ProjectDetail';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
+import { HubVirtualMachines } from '@app/CorePlatforms/HubVirtualMachines';
 import { NotFound } from '@app/NotFound/NotFound';
 import {
   ClustersPage,
@@ -66,6 +67,11 @@ const routes: AppRouteConfig[] = [
     element: <TemplatesPage />,
     path: '/virtualization/templates',
     title: 'Templates',
+  },
+  {
+    element: <HubVirtualMachines />,
+    path: '/core/virtualization/vms',
+    title: 'Hub Virtual Machines',
   },
   {
     label: 'Home',

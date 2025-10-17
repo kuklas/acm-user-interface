@@ -47,7 +47,7 @@ import {
   FormGroup,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon, CubesIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
@@ -66,15 +66,15 @@ const vmSearchSuggestions = [
 
 // Mock VM data
 // Helper function to get VMs based on selected tree node and impersonation context
-const getVMsForSelection = (selectedNodeId: string | null, impersonatingUser: string | null): VirtualMachine[] => {
+const getVMsForSelection = (selectedNodeId: string | null, impersonatingUser: string | null, hubClusterOnly?: boolean): VirtualMachine[] => {
   // Define access scope for impersonated users
   const allowedNamespaceIds = impersonatingUser ? ['ns-project-starlight-dev', 'ns-project-starlight-dev-b'] : null;
   
   let vms: VirtualMachine[] = [];
   
   if (!selectedNodeId) {
-    // No selection, show all VMs (or filtered for impersonation)
-    vms = getAllVirtualMachines();
+    // No selection, show all VMs (or filtered for impersonation/hub cluster)
+    vms = hubClusterOnly ? getVirtualMachinesByCluster('cluster-hub') : getAllVirtualMachines();
   } else if (selectedNodeId.startsWith('clusterset-')) {
     const clusterSetId = selectedNodeId.replace('clusterset-', '');
     vms = getVirtualMachinesByClusterSet(clusterSetId);
@@ -91,7 +91,7 @@ const getVMsForSelection = (selectedNodeId: string | null, impersonatingUser: st
     const vm = allVMs.find(v => v.id === vmId);
     vms = vm ? [vm] : [];
   } else {
-    vms = getAllVirtualMachines();
+    vms = hubClusterOnly ? getVirtualMachinesByCluster('cluster-hub') : getAllVirtualMachines();
   }
   
   // Filter VMs based on impersonation context
@@ -99,16 +99,26 @@ const getVMsForSelection = (selectedNodeId: string | null, impersonatingUser: st
     vms = vms.filter(vm => allowedNamespaceIds.includes(vm.namespaceId));
   }
   
+  // Filter VMs to hub cluster only if hubClusterOnly is true
+  if (hubClusterOnly && !impersonatingUser) {
+    vms = vms.filter(vm => vm.clusterId === 'cluster-hub');
+  }
+  
   return vms;
 };
 
-const VirtualMachines: React.FunctionComponent = () => {
+interface VirtualMachinesProps {
+  hubClusterOnly?: boolean;
+  showProjectsOnly?: boolean;
+}
+
+const VirtualMachines: React.FunctionComponent<VirtualMachinesProps> = ({ hubClusterOnly = false, showProjectsOnly = false }) => {
   useDocumentTitle('Virtual machines');
   const { impersonatingUser } = useImpersonation();
   
   const [searchValue, setSearchValue] = React.useState('');
   const [sidebarSearch, setSidebarSearch] = React.useState('');
-  const [showOnlyWithVMs, setShowOnlyWithVMs] = React.useState(false);
+  const [showOnlyWithVMs, setShowOnlyWithVMs] = React.useState(true);
   const [selectedVMs, setSelectedVMs] = React.useState<number[]>([]);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
@@ -216,7 +226,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   // Get VMs based on selected tree node and apply filters
   const filteredVMs = React.useMemo(() => {
     // Get VMs from database based on selected tree node
-    const vmsFromDB = getVMsForSelection(selectedTreeNode, impersonatingUser);
+    const vmsFromDB = getVMsForSelection(selectedTreeNode, impersonatingUser, hubClusterOnly);
     
     // Transform VMs from database to table format and apply filters
     return vmsFromDB
@@ -238,10 +248,10 @@ const VirtualMachines: React.FunctionComponent = () => {
         labels: ['app:web', 'env:prod'], // Placeholder
         moreLabels: 0,
       }));
-  }, [selectedTreeNode, statusFilter, osFilter, searchValue, impersonatingUser]);
+  }, [selectedTreeNode, statusFilter, osFilter, searchValue, impersonatingUser, hubClusterOnly]);
 
   // Get unique statuses and operating systems for filter options
-  const allVMs = React.useMemo(() => getVMsForSelection(selectedTreeNode, impersonatingUser), [selectedTreeNode, impersonatingUser]);
+  const allVMs = React.useMemo(() => getVMsForSelection(selectedTreeNode, impersonatingUser, hubClusterOnly), [selectedTreeNode, impersonatingUser, hubClusterOnly]);
   const availableStatuses = React.useMemo(() => 
     ['All', ...Array.from(new Set(allVMs.map(vm => vm.status)))],
     [allVMs]
@@ -347,8 +357,67 @@ const VirtualMachines: React.FunctionComponent = () => {
     // Define access scope for impersonated users
     // For Walter Kovacs (dev-team-alpha), limit to specific resources
     const allowedClusterSetIds = impersonatingUser ? ['cs-dev'] : null;
-    const allowedClusterIds = impersonatingUser ? ['cluster-dev-team-a', 'cluster-dev-team-b'] : null;
+    const allowedClusterIds = impersonatingUser ? ['cluster-dev-team-a', 'cluster-dev-team-b'] : 
+                                hubClusterOnly ? ['cluster-hub'] : null;
     const allowedNamespaceIds = impersonatingUser ? ['ns-project-starlight-dev', 'ns-project-starlight-dev-b'] : null;
+
+    // If showProjectsOnly is true, show only projects/namespaces from the hub cluster
+    // Wrapped under "All projects" parent node
+    if (showProjectsOnly && hubClusterOnly) {
+      const hubNamespaces = getNamespacesByCluster('cluster-hub')
+        .filter(namespace => !allowedNamespaceIds || allowedNamespaceIds.includes(namespace.id));
+      
+      const projectNodes = hubNamespaces
+        .map(namespace => {
+          const vmsInNamespace = getVirtualMachinesByNamespace(namespace.id);
+          
+          return {
+            namespace,
+            vmsInNamespace,
+            node: {
+              name: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ProjectDiagramIcon />
+                    <span>{namespace.name}</span>
+                  </span>
+                  <Label isCompact color="grey" style={{ flexShrink: 0 }}>{vmsInNamespace.length}</Label>
+                </div>
+              ),
+              id: `namespace-${namespace.id}`,
+              defaultExpanded: false,
+              children: vmsInNamespace.map(vm => ({
+                name: vm.name,
+                id: `vm-${vm.id}`,
+              })),
+            }
+          };
+        })
+        // Filter out projects with 0 VMs if toggle is enabled
+        .filter(item => !showOnlyWithVMs || item.vmsInNamespace.length > 0)
+        .map(item => item.node);
+
+      // Count total VMs across all visible projects
+      const totalVMs = projectNodes.reduce((sum, node) => {
+        return sum + (node.children?.length || 0);
+      }, 0);
+
+      // Wrap all projects under "All projects" parent node
+      return [{
+        name: (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+              <CubesIcon />
+              <span>All projects</span>
+            </span>
+            <Label isCompact color="grey" style={{ flexShrink: 0 }}>{totalVMs}</Label>
+          </div>
+        ),
+        id: 'all-projects-hub',
+        defaultExpanded: true,
+        children: projectNodes,
+      }];
+    }
 
     return dbClusterSets
       .filter(clusterSet => !allowedClusterSetIds || allowedClusterSetIds.includes(clusterSet.id))
@@ -366,7 +435,13 @@ const VirtualMachines: React.FunctionComponent = () => {
           id: `clusterset-${clusterSet.id}`,
           children: clustersInSet.map(cluster => {
             const namespacesInCluster = getNamespacesByCluster(cluster.id)
-              .filter(namespace => !allowedNamespaceIds || allowedNamespaceIds.includes(namespace.id));
+              .filter(namespace => !allowedNamespaceIds || allowedNamespaceIds.includes(namespace.id))
+              // Filter out projects with 0 VMs if toggle is enabled
+              .filter(namespace => {
+                if (!showOnlyWithVMs) return true;
+                const vmsInNamespace = getVirtualMachinesByNamespace(namespace.id);
+                return vmsInNamespace.length > 0;
+              });
             
             return {
               name: (
@@ -401,7 +476,7 @@ const VirtualMachines: React.FunctionComponent = () => {
           }),
         };
       });
-  }, [dbClusterSets, impersonatingUser]);
+  }, [dbClusterSets, impersonatingUser, hubClusterOnly, showProjectsOnly, showOnlyWithVMs]);
   
   const sidebar = (
     <div 

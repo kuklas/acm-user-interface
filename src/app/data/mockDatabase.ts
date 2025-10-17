@@ -469,6 +469,20 @@ export const namespaces: Namespace[] = [
 
 // Sample Virtual Machines (representative set - in production, you'd generate 15,000)
 export const virtualMachines: VirtualMachine[] = [
+  // Hub Cluster VMs - openshift-monitoring namespace
+  { id: 'vm-hub-mon-001', name: 'prometheus-main', clusterId: 'cluster-hub', namespaceId: 'ns-hub-monitoring', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '200 GiB', ipAddress: '10.0.1.10', node: 'node-hub-01', created: '2024-01-05T08:00:00Z' },
+  { id: 'vm-hub-mon-002', name: 'alertmanager', clusterId: 'cluster-hub', namespaceId: 'ns-hub-monitoring', status: 'Running', os: 'RHEL 9', cpu: 2, memory: '8 GiB', storage: '100 GiB', ipAddress: '10.0.1.11', node: 'node-hub-02', created: '2024-01-05T08:10:00Z' },
+  { id: 'vm-hub-mon-003', name: 'grafana-dashboard', clusterId: 'cluster-hub', namespaceId: 'ns-hub-monitoring', status: 'Running', os: 'RHEL 9', cpu: 2, memory: '8 GiB', storage: '50 GiB', ipAddress: '10.0.1.12', node: 'node-hub-03', created: '2024-01-05T08:20:00Z' },
+  { id: 'vm-hub-mon-004', name: 'thanos-querier', clusterId: 'cluster-hub', namespaceId: 'ns-hub-monitoring', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', ipAddress: '10.0.1.13', node: 'node-hub-04', created: '2024-01-05T08:30:00Z' },
+  { id: 'vm-hub-mon-005', name: 'node-exporter-hub', clusterId: 'cluster-hub', namespaceId: 'ns-hub-monitoring', status: 'Running', os: 'RHEL 9', cpu: 1, memory: '4 GiB', storage: '20 GiB', ipAddress: '10.0.1.14', node: 'node-hub-05', created: '2024-01-05T08:40:00Z' },
+  
+  // Hub Cluster VMs - openshift-gitops namespace
+  { id: 'vm-hub-gitops-001', name: 'argocd-server', clusterId: 'cluster-hub', namespaceId: 'ns-hub-argo-cd', status: 'Running', os: 'RHEL 9', cpu: 2, memory: '8 GiB', storage: '50 GiB', ipAddress: '10.0.2.10', node: 'node-hub-06', created: '2024-01-05T09:00:00Z' },
+  { id: 'vm-hub-gitops-002', name: 'argocd-repo-server', clusterId: 'cluster-hub', namespaceId: 'ns-hub-argo-cd', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', ipAddress: '10.0.2.11', node: 'node-hub-07', created: '2024-01-05T09:10:00Z' },
+  { id: 'vm-hub-gitops-003', name: 'argocd-application-controller', clusterId: 'cluster-hub', namespaceId: 'ns-hub-argo-cd', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '75 GiB', ipAddress: '10.0.2.12', node: 'node-hub-08', created: '2024-01-05T09:20:00Z' },
+  { id: 'vm-hub-gitops-004', name: 'argocd-redis', clusterId: 'cluster-hub', namespaceId: 'ns-hub-argo-cd', status: 'Running', os: 'RHEL 9', cpu: 2, memory: '8 GiB', storage: '30 GiB', ipAddress: '10.0.2.13', node: 'node-hub-01', created: '2024-01-05T09:30:00Z' },
+  { id: 'vm-hub-gitops-005', name: 'argocd-dex-server', clusterId: 'cluster-hub', namespaceId: 'ns-hub-argo-cd', status: 'Running', os: 'RHEL 9', cpu: 1, memory: '4 GiB', storage: '20 GiB', ipAddress: '10.0.2.14', node: 'node-hub-02', created: '2024-01-05T09:40:00Z' },
+  
   // US West Prod 01 VMs
   { id: 'vm-usw01-001', name: 'ntwk-gateway-001', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-core-ntwk-usw01', status: 'Running', os: 'RHEL 9', cpu: 4, memory: '16 GiB', storage: '100 GiB', ipAddress: '10.1.1.10', node: 'node-usw01-01', created: '2024-01-15T10:00:00Z' },
   { id: 'vm-usw01-002', name: 'ntwk-router-002', clusterId: 'cluster-us-west-prod-01', namespaceId: 'ns-core-ntwk-usw01', status: 'Running', os: 'RHEL 9', cpu: 8, memory: '32 GiB', storage: '200 GiB', ipAddress: '10.1.1.11', node: 'node-usw01-02', created: '2024-01-15T10:05:00Z' },
