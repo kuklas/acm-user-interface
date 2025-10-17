@@ -320,8 +320,7 @@ export const UsersTable: React.FunctionComponent = () => {
                   </MenuToggle>
                 )}
                 popperProps={{
-                  appendTo: () => document.body,
-                  position: 'bottom'
+                  appendTo: () => document.body
                 }}
               >
                 <DropdownList>
@@ -329,7 +328,6 @@ export const UsersTable: React.FunctionComponent = () => {
                     <Checkbox
                       id="select-all"
                       isChecked={isAllSelected}
-                      isIndeterminate={isSomeSelected}
                       onChange={handleSelectAll}
                       label="Select all"
                     />
