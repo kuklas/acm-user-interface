@@ -45,9 +45,10 @@ import {
   Alert,
   Form,
   FormGroup,
+  Tooltip,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon, CubesIcon } from '@patternfly/react-icons';
+import { FilterIcon, EllipsisVIcon, CogIcon, AngleLeftIcon, AngleRightIcon, SyncAltIcon, RedoIcon, CheckIcon, PlusCircleIcon, ColumnsIcon, ServerIcon, ProjectDiagramIcon, ExclamationCircleIcon, OffIcon, PauseCircleIcon, MulticlusterIcon, CubesIcon, AngleDoubleDownIcon, AngleDoubleUpIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
@@ -119,6 +120,7 @@ const VirtualMachines: React.FunctionComponent<VirtualMachinesProps> = ({ hubClu
   const [searchValue, setSearchValue] = React.useState('');
   const [sidebarSearch, setSidebarSearch] = React.useState('');
   const [showOnlyWithVMs, setShowOnlyWithVMs] = React.useState(true);
+  const [isTreeExpanded, setIsTreeExpanded] = React.useState(true);
   const [selectedVMs, setSelectedVMs] = React.useState<number[]>([]);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
@@ -419,7 +421,8 @@ const VirtualMachines: React.FunctionComponent<VirtualMachinesProps> = ({ hubClu
       }];
     }
 
-    return dbClusterSets
+    // Build cluster set nodes for Fleet virtualization
+    const clusterSetNodes = dbClusterSets
       .filter(clusterSet => !allowedClusterSetIds || allowedClusterSetIds.includes(clusterSet.id))
       .map(clusterSet => {
         const clustersInSet = getClustersByClusterSet(clusterSet.id)
@@ -476,6 +479,31 @@ const VirtualMachines: React.FunctionComponent<VirtualMachinesProps> = ({ hubClu
           }),
         };
       });
+
+    // Calculate total VMs across all cluster sets
+    const totalVMsInClusterSets = clusterSetNodes.reduce((total, clusterSetNode) => {
+      return total + (clusterSetNode.children?.reduce((clusterTotal, clusterNode) => {
+        return clusterTotal + (clusterNode.children?.reduce((namespaceTotal, namespaceNode) => {
+          return namespaceTotal + (namespaceNode.children?.length || 0);
+        }, 0) || 0);
+      }, 0) || 0);
+    }, 0);
+
+    // Wrap all cluster sets under "All cluster sets" parent node
+    return [{
+      name: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+            <MulticlusterIcon />
+            <span>All cluster sets</span>
+          </span>
+          <Label isCompact color="grey" style={{ flexShrink: 0 }}>{totalVMsInClusterSets}</Label>
+        </div>
+      ),
+      id: 'all-cluster-sets',
+      defaultExpanded: true,
+      children: clusterSetNodes,
+    }];
   }, [dbClusterSets, impersonatingUser, hubClusterOnly, showProjectsOnly, showOnlyWithVMs]);
   
   const sidebar = (
@@ -495,9 +523,43 @@ const VirtualMachines: React.FunctionComponent<VirtualMachinesProps> = ({ hubClu
 
       <Divider style={{ margin: '16px 0' }} />
 
+      {/* Header above tree view */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        padding: '8px 0',
+        marginBottom: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Tooltip content={isTreeExpanded ? 'Collapse all' : 'Expand all'}>
+            <Button
+              variant="plain"
+              aria-label={isTreeExpanded ? 'Collapse all' : 'Expand all'}
+              onClick={() => setIsTreeExpanded(!isTreeExpanded)}
+              style={{ padding: '4px' }}
+            >
+              {isTreeExpanded ? <AngleDoubleUpIcon /> : <AngleDoubleDownIcon />}
+            </Button>
+          </Tooltip>
+          <span style={{ fontWeight: 500 }}>Projects</span>
+        </div>
+        <Button 
+          variant="link" 
+          icon={<PlusCircleIcon />}
+          iconPosition="start"
+          onClick={() => {
+            // TODO: Open create project modal/wizard
+            console.log('Create project clicked');
+          }}
+        >
+          Create project
+        </Button>
+      </div>
+
       <TreeView
         data={treeData}
-        defaultAllExpanded
+        allExpanded={isTreeExpanded}
         hasGuides
         onSelect={(_event, item) => {
           if (item.id) {
