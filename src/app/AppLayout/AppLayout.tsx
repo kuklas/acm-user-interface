@@ -65,6 +65,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useImpersonation } from '@app/contexts/ImpersonationContext';
 import virtIcon from '@app/bgimages/virt-icon.png';
 import multiclusterIcon from '@app/bgimages/pficon-multicluster.svg';
+import redHatOpenShiftLogo from '@app/bgimages/redhatopenshift.svg';
 
 interface IAppLayout {
   children: React.ReactNode;
@@ -378,9 +379,12 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           />
         </MastheadToggle>
         <MastheadBrand>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.1' }}>
-            <span style={{ fontSize: '18px', fontWeight: 700, color: '#151515', letterSpacing: '-0.02em' }}>Red Hat</span>
-            <span style={{ fontSize: '16px', fontWeight: 600, color: '#151515', letterSpacing: '-0.01em' }}>OpenShift</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <img src={redHatOpenShiftLogo} alt="Red Hat OpenShift" style={{ height: '40px' }} />
+            <Label color="orange" isCompact>UXD prototype - work in progress</Label>
+            <span style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>
+              Contact: Stefan Kukla (slack: @stefan)
+            </span>
           </div>
         </MastheadBrand>
       </MastheadMain>
