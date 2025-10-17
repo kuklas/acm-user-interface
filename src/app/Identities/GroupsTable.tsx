@@ -16,11 +16,19 @@ import {
   Icon,
   Pagination,
   PaginationVariant,
+  Modal,
+  ModalVariant,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Title,
+  Alert,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllGroups } from '@app/data';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 // Get groups from centralized database
 const dbGroups = getAllGroups();
@@ -37,6 +45,7 @@ const mockGroups = dbGroups.map((group, index) => ({
 
 export const GroupsTable: React.FunctionComponent = () => {
   const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('Group');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -46,6 +55,8 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
+  const [isImpersonateModalOpen, setIsImpersonateModalOpen] = React.useState(false);
+  const [impersonateGroupName, setImpersonateGroupName] = React.useState('');
 
   const paginatedGroups = mockGroups.slice((page - 1) * perPage, page * perPage);
 
@@ -91,8 +102,23 @@ export const GroupsTable: React.FunctionComponent = () => {
   };
 
   const handleImpersonateGroup = (groupName: string) => {
-    console.log('Impersonate group:', groupName);
+    setImpersonateGroupName(groupName);
+    setIsImpersonateModalOpen(true);
     setOpenRowMenuId(null);
+  };
+
+  const handleImpersonateConfirm = () => {
+    // Close modal immediately and start impersonation with a placeholder user and the group
+    setIsImpersonateModalOpen(false);
+    // Use the first user from the group as placeholder (in a real app, you'd select a specific user)
+    startImpersonation('group-member', [impersonateGroupName]);
+    // Clear the form state
+    setImpersonateGroupName('');
+  };
+
+  const handleImpersonateCancel = () => {
+    setIsImpersonateModalOpen(false);
+    setImpersonateGroupName('');
   };
 
   return (
@@ -314,6 +340,42 @@ export const GroupsTable: React.FunctionComponent = () => {
           variant={PaginationVariant.bottom}
         />
       </div>
+
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={isImpersonateModalOpen}
+        onClose={handleImpersonateCancel}
+        aria-labelledby="impersonate-group-modal-title"
+        aria-describedby="impersonate-group-modal-description"
+      >
+        <ModalHeader>
+          <Title headingLevel="h1" size="2xl" id="impersonate-group-modal-title">
+            Impersonate group
+          </Title>
+        </ModalHeader>
+        <ModalBody style={{ padding: '24px' }}>
+          <Alert 
+            variant="warning" 
+            isInline 
+            title="You are about to impersonate a group"
+            style={{ marginBottom: '16px' }}
+          >
+            This will allow you to see the system from the perspective of users in this group.
+          </Alert>
+
+          <div style={{ marginBottom: '16px' }}>
+            <strong>Group:</strong> {impersonateGroupName}
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="primary" onClick={handleImpersonateConfirm}>
+            Impersonate
+          </Button>
+          <Button variant="link" onClick={handleImpersonateCancel}>
+            Cancel
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };
