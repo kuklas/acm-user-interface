@@ -646,3 +646,11 @@ input[type="checkbox"] {
 .pf-v6-c-modal-box__close + * {
   margin-inline-end: 0 !important;
 }
+
+/* Ensure modal header has proper spacing */
+.pf-v6-c-modal-box__header {
+  padding-top: 24px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  padding-bottom: 16px !important;
+}

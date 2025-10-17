@@ -12,9 +12,22 @@ import {
   MenuToggleElement,
   Pagination,
   PaginationVariant,
+  Modal,
+  ModalVariant,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Tooltip,
+  Title,
+  Alert,
+  Form,
+  FormGroup,
+  Label,
+  Checkbox,
+  Divider,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { EllipsisVIcon } from '@patternfly/react-icons';
+import { EllipsisVIcon, HelpIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllUsers } from '@app/data';
 
@@ -38,6 +51,10 @@ export const UsersTable: React.FunctionComponent = () => {
   const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
+  const [isImpersonateModalOpen, setIsImpersonateModalOpen] = React.useState(false);
+  const [impersonateUsername, setImpersonateUsername] = React.useState('');
+  const [selectedGroups, setSelectedGroups] = React.useState<string[]>([]);
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = React.useState(false);
 
   const paginatedUsers = mockUsers.slice((page - 1) * perPage, page * perPage);
 
@@ -45,10 +62,51 @@ export const UsersTable: React.FunctionComponent = () => {
     setOpenRowMenuId(openRowMenuId === userId ? null : userId);
   };
 
-  const handleImpersonateUser = (userName: string) => {
-    console.log('Impersonate user:', userName);
+  const handleImpersonateUser = (userName: string, username: string) => {
+    setImpersonateUsername(username);
+    setIsImpersonateModalOpen(true);
     setOpenRowMenuId(null);
   };
+
+  const handleImpersonateConfirm = () => {
+    console.log('Impersonating user:', impersonateUsername);
+    setIsImpersonateModalOpen(false);
+    setImpersonateUsername('');
+  };
+
+  const handleImpersonateCancel = () => {
+    setIsImpersonateModalOpen(false);
+    setImpersonateUsername('');
+    setSelectedGroups([]);
+    setIsGroupDropdownOpen(false);
+  };
+
+  const handleGroupToggle = (group: string) => {
+    setSelectedGroups(prev => 
+      prev.includes(group) 
+        ? prev.filter(g => g !== group)
+        : [...prev, group]
+    );
+  };
+
+  const handleRemoveGroup = (groupToRemove: string) => {
+    setSelectedGroups(prev => prev.filter(g => g !== groupToRemove));
+  };
+
+  const availableGroups = ['Group1', 'Group2', 'Group3'];
+
+  const handleSelectAll = () => {
+    if (selectedGroups.length === availableGroups.length) {
+      // If all are selected, deselect all
+      setSelectedGroups([]);
+    } else {
+      // Otherwise, select all
+      setSelectedGroups([...availableGroups]);
+    }
+  };
+
+  const isAllSelected = selectedGroups.length === availableGroups.length;
+  const isSomeSelected = selectedGroups.length > 0 && selectedGroups.length < availableGroups.length;
 
   return (
     <div className="table-content-card">
@@ -156,7 +214,7 @@ export const UsersTable: React.FunctionComponent = () => {
                   <DropdownList>
                     <DropdownItem
                       key="impersonate"
-                      onClick={() => handleImpersonateUser(user.name)}
+                      onClick={() => handleImpersonateUser(user.name, user.username)}
                     >
                       Impersonate
                     </DropdownItem>
@@ -180,6 +238,155 @@ export const UsersTable: React.FunctionComponent = () => {
           variant={PaginationVariant.bottom}
         />
       </div>
+
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={isImpersonateModalOpen}
+        onClose={handleImpersonateCancel}
+      >
+        <ModalHeader>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Title headingLevel="h1" size="2xl">
+              Impersonate user
+            </Title>
+            <Tooltip content="Impersonate a user to test their permissions">
+              <HelpIcon style={{ fontSize: '16px', cursor: 'help', color: 'var(--pf-t--global--icon--color--subtle)' }} />
+            </Tooltip>
+          </div>
+        </ModalHeader>
+        <ModalBody style={{ padding: '24px' }}>
+          <Form>
+            <Alert
+              variant="warning"
+              isInline
+              title="Impersonating a user or group grants you their exact permissions."
+              style={{ marginBottom: '24px' }}
+            />
+            
+            <FormGroup
+              label={
+                <span>
+                  Username{' '}
+                  <Tooltip content="The username of the user or group to impersonate">
+                    <button
+                      type="button"
+                      aria-label="More info for username field"
+                      onClick={e => e.preventDefault()}
+                      className="pf-v6-c-form__group-label-help"
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                    >
+                      <HelpIcon />
+                    </button>
+                  </Tooltip>
+                </span>
+              }
+              fieldId="impersonate-username"
+            >
+              <div style={{ padding: '8px 0', fontWeight: 'normal' }}>
+                {impersonateUsername}
+              </div>
+            </FormGroup>
+
+            <FormGroup
+              label={
+                <span>
+                  Groups{' '}
+                  <Tooltip content="Optional: Specify additional groups for this impersonation session">
+                    <button
+                      type="button"
+                      aria-label="More info for groups field"
+                      onClick={e => e.preventDefault()}
+                      className="pf-v6-c-form__group-label-help"
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                    >
+                      <HelpIcon />
+                    </button>
+                  </Tooltip>
+                </span>
+              }
+              fieldId="impersonate-groups"
+            >
+              <Dropdown
+                isOpen={isGroupDropdownOpen}
+                onOpenChange={(isOpen: boolean) => setIsGroupDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
+                    isExpanded={isGroupDropdownOpen}
+                    isFullWidth
+                  >
+                    {selectedGroups.length > 0 ? `${selectedGroups.length} group(s) selected` : 'Select groups'}
+                  </MenuToggle>
+                )}
+                popperProps={{
+                  appendTo: () => document.body,
+                  position: 'bottom'
+                }}
+              >
+                <DropdownList>
+                  <DropdownItem onClick={handleSelectAll}>
+                    <Checkbox
+                      id="select-all"
+                      isChecked={isAllSelected}
+                      isIndeterminate={isSomeSelected}
+                      onChange={handleSelectAll}
+                      label="Select all"
+                    />
+                  </DropdownItem>
+                  <Divider />
+                  <DropdownItem onClick={() => handleGroupToggle('Group1')}>
+                    <Checkbox
+                      id="group1"
+                      isChecked={selectedGroups.includes('Group1')}
+                      onChange={() => handleGroupToggle('Group1')}
+                      label="Group1"
+                    />
+                  </DropdownItem>
+                  <DropdownItem onClick={() => handleGroupToggle('Group2')}>
+                    <Checkbox
+                      id="group2"
+                      isChecked={selectedGroups.includes('Group2')}
+                      onChange={() => handleGroupToggle('Group2')}
+                      label="Group2"
+                    />
+                  </DropdownItem>
+                  <DropdownItem onClick={() => handleGroupToggle('Group3')}>
+                    <Checkbox
+                      id="group3"
+                      isChecked={selectedGroups.includes('Group3')}
+                      onChange={() => handleGroupToggle('Group3')}
+                      label="Group3"
+                    />
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
+              
+              {selectedGroups.length > 0 && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  {selectedGroups.map((group) => (
+                    <Label
+                      key={group}
+                      color="blue"
+                      onClose={() => handleRemoveGroup(group)}
+                    >
+                      {group}
+                    </Label>
+                  ))}
+                </div>
+              )}
+            </FormGroup>
+          </Form>
+        </ModalBody>
+        <ModalFooter>
+          <Button key="confirm" variant="primary" onClick={handleImpersonateConfirm}>
+            Impersonate
+          </Button>
+          <Button key="cancel" variant="link" onClick={handleImpersonateCancel}>
+            Cancel
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

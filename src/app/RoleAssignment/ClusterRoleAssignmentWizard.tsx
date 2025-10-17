@@ -1009,11 +1009,11 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                     </Td>
                     <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
                       <div>
-                        <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
+                      <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
                           {role.displayName}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                          {role.name}
+                        {role.name}
                         </div>
                       </div>
                     </Td>
