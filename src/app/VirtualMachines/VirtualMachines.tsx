@@ -52,6 +52,8 @@ import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import './VirtualMachines.css';
 import { getAllClusterSets, getClustersByClusterSet, getNamespacesByCluster, getVirtualMachinesByNamespace, getVirtualMachinesByCluster, getVirtualMachinesByClusterSet, getAllVirtualMachines } from '@app/data';
 import { MigrateVMsWizard } from './MigrateVMsWizard';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
+import { VirtualMachine } from '@app/data/schemas/virtualization';
 
 // Mock VM search suggestions
 const vmSearchSuggestions = [
@@ -63,36 +65,46 @@ const vmSearchSuggestions = [
 ];
 
 // Mock VM data
-// Helper function to get VMs based on selected tree node
-const getVMsForSelection = (selectedNodeId: string | null) => {
+// Helper function to get VMs based on selected tree node and impersonation context
+const getVMsForSelection = (selectedNodeId: string | null, impersonatingUser: string | null): VirtualMachine[] => {
+  // Define access scope for impersonated users
+  const allowedNamespaceIds = impersonatingUser ? ['ns-project-starlight-dev', 'ns-project-starlight-dev-b'] : null;
+  
+  let vms: VirtualMachine[] = [];
+  
   if (!selectedNodeId) {
-    // No selection, show all VMs
-    return getAllVirtualMachines();
-  }
-
-  // Parse the node ID to determine the level
-  if (selectedNodeId.startsWith('clusterset-')) {
+    // No selection, show all VMs (or filtered for impersonation)
+    vms = getAllVirtualMachines();
+  } else if (selectedNodeId.startsWith('clusterset-')) {
     const clusterSetId = selectedNodeId.replace('clusterset-', '');
-    return getVirtualMachinesByClusterSet(clusterSetId);
+    vms = getVirtualMachinesByClusterSet(clusterSetId);
   } else if (selectedNodeId.startsWith('cluster-')) {
     const clusterId = selectedNodeId.replace('cluster-', '');
-    return getVirtualMachinesByCluster(clusterId);
+    vms = getVirtualMachinesByCluster(clusterId);
   } else if (selectedNodeId.startsWith('namespace-')) {
     const namespaceId = selectedNodeId.replace('namespace-', '');
-    return getVirtualMachinesByNamespace(namespaceId);
+    vms = getVirtualMachinesByNamespace(namespaceId);
   } else if (selectedNodeId.startsWith('vm-')) {
     // If a specific VM is selected, show just that VM
     const vmId = selectedNodeId.replace('vm-', '');
     const allVMs = getAllVirtualMachines();
     const vm = allVMs.find(v => v.id === vmId);
-    return vm ? [vm] : [];
+    vms = vm ? [vm] : [];
+  } else {
+    vms = getAllVirtualMachines();
   }
   
-  return getAllVirtualMachines();
+  // Filter VMs based on impersonation context
+  if (allowedNamespaceIds) {
+    vms = vms.filter(vm => allowedNamespaceIds.includes(vm.namespaceId));
+  }
+  
+  return vms;
 };
 
 const VirtualMachines: React.FunctionComponent = () => {
   useDocumentTitle('Virtual machines');
+  const { impersonatingUser } = useImpersonation();
   
   const [searchValue, setSearchValue] = React.useState('');
   const [sidebarSearch, setSidebarSearch] = React.useState('');
@@ -204,7 +216,7 @@ const VirtualMachines: React.FunctionComponent = () => {
   // Get VMs based on selected tree node and apply filters
   const filteredVMs = React.useMemo(() => {
     // Get VMs from database based on selected tree node
-    const vmsFromDB = getVMsForSelection(selectedTreeNode);
+    const vmsFromDB = getVMsForSelection(selectedTreeNode, impersonatingUser);
     
     // Transform VMs from database to table format and apply filters
     return vmsFromDB
@@ -226,10 +238,10 @@ const VirtualMachines: React.FunctionComponent = () => {
         labels: ['app:web', 'env:prod'], // Placeholder
         moreLabels: 0,
       }));
-  }, [selectedTreeNode, statusFilter, osFilter, searchValue]);
+  }, [selectedTreeNode, statusFilter, osFilter, searchValue, impersonatingUser]);
 
   // Get unique statuses and operating systems for filter options
-  const allVMs = React.useMemo(() => getVMsForSelection(selectedTreeNode), [selectedTreeNode]);
+  const allVMs = React.useMemo(() => getVMsForSelection(selectedTreeNode, impersonatingUser), [selectedTreeNode, impersonatingUser]);
   const availableStatuses = React.useMemo(() => 
     ['All', ...Array.from(new Set(allVMs.map(vm => vm.status)))],
     [allVMs]
@@ -332,54 +344,64 @@ const VirtualMachines: React.FunctionComponent = () => {
   const dbClusterSets = React.useMemo(() => getAllClusterSets(), []);
   
   const treeData: TreeViewDataItem[] = React.useMemo(() => {
-    return dbClusterSets.map(clusterSet => {
-      const clustersInSet = getClustersByClusterSet(clusterSet.id);
-      
-      return {
-        name: (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <MulticlusterIcon />
-            <span>{clusterSet.name}</span>
-          </span>
-        ),
-        id: `clusterset-${clusterSet.id}`,
-        children: clustersInSet.map(cluster => {
-          const namespacesInCluster = getNamespacesByCluster(cluster.id);
-          
-          return {
-            name: (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ServerIcon />
-                <span>{cluster.name}</span>
-              </span>
-            ),
-            id: `cluster-${cluster.id}`,
-            children: namespacesInCluster.map(namespace => {
-              const vmsInNamespace = getVirtualMachinesByNamespace(namespace.id);
-              
-              return {
-                name: (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <ProjectDiagramIcon />
-                      <span>{namespace.name}</span>
-                    </span>
-                    <Label isCompact color="grey" style={{ flexShrink: 0 }}>{vmsInNamespace.length}</Label>
-                  </div>
-                ),
-                id: `namespace-${namespace.id}`,
-                defaultExpanded: false,
-                children: vmsInNamespace.map(vm => ({
-                  name: vm.name,
-                  id: `vm-${vm.id}`,
-                })),
-              };
-            }),
-          };
-        }),
-      };
-    });
-  }, [dbClusterSets]);
+    // Define access scope for impersonated users
+    // For Walter Kovacs (dev-team-alpha), limit to specific resources
+    const allowedClusterSetIds = impersonatingUser ? ['cs-dev'] : null;
+    const allowedClusterIds = impersonatingUser ? ['cluster-dev-team-a', 'cluster-dev-team-b'] : null;
+    const allowedNamespaceIds = impersonatingUser ? ['ns-project-starlight-dev', 'ns-project-starlight-dev-b'] : null;
+
+    return dbClusterSets
+      .filter(clusterSet => !allowedClusterSetIds || allowedClusterSetIds.includes(clusterSet.id))
+      .map(clusterSet => {
+        const clustersInSet = getClustersByClusterSet(clusterSet.id)
+          .filter(cluster => !allowedClusterIds || allowedClusterIds.includes(cluster.id));
+        
+        return {
+          name: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MulticlusterIcon />
+              <span>{clusterSet.name}</span>
+            </span>
+          ),
+          id: `clusterset-${clusterSet.id}`,
+          children: clustersInSet.map(cluster => {
+            const namespacesInCluster = getNamespacesByCluster(cluster.id)
+              .filter(namespace => !allowedNamespaceIds || allowedNamespaceIds.includes(namespace.id));
+            
+            return {
+              name: (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ServerIcon />
+                  <span>{cluster.name}</span>
+                </span>
+              ),
+              id: `cluster-${cluster.id}`,
+              children: namespacesInCluster.map(namespace => {
+                const vmsInNamespace = getVirtualMachinesByNamespace(namespace.id);
+                
+                return {
+                  name: (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '16px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ProjectDiagramIcon />
+                        <span>{namespace.name}</span>
+                      </span>
+                      <Label isCompact color="grey" style={{ flexShrink: 0 }}>{vmsInNamespace.length}</Label>
+                    </div>
+                  ),
+                  id: `namespace-${namespace.id}`,
+                  defaultExpanded: false,
+                  children: vmsInNamespace.map(vm => ({
+                    name: vm.name,
+                    id: `vm-${vm.id}`,
+                  })),
+                };
+              }),
+            };
+          }),
+        };
+      });
+  }, [dbClusterSets, impersonatingUser]);
   
   const sidebar = (
     <div 

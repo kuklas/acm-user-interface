@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Button,
   Masthead,
@@ -45,10 +45,13 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   DescriptionListDescription,
+  Banner,
+  Spinner,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
+import { OverviewPage, CatalogPage, InstanceTypesPage, TemplatesPage } from '@app/FleetVirtualization/EmptyPages';
 import {
   BarsIcon,
   CaretDownIcon,
@@ -60,6 +63,7 @@ import {
   InfoCircleIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 interface IAppLayout {
   children: React.ReactNode;
@@ -70,12 +74,32 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [perspectiveOpen, setPerspectiveOpen] = React.useState(false);
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false);
+  const { impersonatingUser, impersonatingGroups, isLoading, stopImpersonation } = useImpersonation();
+  const navigate = useNavigate();
+  const hasNavigatedRef = React.useRef(false);
 
-  const perspectives = [
+  // When impersonation starts, switch to Fleet virtualization perspective and navigate to Virtual machines (only once)
+  React.useEffect(() => {
+    if (impersonatingUser && !hasNavigatedRef.current) {
+      setActivePerspective('Fleet virtualization');
+      navigate('/virtualization/virtual-machines');
+      hasNavigatedRef.current = true;
+    } else if (!impersonatingUser) {
+      // Reset the flag when impersonation stops
+      hasNavigatedRef.current = false;
+    }
+  }, [impersonatingUser, navigate]);
+
+  const allPerspectives = [
     { name: 'Core platforms', disabled: false },
     { name: 'Fleet management', disabled: false },
     { name: 'Fleet virtualization', disabled: false },
   ];
+
+  // Filter perspectives: only show Fleet virtualization when impersonating
+  const perspectives = impersonatingUser
+    ? allPerspectives.filter((p) => p.name === 'Fleet virtualization')
+    : allPerspectives;
 
   // Core platforms navigation routes
   const corePlatformsRoutes: IAppRouteGroup[] = [
@@ -252,13 +276,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: '',
       routes: [
         {
-          element: <></>,
+          element: <OverviewPage />,
           label: 'Overview',
           path: '/virtualization/overview',
           title: 'Overview',
         },
         {
-          element: <></>,
+          element: <CatalogPage />,
           label: 'Catalog',
           path: '/virtualization/catalog',
           title: 'Catalog',
@@ -275,13 +299,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: '',
       routes: [
         {
-          element: <></>,
+          element: <InstanceTypesPage />,
           label: 'InstanceTypes',
           path: '/virtualization/instance-types',
           title: 'InstanceTypes',
         },
         {
-          element: <></>,
+          element: <TemplatesPage />,
           label: 'Templates',
           path: '/virtualization/templates',
           title: 'Templates',
@@ -420,7 +444,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     return (
       <div className="perspective-selector" style={{ position: 'relative' }}>
         <button
-            onClick={() => setPerspectiveOpen(!perspectiveOpen)}
+            onClick={() => !impersonatingUser && setPerspectiveOpen(!perspectiveOpen)}
           style={{
             width: '100%',
             padding: 'var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md)',
@@ -430,7 +454,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
               : 'var(--pf-t--global--border--radius--small)',
             background: 'var(--pf-t--global--background--color--primary--default)',
             textAlign: 'left',
-            cursor: 'pointer',
+            cursor: impersonatingUser ? 'default' : 'pointer',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -445,7 +469,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
             </Icon>
             <span>{activePerspective}</span>
           </div>
-          <CaretDownIcon />
+          {!impersonatingUser && <CaretDownIcon />}
         </button>
         
         {perspectiveOpen && (
@@ -503,10 +527,15 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   };
 
   // Select routes based on active perspective
-  const activeRoutes = 
+  let activeRoutes = 
     activePerspective === 'Core platforms' ? corePlatformsRoutes :
     activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : 
     routes.filter(route => route.label !== 'Core Platforms');
+
+  // Filter out "User management" from Fleet virtualization when impersonating
+  if (impersonatingUser && activePerspective === 'Fleet virtualization') {
+    activeRoutes = activeRoutes.filter((route) => route.label !== 'User management');
+  }
 
   const Navigation = (
     <Nav id="nav-primary-simple">
@@ -565,7 +594,31 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       sidebar={sidebarOpen && Sidebar}
       skipToContent={PageSkipToContent}
     >
-      {children}
+      {impersonatingUser && (
+        <Banner isSticky style={{ padding: '16px 24px', backgroundColor: '#E7F1FA', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            You are currently impersonating as <strong>{impersonatingUser}</strong>.
+            {impersonatingGroups.length > 0 && (
+              <> You have also preselected the following group{impersonatingGroups.length > 1 ? 's' : ''}: <strong>{impersonatingGroups.join(', ')}</strong>.</>
+            )}{' '}
+            <Button variant="link" isInline onClick={stopImpersonation} style={{ padding: 0, fontSize: 'inherit' }}>
+              Stop impersonating
+            </Button>
+          </div>
+        </Banner>
+      )}
+      {isLoading ? (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 'calc(100vh - 200px)'
+        }}>
+          <Spinner size="lg" />
+        </div>
+      ) : (
+        children
+      )}
     </Page>
 
       {/* Floating Action Button */}

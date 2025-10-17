@@ -30,6 +30,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { EllipsisVIcon, HelpIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllUsers } from '@app/data';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 // Get users from centralized database
 const dbUsers = getAllUsers();
@@ -45,6 +46,7 @@ const mockUsers = dbUsers.map((user, index) => ({
 
 export const UsersTable: React.FunctionComponent = () => {
   const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('User');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -69,9 +71,13 @@ export const UsersTable: React.FunctionComponent = () => {
   };
 
   const handleImpersonateConfirm = () => {
-    console.log('Impersonating user:', impersonateUsername);
+    // Close modal immediately and start impersonation with the selected username and groups
     setIsImpersonateModalOpen(false);
+    startImpersonation(impersonateUsername, selectedGroups);
+    // Clear the form state
     setImpersonateUsername('');
+    setSelectedGroups([]);
+    setIsGroupDropdownOpen(false);
   };
 
   const handleImpersonateCancel = () => {
@@ -93,7 +99,7 @@ export const UsersTable: React.FunctionComponent = () => {
     setSelectedGroups(prev => prev.filter(g => g !== groupToRemove));
   };
 
-  const availableGroups = ['Group1', 'Group2', 'Group3'];
+  const availableGroups = ['dev-team-alpha'];
 
   const handleSelectAll = () => {
     if (selectedGroups.length === availableGroups.length) {
@@ -333,28 +339,12 @@ export const UsersTable: React.FunctionComponent = () => {
                     />
                   </DropdownItem>
                   <Divider />
-                  <DropdownItem onClick={() => handleGroupToggle('Group1')}>
+                  <DropdownItem onClick={() => handleGroupToggle('dev-team-alpha')}>
                     <Checkbox
-                      id="group1"
-                      isChecked={selectedGroups.includes('Group1')}
-                      onChange={() => handleGroupToggle('Group1')}
-                      label="Group1"
-                    />
-                  </DropdownItem>
-                  <DropdownItem onClick={() => handleGroupToggle('Group2')}>
-                    <Checkbox
-                      id="group2"
-                      isChecked={selectedGroups.includes('Group2')}
-                      onChange={() => handleGroupToggle('Group2')}
-                      label="Group2"
-                    />
-                  </DropdownItem>
-                  <DropdownItem onClick={() => handleGroupToggle('Group3')}>
-                    <Checkbox
-                      id="group3"
-                      isChecked={selectedGroups.includes('Group3')}
-                      onChange={() => handleGroupToggle('Group3')}
-                      label="Group3"
+                      id="dev-team-alpha"
+                      isChecked={selectedGroups.includes('dev-team-alpha')}
+                      onChange={() => handleGroupToggle('dev-team-alpha')}
+                      label="dev-team-alpha"
                     />
                   </DropdownItem>
                 </DropdownList>
