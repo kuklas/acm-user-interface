@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import {
-  PageSection,
   Title,
   Tabs,
   Tab,
   TabTitleText,
-  Content,
 } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons';
 import Overview from './Overview';
@@ -24,17 +22,27 @@ const Virtualization: React.FunctionComponent = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#151515' }}>
-      {/* Header section with title and link */}
-      <PageSection style={{ backgroundColor: '#151515', paddingBottom: '0' }}>
+    <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div style={{ padding: '24px 24px 0 24px' }}>
+        <div 
+          className="page-header-section"
+          style={{
+            backgroundColor: '#ffffff',
+            padding: '24px',
+            borderBottom: '1px solid #e0e0e0',
+            margin: 0,
+            width: '100%',
+            maxWidth: '100%',
+          }}
+        >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title headingLevel="h1" size="2xl" style={{ color: '#ffffff' }}>
+          <Title headingLevel="h1" size="lg">
             Virtualization
           </Title>
           <a
             href="#"
             style={{
-              color: '#73bcf7',
+              color: '#0066cc',
               textDecoration: 'none',
               fontSize: '14px',
               display: 'flex',
@@ -46,54 +54,31 @@ const Virtualization: React.FunctionComponent = () => {
             <ExternalLinkAltIcon style={{ fontSize: '12px' }} />
           </a>
         </div>
-      </PageSection>
 
-      {/* Tabs section */}
-      <PageSection style={{ backgroundColor: '#151515', paddingTop: '16px', paddingBottom: '0' }}>
-        <Tabs
-          activeKey={activeTabKey}
-          onSelect={handleTabClick}
-          aria-label="Virtualization tabs"
-          role="region"
-        >
-          <Tab
-            eventKey={0}
-            title={<TabTitleText>Overview</TabTitleText>}
-            aria-label="Overview tab"
-          >
-            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Overview />
-            </div>
-          </Tab>
-          <Tab
-            eventKey={1}
-            title={<TabTitleText>Top consumers</TabTitleText>}
-            aria-label="Top consumers tab"
-          >
-            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <TopConsumers />
-            </div>
-          </Tab>
-          <Tab
-            eventKey={2}
-            title={<TabTitleText>Migrations</TabTitleText>}
-            aria-label="Migrations tab"
-          >
-            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Migrations />
-            </div>
-          </Tab>
-          <Tab
-            eventKey={3}
-            title={<TabTitleText>Settings</TabTitleText>}
-            aria-label="Settings tab"
-          >
-            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Settings />
-            </div>
-          </Tab>
+        <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Virtualization tabs" style={{ marginTop: '16px' }}>
+          <Tab eventKey={0} title={<TabTitleText>Overview</TabTitleText>} aria-label="Overview tab" />
+          <Tab eventKey={1} title={<TabTitleText>Top consumers</TabTitleText>} aria-label="Top consumers tab" />
+          <Tab eventKey={2} title={<TabTitleText>Migrations</TabTitleText>} aria-label="Migrations tab" />
+          <Tab eventKey={3} title={<TabTitleText>Settings</TabTitleText>} aria-label="Settings tab" />
         </Tabs>
-      </PageSection>
+        </div>
+      </div>
+
+      <div 
+        className="page-content-section"
+        style={{
+          backgroundColor: 'transparent',
+          padding: 0,
+          margin: 0,
+          width: '100%',
+          maxWidth: '100%',
+        }}
+      >
+        {activeTabKey === 0 && <Overview />}
+        {activeTabKey === 1 && <TopConsumers />}
+        {activeTabKey === 2 && <Migrations />}
+        {activeTabKey === 3 && <Settings />}
+      </div>
     </div>
   );
 };
