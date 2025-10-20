@@ -6,6 +6,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import Dotenv from 'dotenv-webpack';
 const BG_IMAGES_DIRNAME = 'bgimages';
+// In development, use root path '/'. In production, use GitHub Pages path '/acm-user-interface/'
 const ASSET_PATH = process.env.ASSET_PATH || (process.env.NODE_ENV === 'production' ? '/acm-user-interface/' : '/');
 
 export default (env) => {

@@ -52,7 +52,10 @@ import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import { HubVirtualMachines } from '@app/CorePlatforms/HubVirtualMachines';
 import { IdentityProvider } from '@app/IdentityProvider/IdentityProvider';
-import { OverviewPage, CatalogPage, InstanceTypesPage, TemplatesPage } from '@app/FleetVirtualization/EmptyPages';
+import { OverviewPage } from '@app/FleetVirtualization/EmptyPages';
+import { Catalog } from '@app/FleetVirtualization/Catalog';
+import { Templates } from '@app/FleetVirtualization/Templates';
+import { InstanceTypes } from '@app/FleetVirtualization/InstanceTypes';
 import {
   BarsIcon,
   CaretDownIcon,
@@ -300,7 +303,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           title: 'Overview',
         },
         {
-          element: <CatalogPage />,
+          element: <Catalog />,
           label: 'Catalog',
           path: '/virtualization/catalog',
           title: 'Catalog',
@@ -317,13 +320,13 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
       label: '',
       routes: [
         {
-          element: <InstanceTypesPage />,
+          element: <InstanceTypes />,
           label: 'InstanceTypes',
           path: '/virtualization/instance-types',
           title: 'InstanceTypes',
         },
         {
-          element: <TemplatesPage />,
+          element: <Templates />,
           label: 'Templates',
           path: '/virtualization/templates',
           title: 'Templates',

@@ -22,7 +22,10 @@ import {
   IdentityProvidersPage
 } from '@app/navigation';
 import { ProjectsPage } from '@app/navigation/core-platforms';
-import { OverviewPage, CatalogPage, InstanceTypesPage, TemplatesPage } from '@app/FleetVirtualization/EmptyPages';
+import { OverviewPage } from '@app/FleetVirtualization/EmptyPages';
+import { Catalog } from '@app/FleetVirtualization/Catalog';
+import { Templates } from '@app/FleetVirtualization/Templates';
+import { InstanceTypes } from '@app/FleetVirtualization/InstanceTypes';
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
@@ -49,7 +52,7 @@ const routes: AppRouteConfig[] = [
     title: 'Overview',
   },
   {
-    element: <CatalogPage />,
+    element: <Catalog />,
     path: '/virtualization/catalog',
     title: 'Catalog',
   },
@@ -59,12 +62,12 @@ const routes: AppRouteConfig[] = [
     title: 'Virtual machines',
   },
   {
-    element: <InstanceTypesPage />,
+    element: <InstanceTypes />,
     path: '/virtualization/instance-types',
     title: 'InstanceTypes',
   },
   {
-    element: <TemplatesPage />,
+    element: <Templates />,
     path: '/virtualization/templates',
     title: 'Templates',
   },

@@ -1,0 +1,252 @@
+import * as React from 'react';
+import {
+  Title,
+  Button,
+  Dropdown,
+  DropdownList,
+  DropdownItem,
+  MenuToggle,
+  MenuToggleElement,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+  SearchInput,
+  Label,
+  Tabs,
+  Tab,
+  TabTitleText,
+  Pagination,
+  PaginationVariant,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateActions,
+} from '@patternfly/react-core';
+import { 
+  Table, 
+  Thead, 
+  Tbody, 
+  Tr, 
+  Th, 
+  Td 
+} from '@patternfly/react-table';
+import { 
+  StarIcon,
+  EllipsisVIcon,
+  ThIcon,
+  ThLargeIcon,
+  PlusCircleIcon,
+} from '@patternfly/react-icons';
+import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+
+export const InstanceTypes: React.FunctionComponent = () => {
+  useDocumentTitle('InstanceTypes');
+
+  // State management
+  const [activeTabKey, setActiveTabKey] = React.useState<number>(0);
+  const [isNameSortOpen, setIsNameSortOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState('');
+  const [openKebabId, setOpenKebabId] = React.useState<string | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(15);
+
+  // Instance types data
+  const instanceTypes = [
+    { id: '1', name: 'cx1.2xlarge', cpu: 8, memory: '16 GiB', vendor: 'redhat.com' },
+    { id: '2', name: 'cx1.2xlargelgi', cpu: 8, memory: '16 GiB', vendor: 'redhat.com' },
+    { id: '3', name: 'cx1.4xlarge', cpu: 16, memory: '32 GiB', vendor: 'redhat.com' },
+    { id: '4', name: 'cx1.4xlargelgi', cpu: 16, memory: '32 GiB', vendor: 'redhat.com' },
+    { id: '5', name: 'cx1.8xlarge', cpu: 32, memory: '64 GiB', vendor: 'redhat.com' },
+    { id: '6', name: 'cx1.8xlargelgi', cpu: 32, memory: '64 GiB', vendor: 'redhat.com' },
+    { id: '7', name: 'cx1.large', cpu: 2, memory: '4 GiB', vendor: 'redhat.com' },
+    { id: '8', name: 'cx1.largelgi', cpu: 2, memory: '4 GiB', vendor: 'redhat.com' },
+    { id: '9', name: 'cx1.medium', cpu: 1, memory: '2 GiB', vendor: 'redhat.com' },
+    { id: '10', name: 'cx1.mediumlgi', cpu: 1, memory: '2 GiB', vendor: 'redhat.com' },
+    { id: '11', name: 'cx1.xlarge', cpu: 4, memory: '8 GiB', vendor: 'redhat.com' },
+    { id: '12', name: 'cx1.xlargelgi', cpu: 4, memory: '8 GiB', vendor: 'redhat.com' },
+    { id: '13', name: 'm1.2xlarge', cpu: 8, memory: '32 GiB', vendor: 'redhat.com' },
+    { id: '14', name: 'm1.4xlarge', cpu: 16, memory: '64 GiB', vendor: 'redhat.com' },
+    { id: '15', name: 'm1.8xlarge', cpu: 32, memory: '128 GiB', vendor: 'redhat.com' },
+  ];
+
+  const totalItems = 55; // Simulating total of 55 items as shown in screenshot
+
+  return (
+    <div 
+      className="instance-types-page-container"
+      style={{
+        padding: '24px',
+        width: '100%',
+        maxWidth: '100%',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}
+    >
+      {/* Header section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title headingLevel="h1" size="2xl">
+          VirtualMachineClusterInstanceTypes
+        </Title>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button variant="plain" aria-label="Favorite">
+            <StarIcon />
+          </Button>
+          <Button variant="primary">Create</Button>
+        </div>
+      </div>
+
+      {/* 16px spacing */}
+      <div style={{ height: '16px' }} />
+
+      {/* Tabs */}
+      <Tabs activeKey={activeTabKey} onSelect={(_event, tabIndex) => setActiveTabKey(tabIndex as number)}>
+        <Tab eventKey={0} title={<TabTitleText>Cluster InstanceTypes</TabTitleText>} />
+        <Tab eventKey={1} title={<TabTitleText>User InstanceTypes</TabTitleText>} />
+      </Tabs>
+
+      {/* 16px spacing */}
+      <div style={{ height: '16px' }} />
+
+      {/* Toolbar */}
+      <Toolbar>
+        <ToolbarContent>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isNameSortOpen}
+              onSelect={() => setIsNameSortOpen(false)}
+              onOpenChange={(isOpen) => setIsNameSortOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsNameSortOpen(!isNameSortOpen)}
+                  isExpanded={isNameSortOpen}
+                >
+                  Name
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem key="name-asc">Name (A-Z)</DropdownItem>
+                <DropdownItem key="name-desc">Name (Z-A)</DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
+          <ToolbarItem style={{ flex: 1 }}>
+            <SearchInput
+              placeholder="Search by name..."
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button variant="plain" aria-label="View options">
+              <ThIcon />
+            </Button>
+          </ToolbarItem>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Pagination
+              itemCount={totalItems}
+              perPage={perPage}
+              page={page}
+              onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+              onPerPageSelect={(_event, newPerPage) => {
+                setPerPage(newPerPage);
+                setPage(1);
+              }}
+              variant={PaginationVariant.top}
+              isCompact
+            />
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+
+      {/* 16px spacing */}
+      <div style={{ height: '16px' }} />
+
+      {/* Instance types table */}
+      {activeTabKey === 0 && (
+        <Table variant="compact">
+          <Thead>
+            <Tr>
+              <Th>Name</Th>
+              <Th>CPU</Th>
+              <Th>Memory</Th>
+              <Th>Vendor</Th>
+              <Th></Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {instanceTypes.map((instanceType) => (
+              <Tr key={instanceType.id}>
+                <Td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Label color="blue" isCompact>VMCI</Label>
+                    <a
+                      href="#"
+                      style={{
+                        color: 'var(--pf-t--global--color--brand--default)',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      {instanceType.name}
+                    </a>
+                  </div>
+                </Td>
+                <Td>{instanceType.cpu}</Td>
+                <Td>{instanceType.memory}</Td>
+                <Td>{instanceType.vendor}</Td>
+                <Td isActionCell>
+                  <Dropdown
+                    isOpen={openKebabId === instanceType.id}
+                    onSelect={() => setOpenKebabId(null)}
+                    onOpenChange={(isOpen) => setOpenKebabId(isOpen ? instanceType.id : null)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={() => setOpenKebabId(openKebabId === instanceType.id ? null : instanceType.id)}
+                        isExpanded={openKebabId === instanceType.id}
+                        variant="plain"
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                    popperProps={{ position: 'right' }}
+                  >
+                    <DropdownList>
+                      <DropdownItem key="edit">Edit instance type</DropdownItem>
+                      <DropdownItem key="clone">Clone instance type</DropdownItem>
+                      <DropdownItem key="delete">Delete instance type</DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      )}
+
+      {activeTabKey === 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <EmptyState>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <PlusCircleIcon style={{ fontSize: '64px', color: 'var(--pf-t--global--icon--color--subtle)' }} />
+              </div>
+              <Title headingLevel="h2" size="lg" style={{ marginBottom: '16px' }}>
+                No VirtualMachineInstanceTypes found
+              </Title>
+              <EmptyStateBody>
+                Click <strong>Create VirtualMachineInstanceType</strong> to create your first VirtualMachineInstanceType
+              </EmptyStateBody>
+              <EmptyStateActions style={{ marginTop: '24px' }}>
+                <Button variant="primary">Create VirtualMachineInstanceType</Button>
+              </EmptyStateActions>
+            </div>
+          </EmptyState>
+        </div>
+      )}
+    </div>
+  );
+};
+
