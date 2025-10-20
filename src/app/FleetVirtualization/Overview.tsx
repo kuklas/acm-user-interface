@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Title,
   Card,
@@ -26,11 +26,90 @@ import {
   AngleRightIcon,
   OutlinedQuestionCircleIcon,
 } from '@patternfly/react-icons';
+import { getAllVirtualMachines } from '../data/queries';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 const Overview: React.FunctionComponent = () => {
+  const { impersonatingUser, impersonatingGroups } = useImpersonation();
   const [isHealthAlertsOpen, setIsHealthAlertsOpen] = useState(false);
   const [isVMResourceOpen, setIsVMResourceOpen] = useState(false);
   const [isAdditionalStatusesExpanded, setIsAdditionalStatusesExpanded] = useState(false);
+
+  // Check if impersonating dev-team-alpha group
+  const isImpersonatingDevTeam = impersonatingGroups.includes('dev-team-alpha');
+
+  // Get all VMs from the database and filter based on impersonation
+  const allVMs = useMemo(() => {
+    const vms = getAllVirtualMachines();
+    
+    if (isImpersonatingDevTeam) {
+      // Only show VMs from dev-team-a-cluster and dev-team-b-cluster
+      return vms.filter(vm => 
+        vm.clusterId === 'cluster-dev-team-a' || vm.clusterId === 'cluster-dev-team-b'
+      );
+    }
+    
+    return vms;
+  }, [isImpersonatingDevTeam]);
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const totalVMs = allVMs.length;
+    const totalVCPUs = allVMs.reduce((sum, vm) => sum + vm.cpu, 0);
+    const totalMemoryMiB = allVMs.reduce((sum, vm) => {
+      const memoryGiB = parseInt(vm.memory.split(' ')[0]); // Extract number from "8 GiB"
+      return sum + (memoryGiB * 1024); // Convert GiB to MiB
+    }, 0);
+    const totalStorageGiB = allVMs.reduce((sum, vm) => {
+      const storageGiB = parseInt(vm.storage.split(' ')[0]); // Extract number from "50 GiB"
+      return sum + storageGiB;
+    }, 0);
+
+    // Count VM statuses
+    const statusCounts = {
+      running: allVMs.filter(vm => vm.status === 'Running').length,
+      stopped: allVMs.filter(vm => vm.status === 'Stopped').length,
+      error: allVMs.filter(vm => vm.status === 'Error').length,
+      paused: allVMs.filter(vm => vm.status === 'Paused').length,
+      starting: allVMs.filter(vm => vm.status === 'Starting').length,
+      stopping: allVMs.filter(vm => vm.status === 'Stopping').length,
+    };
+
+    // Group VMs by OS (since we don't have template field)
+    const vmsByTemplate: { [key: string]: number } = {};
+    allVMs.forEach(vm => {
+      const os = vm.os || 'unknown';
+      vmsByTemplate[os] = (vmsByTemplate[os] || 0) + 1;
+    });
+
+    // Group VMs by cluster
+    const vmsByCluster: { [key: string]: number } = {};
+    allVMs.forEach(vm => {
+      const cluster = vm.clusterId;
+      vmsByCluster[cluster] = (vmsByCluster[cluster] || 0) + 1;
+    });
+
+    // Group VMs by project (namespace)
+    const vmsByProject: { [key: string]: number } = {};
+    allVMs.forEach(vm => {
+      const project = vm.namespaceId;
+      vmsByProject[project] = (vmsByProject[project] || 0) + 1;
+    });
+
+    return {
+      totalVMs,
+      totalVCPUs,
+      totalMemoryMiB,
+      totalStorageGiB,
+      statusCounts,
+      vmsByTemplate,
+      vmsByCluster,
+      vmsByProject,
+    };
+  }, [allVMs]);
+
+  // State for resource grouping selection
+  const [resourceGrouping, setResourceGrouping] = useState<'templates' | 'clusters' | 'projects'>('templates');
 
   return (
     <div style={{ padding: '24px', backgroundColor: '#f0f0f0', minHeight: '100vh' }}>
@@ -136,7 +215,7 @@ const Overview: React.FunctionComponent = () => {
           <Card>
             <CardBody>
               <Title headingLevel="h2" size="2xl" style={{ textAlign: 'center', marginBottom: '8px' }}>
-                4
+                {metrics.totalVMs}
               </Title>
               <Content style={{ textAlign: 'center', fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
                 VirtualMachines
@@ -146,7 +225,7 @@ const Overview: React.FunctionComponent = () => {
               </Content>
               <div style={{ height: '100px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  5 VMs
+                  {Math.ceil(metrics.totalVMs * 1.2)} VMs
                 </div>
                 <div style={{ position: 'absolute', bottom: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                   0 VMs
@@ -161,7 +240,7 @@ const Overview: React.FunctionComponent = () => {
                   ))}
                   {/* Area chart */}
                   <path
-                    d="M 0 80 L 35 80 L 70 80 L 105 80 L 140 80 L 175 20 L 210 40 L 245 40 L 245 100 L 0 100 Z"
+                    d="M 0 60 L 35 60 L 70 58 L 105 55 L 140 52 L 175 50 L 210 48 L 245 45 L 245 100 L 0 100 Z"
                     fill="rgba(6, 153, 220, 0.2)"
                     stroke="#0699dc"
                     strokeWidth="2"
@@ -176,7 +255,7 @@ const Overview: React.FunctionComponent = () => {
           <Card>
             <CardBody>
               <Title headingLevel="h2" size="2xl" style={{ textAlign: 'center', marginBottom: '8px' }}>
-                2
+                {metrics.totalVCPUs}
               </Title>
               <Content style={{ textAlign: 'center', fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
                 vCPU usage
@@ -186,7 +265,7 @@ const Overview: React.FunctionComponent = () => {
               </Content>
               <div style={{ height: '100px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  2 vCPU
+                  {Math.ceil(metrics.totalVCPUs * 1.1)} vCPU
                 </div>
                 <div style={{ position: 'absolute', bottom: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                   0 vCPU
@@ -199,9 +278,9 @@ const Overview: React.FunctionComponent = () => {
                   {[0, 25, 50, 75, 100].map((y) => (
                     <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#d2d2d2" strokeWidth="1" />
                   ))}
-                  {/* Area chart - flat line at 2 vCPU */}
+                  {/* Area chart */}
                   <path
-                    d="M 0 50 L 35 50 L 70 50 L 105 50 L 140 50 L 175 50 L 210 50 L 245 50 L 245 100 L 0 100 Z"
+                    d="M 0 40 L 35 40 L 70 38 L 105 37 L 140 37 L 175 36 L 210 35 L 245 35 L 245 100 L 0 100 Z"
                     fill="rgba(6, 153, 220, 0.2)"
                     stroke="#0699dc"
                     strokeWidth="2"
@@ -216,57 +295,17 @@ const Overview: React.FunctionComponent = () => {
           <Card>
             <CardBody>
               <Title headingLevel="h2" size="2xl" style={{ textAlign: 'center', marginBottom: '8px' }}>
-                881.5
+                {(metrics.totalMemoryMiB / 1024).toFixed(1)}
               </Title>
               <Content style={{ textAlign: 'center', fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
-                Memory (MiB)
+                Memory (GiB)
               </Content>
               <Content style={{ textAlign: 'center', fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)', marginBottom: '16px' }}>
                 Last 8 days' trend
               </Content>
               <div style={{ height: '100px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  905.2 MiB
-                </div>
-                <div style={{ position: 'absolute', bottom: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  0 MiB
-                </div>
-                <div style={{ position: 'absolute', bottom: -20, right: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  Oct 17
-                </div>
-                <svg width="100%" height="100" viewBox="0 0 280 100" style={{ marginLeft: '30px' }}>
-                  {/* Grid lines */}
-                  {[0, 25, 50, 75, 100].map((y) => (
-                    <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#d2d2d2" strokeWidth="1" />
-                  ))}
-                  {/* Area chart - small dip at the end */}
-                  <path
-                    d="M 0 10 L 35 10 L 70 10 L 105 10 L 140 10 L 175 10 L 210 13 L 245 13 L 245 100 L 0 100 Z"
-                    fill="rgba(6, 153, 220, 0.2)"
-                    stroke="#0699dc"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-            </CardBody>
-          </Card>
-        </GridItem>
-
-        <GridItem span={3}>
-          <Card>
-            <CardBody>
-              <Title headingLevel="h2" size="2xl" style={{ textAlign: 'center', marginBottom: '8px' }}>
-                3.93
-              </Title>
-              <Content style={{ textAlign: 'center', fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
-                Storage (GiB)
-              </Content>
-              <Content style={{ textAlign: 'center', fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)', marginBottom: '16px' }}>
-                Last 8 days' trend
-              </Content>
-              <div style={{ height: '100px', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                  3.93 GiB
+                  {((metrics.totalMemoryMiB / 1024) * 1.1).toFixed(1)} GiB
                 </div>
                 <div style={{ position: 'absolute', bottom: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                   0 GiB
@@ -279,9 +318,49 @@ const Overview: React.FunctionComponent = () => {
                   {[0, 25, 50, 75, 100].map((y) => (
                     <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#d2d2d2" strokeWidth="1" />
                   ))}
-                  {/* Area chart - flat line */}
+                  {/* Area chart */}
                   <path
-                    d="M 0 10 L 35 10 L 70 10 L 105 10 L 140 10 L 175 10 L 210 10 L 245 10 L 245 100 L 0 100 Z"
+                    d="M 0 20 L 35 20 L 70 18 L 105 18 L 140 17 L 175 15 L 210 15 L 245 15 L 245 100 L 0 100 Z"
+                    fill="rgba(6, 153, 220, 0.2)"
+                    stroke="#0699dc"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
+            </CardBody>
+          </Card>
+        </GridItem>
+
+        <GridItem span={3}>
+          <Card>
+            <CardBody>
+              <Title headingLevel="h2" size="2xl" style={{ textAlign: 'center', marginBottom: '8px' }}>
+                {metrics.totalStorageGiB.toFixed(1)}
+              </Title>
+              <Content style={{ textAlign: 'center', fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
+                Storage (GiB)
+              </Content>
+              <Content style={{ textAlign: 'center', fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)', marginBottom: '16px' }}>
+                Last 8 days' trend
+              </Content>
+              <div style={{ height: '100px', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                  {(metrics.totalStorageGiB * 1.1).toFixed(1)} GiB
+                </div>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                  0 GiB
+                </div>
+                <div style={{ position: 'absolute', bottom: -20, right: 0, fontSize: '10px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                  Oct 17
+                </div>
+                <svg width="100%" height="100" viewBox="0 0 280 100" style={{ marginLeft: '30px' }}>
+                  {/* Grid lines */}
+                  {[0, 25, 50, 75, 100].map((y) => (
+                    <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#d2d2d2" strokeWidth="1" />
+                  ))}
+                  {/* Area chart */}
+                  <path
+                    d="M 0 12 L 35 12 L 70 11 L 105 11 L 140 10 L 175 10 L 210 10 L 245 10 L 245 100 L 0 100 Z"
                     fill="rgba(6, 153, 220, 0.2)"
                     stroke="#0699dc"
                     strokeWidth="2"
@@ -337,42 +416,57 @@ const Overview: React.FunctionComponent = () => {
                 <GridItem span={3}>
                   <div style={{ textAlign: 'center' }}>
                     <ExclamationCircleIcon style={{ fontSize: '24px', color: 'var(--pf-t--global--icon--color--status--danger--default)', marginBottom: '8px' }} />
-                    <Title headingLevel="h2" size="xl">0</Title>
+                    <Title headingLevel="h2" size="xl">{metrics.statusCounts.error}</Title>
                     <Content style={{ fontSize: '14px' }}>Error</Content>
                   </div>
                 </GridItem>
                 <GridItem span={3}>
                   <div style={{ textAlign: 'center' }}>
                     <CheckCircleIcon style={{ fontSize: '24px', color: 'var(--pf-t--global--icon--color--status--success--default)', marginBottom: '8px' }} />
-                    <Title headingLevel="h2" size="xl">2</Title>
+                    <Title headingLevel="h2" size="xl">{metrics.statusCounts.running}</Title>
                     <Content style={{ fontSize: '14px' }}>Running</Content>
                   </div>
                 </GridItem>
                 <GridItem span={3}>
                   <div style={{ textAlign: 'center' }}>
                     <OffIcon style={{ fontSize: '24px', color: 'var(--pf-t--global--icon--color--subtle)', marginBottom: '8px' }} />
-                    <Title headingLevel="h2" size="xl">2</Title>
+                    <Title headingLevel="h2" size="xl">{metrics.statusCounts.stopped}</Title>
                     <Content style={{ fontSize: '14px' }}>Stopped</Content>
                   </div>
                 </GridItem>
                 <GridItem span={3}>
                   <div style={{ textAlign: 'center' }}>
                     <PauseCircleIcon style={{ fontSize: '24px', color: 'var(--pf-t--global--icon--color--subtle)', marginBottom: '8px' }} />
-                    <Title headingLevel="h2" size="xl">0</Title>
+                    <Title headingLevel="h2" size="xl">{metrics.statusCounts.paused}</Title>
                     <Content style={{ fontSize: '14px' }}>Paused</Content>
                   </div>
                 </GridItem>
               </Grid>
               <Divider style={{ margin: '24px 0' }} />
               <ExpandableSection
-                toggleText="Additional statuses (6)"
+                toggleText={`Additional statuses (${metrics.statusCounts.starting + metrics.statusCounts.stopping})`}
                 isExpanded={isAdditionalStatusesExpanded}
                 onToggle={(_event, isExpanded) => setIsAdditionalStatusesExpanded(isExpanded)}
               >
                 <div style={{ paddingTop: '16px' }}>
-                  <Content style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                    Additional status information would appear here
-                  </Content>
+                  <Grid hasGutter>
+                    {metrics.statusCounts.starting > 0 && (
+                      <GridItem span={6}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                          <Content style={{ fontSize: '14px' }}>Starting</Content>
+                          <Title headingLevel="h4" size="md">{metrics.statusCounts.starting}</Title>
+                        </div>
+                      </GridItem>
+                    )}
+                    {metrics.statusCounts.stopping > 0 && (
+                      <GridItem span={6}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                          <Content style={{ fontSize: '14px' }}>Stopping</Content>
+                          <Title headingLevel="h4" size="md">{metrics.statusCounts.stopping}</Title>
+                        </div>
+                      </GridItem>
+                    )}
+                  </Grid>
                 </div>
               </ExpandableSection>
             </CardBody>
@@ -396,67 +490,87 @@ const Overview: React.FunctionComponent = () => {
                       onClick={() => setIsVMResourceOpen(!isVMResourceOpen)}
                       isExpanded={isVMResourceOpen}
                     >
-                      Show VirtualMachine per Templates
+                      Show VirtualMachine per {resourceGrouping === 'templates' ? 'OS' : resourceGrouping === 'clusters' ? 'Clusters' : 'Projects'}
                     </MenuToggle>
                   )}
                 >
                   <DropdownList>
-                    <DropdownItem key="templates">Show VirtualMachine per Templates</DropdownItem>
-                    <DropdownItem key="clusters">Show VirtualMachine per Clusters</DropdownItem>
-                    <DropdownItem key="projects">Show VirtualMachine per Projects</DropdownItem>
+                    <DropdownItem key="templates" onClick={() => { setResourceGrouping('templates'); setIsVMResourceOpen(false); }}>
+                      Show VirtualMachine per OS
+                    </DropdownItem>
+                    <DropdownItem key="clusters" onClick={() => { setResourceGrouping('clusters'); setIsVMResourceOpen(false); }}>
+                      Show VirtualMachine per Clusters
+                    </DropdownItem>
+                    <DropdownItem key="projects" onClick={() => { setResourceGrouping('projects'); setIsVMResourceOpen(false); }}>
+                      Show VirtualMachine per Projects
+                    </DropdownItem>
                   </DropdownList>
                 </Dropdown>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
-                {/* Donut chart placeholder */}
-                <div style={{ position: 'relative', width: '200px', height: '200px', marginBottom: '24px' }}>
-                  <svg width="200" height="200" viewBox="0 0 200 200">
-                    {/* Blue segment (50%) */}
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="70"
-                      fill="none"
-                      stroke="#06c"
-                      strokeWidth="40"
-                      strokeDasharray="220 440"
-                      transform="rotate(-90 100 100)"
-                    />
-                    {/* Light blue segment (50%) */}
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="70"
-                      fill="none"
-                      stroke="#73bcf7"
-                      strokeWidth="40"
-                      strokeDasharray="220 440"
-                      strokeDashoffset="-220"
-                      transform="rotate(-90 100 100)"
-                    />
-                  </svg>
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    textAlign: 'center'
-                  }}>
-                    <Title headingLevel="h2" size="2xl">2</Title>
-                    <Content style={{ fontSize: '16px' }}>VMs</Content>
-                  </div>
-                </div>
-                {/* Legend */}
-                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: '#06c', borderRadius: '2px' }}></div>
-                    <Content style={{ fontSize: '14px' }}>1 fedora-server-small</Content>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: '#73bcf7', borderRadius: '2px' }}></div>
-                    <Content style={{ fontSize: '14px' }}>1 rhel9-server-small</Content>
-                  </div>
-                </div>
+                {/* Donut chart */}
+                {(() => {
+                  const dataSource = resourceGrouping === 'templates' ? metrics.vmsByTemplate :
+                                    resourceGrouping === 'clusters' ? metrics.vmsByCluster :
+                                    metrics.vmsByProject;
+                  
+                  const entries = Object.entries(dataSource);
+                  const colors = ['#06c', '#73bcf7', '#009596', '#f0ab00', '#c9190b', '#a18fff', '#f4c145', '#92d400'];
+                  
+                  // Calculate total circumference and segments
+                  const totalVMs = metrics.totalVMs;
+                  const circumference = 2 * Math.PI * 70; // radius = 70
+                  let currentOffset = 0;
+
+                  return (
+                    <>
+                      <div style={{ position: 'relative', width: '200px', height: '200px', marginBottom: '24px' }}>
+                        <svg width="200" height="200" viewBox="0 0 200 200">
+                          {entries.map(([name, count], index) => {
+                            const percentage = count / totalVMs;
+                            const segmentLength = percentage * circumference;
+                            const offset = currentOffset;
+                            currentOffset += segmentLength;
+                            
+                            return (
+                              <circle
+                                key={name}
+                                cx="100"
+                                cy="100"
+                                r="70"
+                                fill="none"
+                                stroke={colors[index % colors.length]}
+                                strokeWidth="40"
+                                strokeDasharray={`${segmentLength} ${circumference}`}
+                                strokeDashoffset={-offset}
+                                transform="rotate(-90 100 100)"
+                              />
+                            );
+                          })}
+                        </svg>
+                        <div style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          textAlign: 'center'
+                        }}>
+                          <Title headingLevel="h2" size="2xl">{totalVMs}</Title>
+                          <Content style={{ fontSize: '16px' }}>VMs</Content>
+                        </div>
+                      </div>
+                      {/* Legend */}
+                      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '100%' }}>
+                        {entries.map(([name, count], index) => (
+                          <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', backgroundColor: colors[index % colors.length], borderRadius: '2px', flexShrink: 0 }}></div>
+                            <Content style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>{count} {name}</Content>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </CardBody>
           </Card>

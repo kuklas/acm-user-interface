@@ -32,9 +32,14 @@ import {
   DesktopIcon,
 } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 export const Templates: React.FunctionComponent = () => {
   useDocumentTitle('Templates');
+  const { impersonatingUser, impersonatingGroups } = useImpersonation();
+  
+  // Check if impersonating dev-team-alpha group
+  const isImpersonatingDevTeam = impersonatingGroups.includes('dev-team-alpha');
 
   // State management
   const [isClusterOpen, setIsClusterOpen] = React.useState(false);
@@ -47,19 +52,30 @@ export const Templates: React.FunctionComponent = () => {
   const [hideDeprecated, setHideDeprecated] = React.useState(true);
   const [openKebabId, setOpenKebabId] = React.useState<string | null>(null);
 
-  // Template data
-  const templates = [
-    { id: '1', name: 'vm-s390x-template', os: 'Fedora', architecture: '-', workload: 'Server', bootSource: 'Container disk', sourceAvailable: true },
-    { id: '2', name: 'centos-stream9-server-small', os: 'CentOS', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false },
-    { id: '3', name: 'fedora-server-small', os: 'Fedora', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true },
-    { id: '4', name: 'rhel7-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false },
-    { id: '5', name: 'rhel8-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true },
-    { id: '6', name: 'rhel9-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true },
-    { id: '7', name: 'windows10-desktop-medium', os: 'Windows', architecture: 'amd64', workload: 'Desktop', bootSource: 'PVC', sourceAvailable: false },
-    { id: '8', name: 'windows11-desktop-medium', os: 'Windows', architecture: 'amd64', workload: 'Desktop', bootSource: 'PVC', sourceAvailable: false },
-    { id: '9', name: 'windows2k19-server-medium', os: 'Windows', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false },
-    { id: '10', name: 'windows2k22-server-medium', os: 'Windows', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false },
+  // Template data (all templates)
+  const allTemplates = [
+    { id: '1', name: 'vm-s390x-template', os: 'Fedora', architecture: '-', workload: 'Server', bootSource: 'Container disk', sourceAvailable: true, cluster: 'cluster-hub', project: 'openshift' },
+    { id: '2', name: 'centos-stream9-server-small', os: 'CentOS', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false, cluster: 'cluster-us-west-prod-01', project: 'openshift' },
+    { id: '3', name: 'fedora-server-small', os: 'Fedora', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true, cluster: 'cluster-hub', project: 'openshift' },
+    { id: '4', name: 'rhel7-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false, cluster: 'cluster-us-east-prod-02', project: 'openshift' },
+    { id: '5', name: 'rhel8-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true, cluster: 'cluster-hub', project: 'openshift' },
+    { id: '6', name: 'rhel9-server-small', os: 'RHEL', architecture: 'amd64', workload: 'Server', bootSource: 'PVC (auto import)', sourceAvailable: true, cluster: 'cluster-hub', project: 'openshift' },
+    { id: '7', name: 'windows10-desktop-medium', os: 'Windows', architecture: 'amd64', workload: 'Desktop', bootSource: 'PVC', sourceAvailable: false, cluster: 'dev-team-a-cluster', project: 'starlight' },
+    { id: '8', name: 'windows11-desktop-medium', os: 'Windows', architecture: 'amd64', workload: 'Desktop', bootSource: 'PVC', sourceAvailable: false, cluster: 'dev-team-a-cluster', project: 'starlight' },
+    { id: '9', name: 'windows2k19-server-medium', os: 'Windows', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false, cluster: 'dev-team-b-cluster', project: 'starlight' },
+    { id: '10', name: 'windows2k22-server-medium', os: 'Windows', architecture: 'amd64', workload: 'Server', bootSource: 'PVC', sourceAvailable: false, cluster: 'dev-team-b-cluster', project: 'starlight' },
   ];
+  
+  // Filter templates based on impersonation context
+  const templates = React.useMemo(() => {
+    if (isImpersonatingDevTeam) {
+      // Only show templates from dev-team-a-cluster and dev-team-b-cluster
+      return allTemplates.filter(template => 
+        template.cluster === 'dev-team-a-cluster' || template.cluster === 'dev-team-b-cluster'
+      );
+    }
+    return allTemplates;
+  }, [isImpersonatingDevTeam]);
 
   return (
     <div 
@@ -274,6 +290,8 @@ export const Templates: React.FunctionComponent = () => {
         <Thead>
           <Tr>
             <Th>Name</Th>
+            <Th>Cluster</Th>
+            <Th>Project</Th>
             <Th>Architecture</Th>
             <Th>Workload profile</Th>
             <Th>Boot source</Th>
@@ -309,6 +327,8 @@ export const Templates: React.FunctionComponent = () => {
                   </a>
                 </div>
               </Td>
+              <Td>{template.cluster}</Td>
+              <Td>{template.project}</Td>
               <Td>{template.architecture}</Td>
               <Td>{template.workload}</Td>
               <Td>

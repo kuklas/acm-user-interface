@@ -72,7 +72,10 @@ import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 export const Catalog: React.FunctionComponent = () => {
   useDocumentTitle('Catalog');
-  const { impersonatingUser } = useImpersonation();
+  const { impersonatingUser, impersonatingGroups } = useImpersonation();
+  
+  // Check if impersonating dev-team-alpha group
+  const isImpersonatingDevTeam = impersonatingGroups.includes('dev-team-alpha');
 
   // Dropdowns state
   const [isClusterOpen, setIsClusterOpen] = React.useState(false);
@@ -134,7 +137,7 @@ export const Catalog: React.FunctionComponent = () => {
 
   // Data - filtered based on impersonation
   const clusters = React.useMemo(() => {
-    if (impersonatingUser) {
+    if (isImpersonatingDevTeam) {
       return [
         { id: 'cluster-dev-team-a', name: 'dev-team-a-cluster' },
         { id: 'cluster-dev-team-b', name: 'dev-team-b-cluster' },
@@ -147,10 +150,10 @@ export const Catalog: React.FunctionComponent = () => {
       { id: 'cluster-dev-team-a', name: 'dev-team-a-cluster' },
       { id: 'cluster-dev-team-b', name: 'dev-team-b-cluster' },
     ];
-  }, [impersonatingUser]);
+  }, [isImpersonatingDevTeam]);
 
   const projects = React.useMemo(() => {
-    if (impersonatingUser) {
+    if (isImpersonatingDevTeam) {
       return [
         { id: 'ns-project-starlight-dev', name: 'starlight' },
       ];
@@ -161,7 +164,7 @@ export const Catalog: React.FunctionComponent = () => {
       { id: 'ns-hub-argo-cd', name: 'openshift-gitops' },
       { id: 'ns-project-starlight-dev', name: 'starlight' },
     ];
-  }, [impersonatingUser]);
+  }, [isImpersonatingDevTeam]);
 
   // Boot volumes data
   const bootVolumes = [

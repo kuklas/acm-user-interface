@@ -37,9 +37,14 @@ import {
   PlusCircleIcon,
 } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
+import { useImpersonation } from '@app/contexts/ImpersonationContext';
 
 export const InstanceTypes: React.FunctionComponent = () => {
   useDocumentTitle('InstanceTypes');
+  const { impersonatingUser, impersonatingGroups } = useImpersonation();
+  
+  // Check if impersonating dev-team-alpha group
+  const isImpersonatingDevTeam = impersonatingGroups.includes('dev-team-alpha');
 
   // State management
   const [activeTabKey, setActiveTabKey] = React.useState<number>(0);
@@ -49,24 +54,35 @@ export const InstanceTypes: React.FunctionComponent = () => {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(15);
 
-  // Instance types data
-  const instanceTypes = [
-    { id: '1', name: 'cx1.2xlarge', cpu: 8, memory: '16 GiB', vendor: 'redhat.com' },
-    { id: '2', name: 'cx1.2xlargelgi', cpu: 8, memory: '16 GiB', vendor: 'redhat.com' },
-    { id: '3', name: 'cx1.4xlarge', cpu: 16, memory: '32 GiB', vendor: 'redhat.com' },
-    { id: '4', name: 'cx1.4xlargelgi', cpu: 16, memory: '32 GiB', vendor: 'redhat.com' },
-    { id: '5', name: 'cx1.8xlarge', cpu: 32, memory: '64 GiB', vendor: 'redhat.com' },
-    { id: '6', name: 'cx1.8xlargelgi', cpu: 32, memory: '64 GiB', vendor: 'redhat.com' },
-    { id: '7', name: 'cx1.large', cpu: 2, memory: '4 GiB', vendor: 'redhat.com' },
-    { id: '8', name: 'cx1.largelgi', cpu: 2, memory: '4 GiB', vendor: 'redhat.com' },
-    { id: '9', name: 'cx1.medium', cpu: 1, memory: '2 GiB', vendor: 'redhat.com' },
-    { id: '10', name: 'cx1.mediumlgi', cpu: 1, memory: '2 GiB', vendor: 'redhat.com' },
-    { id: '11', name: 'cx1.xlarge', cpu: 4, memory: '8 GiB', vendor: 'redhat.com' },
-    { id: '12', name: 'cx1.xlargelgi', cpu: 4, memory: '8 GiB', vendor: 'redhat.com' },
-    { id: '13', name: 'm1.2xlarge', cpu: 8, memory: '32 GiB', vendor: 'redhat.com' },
-    { id: '14', name: 'm1.4xlarge', cpu: 16, memory: '64 GiB', vendor: 'redhat.com' },
-    { id: '15', name: 'm1.8xlarge', cpu: 32, memory: '128 GiB', vendor: 'redhat.com' },
+  // Instance types data (all instance types)
+  const allInstanceTypes = [
+    { id: '1', name: 'cx1.2xlarge', cpu: 8, memory: '16 GiB', vendor: 'redhat.com', cluster: 'cluster-hub', project: 'openshift' },
+    { id: '2', name: 'cx1.2xlargelgi', cpu: 8, memory: '16 GiB', vendor: 'redhat.com', cluster: 'cluster-hub', project: 'openshift' },
+    { id: '3', name: 'cx1.4xlarge', cpu: 16, memory: '32 GiB', vendor: 'redhat.com', cluster: 'cluster-us-west-prod-01', project: 'openshift' },
+    { id: '4', name: 'cx1.4xlargelgi', cpu: 16, memory: '32 GiB', vendor: 'redhat.com', cluster: 'cluster-us-west-prod-01', project: 'openshift' },
+    { id: '5', name: 'cx1.8xlarge', cpu: 32, memory: '64 GiB', vendor: 'redhat.com', cluster: 'cluster-us-east-prod-02', project: 'openshift' },
+    { id: '6', name: 'cx1.8xlargelgi', cpu: 32, memory: '64 GiB', vendor: 'redhat.com', cluster: 'cluster-us-east-prod-02', project: 'openshift' },
+    { id: '7', name: 'cx1.large', cpu: 2, memory: '4 GiB', vendor: 'redhat.com', cluster: 'cluster-hub', project: 'openshift' },
+    { id: '8', name: 'cx1.largelgi', cpu: 2, memory: '4 GiB', vendor: 'redhat.com', cluster: 'cluster-hub', project: 'openshift' },
+    { id: '9', name: 'cx1.medium', cpu: 1, memory: '2 GiB', vendor: 'redhat.com', cluster: 'dev-team-a-cluster', project: 'starlight' },
+    { id: '10', name: 'cx1.mediumlgi', cpu: 1, memory: '2 GiB', vendor: 'redhat.com', cluster: 'dev-team-a-cluster', project: 'starlight' },
+    { id: '11', name: 'cx1.xlarge', cpu: 4, memory: '8 GiB', vendor: 'redhat.com', cluster: 'dev-team-b-cluster', project: 'starlight' },
+    { id: '12', name: 'cx1.xlargelgi', cpu: 4, memory: '8 GiB', vendor: 'redhat.com', cluster: 'dev-team-b-cluster', project: 'starlight' },
+    { id: '13', name: 'm1.2xlarge', cpu: 8, memory: '32 GiB', vendor: 'redhat.com', cluster: 'cluster-hub', project: 'openshift' },
+    { id: '14', name: 'm1.4xlarge', cpu: 16, memory: '64 GiB', vendor: 'redhat.com', cluster: 'cluster-us-west-prod-01', project: 'openshift' },
+    { id: '15', name: 'm1.8xlarge', cpu: 32, memory: '128 GiB', vendor: 'redhat.com', cluster: 'cluster-us-east-prod-02', project: 'openshift' },
   ];
+  
+  // Filter instance types based on impersonation context
+  const instanceTypes = React.useMemo(() => {
+    if (isImpersonatingDevTeam) {
+      // Only show instance types from dev-team-a-cluster and dev-team-b-cluster
+      return allInstanceTypes.filter(instanceType => 
+        instanceType.cluster === 'dev-team-a-cluster' || instanceType.cluster === 'dev-team-b-cluster'
+      );
+    }
+    return allInstanceTypes;
+  }, [isImpersonatingDevTeam]);
 
   const totalItems = 55; // Simulating total of 55 items as shown in screenshot
 
@@ -170,6 +186,8 @@ export const InstanceTypes: React.FunctionComponent = () => {
           <Thead>
             <Tr>
               <Th>Name</Th>
+              <Th>Cluster</Th>
+              <Th>Project</Th>
               <Th>CPU</Th>
               <Th>Memory</Th>
               <Th>Vendor</Th>
@@ -193,6 +211,8 @@ export const InstanceTypes: React.FunctionComponent = () => {
                     </a>
                   </div>
                 </Td>
+                <Td>{instanceType.cluster}</Td>
+                <Td>{instanceType.project}</Td>
                 <Td>{instanceType.cpu}</Td>
                 <Td>{instanceType.memory}</Td>
                 <Td>{instanceType.vendor}</Td>
