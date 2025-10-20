@@ -23,6 +23,7 @@ import {
 } from '@app/navigation';
 import { ProjectsPage } from '@app/navigation/core-platforms';
 import { OverviewPage } from '@app/FleetVirtualization/EmptyPages';
+import Virtualization from '@app/FleetVirtualization/Virtualization';
 import { Catalog } from '@app/FleetVirtualization/Catalog';
 import { Templates } from '@app/FleetVirtualization/Templates';
 import { InstanceTypes } from '@app/FleetVirtualization/InstanceTypes';
@@ -47,9 +48,9 @@ export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 
 const routes: AppRouteConfig[] = [
   {
-    element: <OverviewPage />,
+    element: <Virtualization />,
     path: '/virtualization/overview',
-    title: 'Overview',
+    title: 'Virtualization',
   },
   {
     element: <Catalog />,

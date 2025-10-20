@@ -31,6 +31,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.14",
     "@types/react-router-dom": "^5.3.3",
+    "@types/victory": "^33.1.5",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",
     "copy-webpack-plugin": "^13.0.0",
@@ -73,6 +74,7 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
+    "@patternfly/react-charts": "^8.4.0",
     "@patternfly/react-core": "^6.3.0",
     "@patternfly/react-icons": "^6.3.0",
     "@patternfly/react-styles": "^6.3.0",
