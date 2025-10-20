@@ -313,7 +313,7 @@ const Roles: React.FunctionComponent = () => {
               <Th width={35}>Description</Th>
               <Th width={20}>Category</Th>
               <Th width={15}>Type</Th>
-              <Th width={5}></Th>
+              <Th width={10}></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -351,7 +351,7 @@ const Roles: React.FunctionComponent = () => {
                 <Td dataLabel="Type" width={15}>
                   <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
                 </Td>
-                <Td dataLabel="Actions" width={5} style={{ textAlign: 'right' }}>
+                <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openActionMenuId === role.id}
                     onSelect={() => setOpenActionMenuId(null)}
