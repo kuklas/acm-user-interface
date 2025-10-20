@@ -9,6 +9,9 @@ import {
 } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons';
 import Overview from './Overview';
+import TopConsumers from './TopConsumers';
+import Migrations from './Migrations';
+import Settings from './Settings';
 
 const Virtualization: React.FunctionComponent = () => {
   const [activeTabKey, setActiveTabKey] = useState<string | number>(0);
@@ -67,8 +70,8 @@ const Virtualization: React.FunctionComponent = () => {
             title={<TabTitleText>Top consumers</TabTitleText>}
             aria-label="Top consumers tab"
           >
-            <div style={{ padding: '24px', backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Content>Top consumers content coming soon</Content>
+            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
+              <TopConsumers />
             </div>
           </Tab>
           <Tab
@@ -76,8 +79,8 @@ const Virtualization: React.FunctionComponent = () => {
             title={<TabTitleText>Migrations</TabTitleText>}
             aria-label="Migrations tab"
           >
-            <div style={{ padding: '24px', backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Content>Migrations content coming soon</Content>
+            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
+              <Migrations />
             </div>
           </Tab>
           <Tab
@@ -85,8 +88,8 @@ const Virtualization: React.FunctionComponent = () => {
             title={<TabTitleText>Settings</TabTitleText>}
             aria-label="Settings tab"
           >
-            <div style={{ padding: '24px', backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
-              <Content>Settings content coming soon</Content>
+            <div style={{ backgroundColor: '#f0f0f0', minHeight: 'calc(100vh - 200px)' }}>
+              <Settings />
             </div>
           </Tab>
         </Tabs>
