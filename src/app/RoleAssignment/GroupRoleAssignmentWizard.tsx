@@ -56,11 +56,29 @@ const mockGroups = dbGroups.map((group, index) => ({
   users: group.userIds.length,
 }));
 
+// Map category to display category (plugin/source)
+const getCategoryDisplay = (category: string): string => {
+  switch (category) {
+    case 'kubevirt':
+      return 'Virtualization';
+    case 'cluster':
+      return 'OpenShift Cluster Management';
+    case 'namespace':
+      return 'OpenShift Namespace Management';
+    case 'application':
+      return 'Application Management';
+    default:
+      return 'OpenShift';
+  }
+};
+
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
   displayName: role.displayName,
   type: role.type === 'default' ? 'Default' : 'Custom',
+  category: getCategoryDisplay(role.category),
+  description: role.description,
   resources: role.category === 'kubevirt' 
     ? ['VirtualMachines', 'VirtualMachineInstances'] 
     : role.category === 'cluster' 
@@ -2317,10 +2335,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               <Thead>
                 <Tr>
                   <Th width={10}></Th>
-                  <Th width={35}>Role</Th>
-                  <Th width={15}>Type</Th>
-                  <Th width={25}>Resources</Th>
-                  <Th width={20}>Permissions</Th>
+                  <Th width={25}>Role</Th>
+                  <Th width={35}>Description</Th>
+                  <Th width={20}>Category</Th>
+                  <Th width={10}>Type</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -2350,23 +2368,14 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         </div>
                       </div>
                     </Td>
+                    <Td dataLabel="Description" style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)', wordBreak: 'break-word' }}>
+                      {role.description}
+                    </Td>
+                    <Td dataLabel="Category" style={{ wordBreak: 'break-word' }}>
+                      {role.category}
+                    </Td>
                     <Td dataLabel="Type">
                       <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
-                    </Td>
-                    <Td dataLabel="Resources" style={{ wordBreak: 'break-word' }}>
-                      <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                        {role.resources.join(', ')}
-                      </div>
-                    </Td>
-                    <Td dataLabel="Permissions">
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {role.permissions.slice(0, 2).map((perm) => (
-                          <Label key={perm} isCompact>{perm}</Label>
-                        ))}
-                        {role.permissions.length > 2 && (
-                          <Label isCompact>+{role.permissions.length - 2} more</Label>
-                        )}
-                      </div>
                     </Td>
                   </Tr>
                 ))}

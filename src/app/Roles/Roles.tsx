@@ -25,7 +25,7 @@ import {
   PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { EllipsisVIcon } from '@patternfly/react-icons';
+import { EllipsisVIcon, FilterIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 import { getAllRoles } from '@app/data';
@@ -33,12 +33,30 @@ import { getAllRoles } from '@app/data';
 // Get roles from centralized database
 const dbRoles = getAllRoles();
 
+// Map category to display category (plugin/source)
+const getCategoryDisplay = (category: string): string => {
+  switch (category) {
+    case 'kubevirt':
+      return 'Virtualization';
+    case 'cluster':
+      return 'OpenShift Cluster Management';
+    case 'namespace':
+      return 'OpenShift Namespace Management';
+    case 'application':
+      return 'Application Management';
+    default:
+      return 'OpenShift';
+  }
+};
+
 // Transform roles from database to component format
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
   name: role.name,
   displayName: role.displayName,
   type: role.type === 'default' ? 'Default' : 'Custom',
+  category: getCategoryDisplay(role.category),
+  description: role.description,
   resources: role.category === 'kubevirt' 
     ? ['VirtualMachines', 'VirtualMachineInstances'] 
     : role.category === 'cluster' 
@@ -57,6 +75,8 @@ const Roles: React.FunctionComponent = () => {
   const [newRoleName, setNewRoleName] = React.useState('');
   const [selectedPermissions, setSelectedPermissions] = React.useState<string[]>([]);
   const [typeFilter, setTypeFilter] = React.useState<'All' | 'Default' | 'Custom'>('All');
+  const [categoryFilter, setCategoryFilter] = React.useState<string>('All categories');
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<{
     index: number;
     direction: 'asc' | 'desc';
@@ -65,6 +85,12 @@ const Roles: React.FunctionComponent = () => {
   const [openActionMenuId, setOpenActionMenuId] = React.useState<number | null>(null);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
+  
+  // Get unique categories from roles
+  const uniqueCategories = React.useMemo(() => {
+    const categories = new Set(mockRoles.map(role => role.category));
+    return ['All categories', ...Array.from(categories).sort()];
+  }, []);
 
   const availablePermissions = ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch'];
 
@@ -98,9 +124,14 @@ const Roles: React.FunctionComponent = () => {
 
   const sortedRoles = React.useMemo(() => {
     // Filter by type first
-    const filtered = typeFilter === 'All' 
+    let filtered = typeFilter === 'All' 
       ? mockRoles 
       : mockRoles.filter(role => role.type === typeFilter);
+    
+    // Then filter by category
+    if (categoryFilter !== 'All categories') {
+      filtered = filtered.filter(role => role.category === categoryFilter);
+    }
     
     // Then sort
     const sorted = [...filtered];
@@ -111,17 +142,24 @@ const Roles: React.FunctionComponent = () => {
       });
     }
     return sorted;
-  }, [sortBy, typeFilter]);
+  }, [sortBy, typeFilter, categoryFilter]);
 
   const paginatedRoles = sortedRoles.slice((page - 1) * perPage, page * perPage);
 
-  const isAllSelected = paginatedRoles.length > 0 && paginatedRoles.every(role => selectedRoles.has(role.id));
+  // Only consider Custom roles for "select all" logic
+  const selectableRoles = paginatedRoles.filter(role => role.type !== 'Default');
+  const isAllSelected = selectableRoles.length > 0 && selectableRoles.every(role => selectedRoles.has(role.id));
   const isPartiallySelected = selectedRoles.size > 0 && !isAllSelected;
 
   const handleSelectAll = (isSelecting: boolean) => {
     const newSelected = new Set(selectedRoles);
     if (isSelecting) {
-      paginatedRoles.forEach(role => newSelected.add(role.id));
+      // Only select Custom roles, not Default roles
+      paginatedRoles.forEach(role => {
+        if (role.type !== 'Default') {
+          newSelected.add(role.id);
+        }
+      });
     } else {
       paginatedRoles.forEach(role => newSelected.delete(role.id));
     }
@@ -165,6 +203,34 @@ const Roles: React.FunctionComponent = () => {
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isCategoryFilterOpen}
+                onSelect={() => setIsCategoryFilterOpen(false)}
+                onOpenChange={(isOpen) => setIsCategoryFilterOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)}
+                    isExpanded={isCategoryFilterOpen}
+                    icon={<FilterIcon />}
+                  >
+                    {categoryFilter}
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  {uniqueCategories.map((category) => (
+                    <DropdownItem
+                      key={category}
+                      onClick={() => setCategoryFilter(category)}
+                    >
+                      {category}
+                    </DropdownItem>
+                  ))}
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem>
               <SearchInput
                 placeholder="Search roles"
@@ -235,7 +301,7 @@ const Roles: React.FunctionComponent = () => {
                 }}
               />
               <Th 
-                width={30}
+                width={25}
                 sort={{ 
                   sortBy, 
                   onSort: handleSort, 
@@ -244,10 +310,10 @@ const Roles: React.FunctionComponent = () => {
               >
                 Role
               </Th>
+              <Th width={35}>Description</Th>
+              <Th width={20}>Category</Th>
               <Th width={15}>Type</Th>
-              <Th width={25}>Resources</Th>
-              <Th width={20}>Permissions</Th>
-              <Th width={10}></Th>
+              <Th width={5}></Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -258,9 +324,10 @@ const Roles: React.FunctionComponent = () => {
                     rowIndex: role.id,
                     onSelect: (_event, isSelecting) => handleSelectRole(role.id, isSelecting),
                     isSelected: selectedRoles.has(role.id),
+                    isDisabled: role.type === 'Default',
                   }}
                 />
-                <Td dataLabel="Role" width={30} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Role" width={25} style={{ textAlign: 'left' }}>
                   <div>
                     <Button 
                       variant="link" 
@@ -275,25 +342,16 @@ const Roles: React.FunctionComponent = () => {
                     </div>
                   </div>
                 </Td>
+                <Td dataLabel="Description" width={35} style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                  {role.description}
+                </Td>
+                <Td dataLabel="Category" width={20}>
+                  {role.category}
+                </Td>
                 <Td dataLabel="Type" width={15}>
                   <Label color={role.type === 'Default' ? 'blue' : 'green'}>{role.type}</Label>
                 </Td>
-                <Td dataLabel="Resources" width={25}>{role.resources.join(', ')}</Td>
-                <Td dataLabel="Permissions" width={20}>
-                  <Split hasGutter>
-                    {role.permissions.slice(0, 3).map((perm) => (
-                      <SplitItem key={perm}>
-                        <Label isCompact>{perm}</Label>
-                      </SplitItem>
-                    ))}
-                    {role.permissions.length > 3 && (
-                      <SplitItem>
-                        <Label isCompact>+{role.permissions.length - 3} more</Label>
-                      </SplitItem>
-                    )}
-                  </Split>
-                </Td>
-                <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
+                <Td dataLabel="Actions" width={5} style={{ textAlign: 'right' }}>
                   <Dropdown
                     isOpen={openActionMenuId === role.id}
                     onSelect={() => setOpenActionMenuId(null)}
