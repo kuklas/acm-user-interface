@@ -61,6 +61,10 @@ const CreateRole: React.FunctionComponent = () => {
   
   const [roleName, setRoleName] = React.useState('my-custom-role');
   const [description, setDescription] = React.useState('');
+  const [category, setCategory] = React.useState('');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = React.useState(false);
+  const [isCreatingNewCategory, setIsCreatingNewCategory] = React.useState(false);
+  const [labels, setLabels] = React.useState<Array<{ id: number; key: string; value: string }>>([]);
   const [permissionRules, setPermissionRules] = React.useState<PermissionRule[]>([
     { id: 1, apiGroups: '', resources: '', verbs: ['get'] },
   ]);
@@ -127,6 +131,15 @@ const CreateRole: React.FunctionComponent = () => {
   // State for perspective dropdown toggles
   const [perspectiveDropdowns, setPerspectiveDropdowns] = React.useState<Record<string, boolean>>({});
 
+  // Available categories from existing roles
+  const existingCategories = [
+    'Virtualization',
+    'OpenShift Cluster Management',
+    'OpenShift Namespace Management',
+    'Application Management',
+    'OpenShift',
+  ];
+
   const handleSelectAllPages = (perspective: string, selectAll: boolean) => {
     const access = navigationAccess[perspective];
     const updatedPages = Object.keys(access.pages).reduce((acc, page) => {
@@ -143,21 +156,46 @@ const CreateRole: React.FunctionComponent = () => {
     });
   };
 
-  const allVerbs = [
-    { name: 'get', label: 'get - Read individual resources' },
-    { name: 'list', label: 'list - List multiple resources' },
-    { name: 'watch', label: 'watch - Watch for resource changes' },
-    { name: 'create', label: 'create - Create new resources' },
-    { name: 'update', label: 'update - Update existing resources' },
-    { name: 'patch', label: 'patch - Partially update resources' },
-    { name: 'delete', label: 'delete - Delete individual resources' },
-    { name: 'deletecollection', label: 'deletecollection - Delete multiple resources at once' },
-    { name: 'bind', label: 'bind - Bind roles to users or groups (RBAC)' },
-    { name: 'escalate', label: 'escalate - Grant permissions above current role (RBAC)' },
-    { name: 'impersonate', label: 'impersonate - Impersonate another user or service account' },
-    { name: 'use', label: 'use - Use named resources (e.g., SecurityContextConstraints in OpenShift)' },
-    { name: 'approve', label: 'approve - Approve certificate signing requests (CSR)' },
-    { name: '*', label: '* - All operations (use with caution)' },
+  // Grouped verbs for better UX
+  const verbGroups = [
+    {
+      category: 'Read Operations',
+      description: 'View and monitor resources',
+      verbs: [
+        { name: 'get', label: 'Get', description: 'Read individual resources' },
+        { name: 'list', label: 'List', description: 'List multiple resources' },
+        { name: 'watch', label: 'Watch', description: 'Watch for resource changes' },
+      ]
+    },
+    {
+      category: 'Write Operations',
+      description: 'Create and modify resources',
+      verbs: [
+        { name: 'create', label: 'Create', description: 'Create new resources' },
+        { name: 'update', label: 'Update', description: 'Update existing resources' },
+        { name: 'patch', label: 'Patch', description: 'Partially update resources' },
+      ]
+    },
+    {
+      category: 'Delete Operations',
+      description: 'Remove resources',
+      verbs: [
+        { name: 'delete', label: 'Delete', description: 'Delete individual resources' },
+        { name: 'deletecollection', label: 'Delete Collection', description: 'Delete multiple resources at once' },
+      ]
+    },
+    {
+      category: 'Advanced Operations',
+      description: 'Special permissions (use with caution)',
+      verbs: [
+        { name: 'bind', label: 'Bind', description: 'Bind roles to users or groups' },
+        { name: 'escalate', label: 'Escalate', description: 'Grant permissions above current role' },
+        { name: 'impersonate', label: 'Impersonate', description: 'Impersonate another user' },
+        { name: 'use', label: 'Use', description: 'Use named resources (e.g., SecurityContextConstraints)' },
+        { name: 'approve', label: 'Approve', description: 'Approve certificate signing requests' },
+        { name: '*', label: 'All (*)', description: 'All operations (admin level)' },
+      ]
+    },
   ];
 
   const roleTemplates = [
@@ -331,6 +369,38 @@ const CreateRole: React.FunctionComponent = () => {
       }
       return rule;
     }));
+  };
+
+  const handleVerbGroupToggle = (ruleId: number, groupVerbs: string[], isChecked: boolean) => {
+    setPermissionRules(permissionRules.map(rule => {
+      if (rule.id === ruleId) {
+        let verbs: string[];
+        if (isChecked) {
+          // Add all verbs from the group that aren't already selected
+          verbs = [...new Set([...rule.verbs, ...groupVerbs])];
+        } else {
+          // Remove all verbs from the group
+          verbs = rule.verbs.filter(v => !groupVerbs.includes(v));
+        }
+        return { ...rule, verbs };
+      }
+      return rule;
+    }));
+  };
+
+  const handleAddLabel = () => {
+    const newId = labels.length > 0 ? Math.max(...labels.map(l => l.id)) + 1 : 1;
+    setLabels([...labels, { id: newId, key: '', value: '' }]);
+  };
+
+  const handleLabelChange = (id: number, field: 'key' | 'value', value: string) => {
+    setLabels(labels.map(label => 
+      label.id === id ? { ...label, [field]: value } : label
+    ));
+  };
+
+  const handleRemoveLabel = (id: number) => {
+    setLabels(labels.filter(label => label.id !== id));
   };
 
   const generateYAML = () => {
@@ -569,23 +639,24 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
     <>
       <Modal
         variant={ModalVariant.large}
-        title=""
+        title="Select templates"
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
+        actions={[
+          <Button key="close" variant="primary" onClick={() => setIsTemplateModalOpen(false)}>
+            Close
+          </Button>
+        ]}
       >
-        <Toolbar style={{ padding: 'var(--pf-t--global--spacer--md)' }}>
-          <ToolbarContent>
-            <ToolbarItem style={{ width: '100%' }}>
-              <SearchInput
-                placeholder="Search by name, description, or category"
-                value={templateSearch}
-                onChange={(_event, value) => setTemplateSearch(value)}
-                onClear={() => setTemplateSearch('')}
-                style={{ width: '100%' }}
-              />
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
+        <div style={{ padding: '16px 16px 0 16px' }}>
+          <SearchInput
+            placeholder="Search by name, description, or category"
+            value={templateSearch}
+            onChange={(_event, value) => setTemplateSearch(value)}
+            onClear={() => setTemplateSearch('')}
+            style={{ maxWidth: '500px' }}
+          />
+        </div>
         <Table aria-label="Role templates table" variant="compact">
           <Thead>
             <Tr>
@@ -632,19 +703,26 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
               <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
                 <SplitItem isFilled>
                   <Title headingLevel="h1" size="2xl">
-                    Create New Role
+                    Create custom role
                   </Title>
                 </SplitItem>
                 <SplitItem>
-                  <Button variant="link" isInline onClick={() => setIsTemplateModalOpen(true)}>
-                    See all templates
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate('/user-management/roles')}
+                  >
+                    Cancel
                   </Button>
                 </SplitItem>
               </Split>
 
-              <Content component="p" className="pf-v6-u-color-200" style={{ marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
+              <Content component="p" className="pf-v6-u-color-200" style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
                 Create a custom role to control what users can see and do across your cluster resources. Define permissions, navigation access, and resource scopes to implement fine-grained access control.
               </Content>
+
+              <Button variant="link" isInline onClick={() => setIsTemplateModalOpen(true)} style={{ paddingLeft: 0, marginBottom: 'var(--pf-t--global--spacer--lg)' }}>
+                Select templates
+              </Button>
 
       <Grid hasGutter span={6}>
         <GridItem span={6}>
@@ -675,10 +753,42 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                 </FormGroup>
 
                 <FormGroup label="Labels" fieldId="labels">
-                  <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
+                  <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
                     Add key/value labels to organize and find this role (for example by organization or team).
                   </Content>
-                  <Button variant="link" isInline icon={<PlusCircleIcon />} style={{ paddingLeft: 0 }}>
+                  
+                  {labels.map((label) => (
+                    <Split hasGutter key={label.id} style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                      <SplitItem isFilled>
+                        <TextInput
+                          type="text"
+                          id={`label-key-${label.id}`}
+                          placeholder="Key (e.g., team, environment)"
+                          value={label.key}
+                          onChange={(_event, value) => handleLabelChange(label.id, 'key', value)}
+                        />
+                      </SplitItem>
+                      <SplitItem isFilled>
+                        <TextInput
+                          type="text"
+                          id={`label-value-${label.id}`}
+                          placeholder="Value (e.g., platform, production)"
+                          value={label.value}
+                          onChange={(_event, value) => handleLabelChange(label.id, 'value', value)}
+                        />
+                      </SplitItem>
+                      <SplitItem>
+                        <Button 
+                          variant="plain" 
+                          icon={<MinusCircleIcon />} 
+                          onClick={() => handleRemoveLabel(label.id)}
+                          aria-label="Remove label"
+                        />
+                      </SplitItem>
+                    </Split>
+                  ))}
+                  
+                  <Button variant="link" isInline icon={<PlusCircleIcon />} style={{ paddingLeft: 0 }} onClick={handleAddLabel}>
                     Add label
                   </Button>
                 </FormGroup>
@@ -692,6 +802,102 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                     placeholder="Explain what this role is for and who should use it"
                     rows={4}
                   />
+                </FormGroup>
+
+                <FormGroup label="Category" fieldId="category">
+                  <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm" style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                    Assign this role to a category to help organize and filter roles.
+                  </Content>
+                  
+                  {!isCreatingNewCategory ? (
+                    <Split hasGutter>
+                      <SplitItem isFilled>
+                        <Dropdown
+                          isOpen={isCategoryDropdownOpen}
+                          onSelect={(event, value) => {
+                            if (value === 'create-new') {
+                              setIsCreatingNewCategory(true);
+                              setCategory('');
+                            } else {
+                              setCategory(value as string);
+                            }
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          onOpenChange={(isOpen: boolean) => setIsCategoryDropdownOpen(isOpen)}
+                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle
+                              ref={toggleRef}
+                              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                              isExpanded={isCategoryDropdownOpen}
+                              isFullWidth
+                            >
+                              {category || 'Select a category'}
+                            </MenuToggle>
+                          )}
+                        >
+                          <DropdownList>
+                            <DropdownItem value="create-new">
+                              Create new category
+                            </DropdownItem>
+                            <Divider />
+                            {existingCategories.map((cat) => (
+                              <DropdownItem key={cat} value={cat}>
+                                {cat}
+                              </DropdownItem>
+                            ))}
+                          </DropdownList>
+                        </Dropdown>
+                      </SplitItem>
+                      {category && !existingCategories.includes(category) && (
+                        <SplitItem>
+                          <Button
+                            variant="plain"
+                            onClick={() => setCategory('')}
+                            aria-label="Clear custom category"
+                          >
+                            <MinusCircleIcon />
+                          </Button>
+                        </SplitItem>
+                      )}
+                    </Split>
+                  ) : (
+                    <Split hasGutter>
+                      <SplitItem isFilled>
+                        <TextInput
+                          type="text"
+                          id="new-category"
+                          name="new-category"
+                          value={category}
+                          onChange={(_event, value) => setCategory(value)}
+                          placeholder="Enter new category name"
+                        />
+                      </SplitItem>
+                      <SplitItem>
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            if (category.trim()) {
+                              setIsCreatingNewCategory(false);
+                            }
+                          }}
+                          isDisabled={!category.trim()}
+                        >
+                          Confirm
+                        </Button>
+                      </SplitItem>
+                      <SplitItem>
+                        <Button
+                          variant="link"
+                          onClick={() => {
+                            setIsCreatingNewCategory(false);
+                            setCategory('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </SplitItem>
+                    </Split>
+                  )}
                 </FormGroup>
 
                 <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
@@ -895,6 +1101,8 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                               </Button>
                             </FormGroup>
 
+                            <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
+
                             <FormGroup label="Resources" fieldId={`resources-${rule.id}`}>
                               <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
                                 Enter one or more resource types for the selected API groups. Separate multiple values with commas.
@@ -916,22 +1124,105 @@ ${rule.verbs.map(v => `  - "${v}"`).join('\n')}`).join('\n')}`;
                               </Button>
                             </FormGroup>
 
+                            <Divider style={{ margin: 'var(--pf-t--global--spacer--lg) 0' }} />
+
                             <FormGroup label="Verbs (Permissions)" fieldId={`verbs-${rule.id}`}>
-                              <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
-                                Select the actions this rule allows on the chosen resources.
-                              </Content>
-                              <Grid hasGutter span={6} style={{ marginTop: 'var(--pf-t--global--spacer--sm)' }}>
-                                {allVerbs.map(verb => (
-                                  <GridItem span={6} key={verb.name}>
-                                    <Checkbox
-                                      id={`verb-${rule.id}-${verb.name}`}
-                                      label={verb.label}
-                                      isChecked={rule.verbs.includes(verb.name)}
-                                      onChange={(_event, checked) => handleVerbToggle(rule.id, verb.name, checked)}
-                                    />
-                                  </GridItem>
-                                ))}
-                              </Grid>
+                              <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                                <SplitItem isFilled>
+                                  <Content component="p" className="pf-v6-u-color-200 pf-v6-u-font-size-sm">
+                                    Select the actions this rule allows on the chosen resources.
+                                  </Content>
+                                </SplitItem>
+                                <SplitItem>
+                                  <Button
+                                    variant="link"
+                                    isInline
+                                    onClick={() => {
+                                      const allVerbs = verbGroups.flatMap(g => g.verbs.map(v => v.name));
+                                      const allSelected = allVerbs.every(v => rule.verbs.includes(v));
+                                      if (allSelected) {
+                                        // Deselect all
+                                        setPermissionRules(permissionRules.map(r => 
+                                          r.id === rule.id ? { ...r, verbs: [] } : r
+                                        ));
+                                      } else {
+                                        // Select all
+                                        setPermissionRules(permissionRules.map(r => 
+                                          r.id === rule.id ? { ...r, verbs: allVerbs } : r
+                                        ));
+                                      }
+                                    }}
+                                    style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}
+                                  >
+                                    {(() => {
+                                      const allVerbs = verbGroups.flatMap(g => g.verbs.map(v => v.name));
+                                      const allSelected = allVerbs.every(v => rule.verbs.includes(v));
+                                      return allSelected ? 'Deselect all categories' : 'Select all categories';
+                                    })()}
+                                  </Button>
+                                </SplitItem>
+                              </Split>
+                              
+                              {verbGroups.map((group, groupIndex) => {
+                                const groupVerbNames = group.verbs.map(v => v.name);
+                                const allGroupSelected = groupVerbNames.every(v => rule.verbs.includes(v));
+                                const someGroupSelected = groupVerbNames.some(v => rule.verbs.includes(v)) && !allGroupSelected;
+                                
+                                return (
+                                  <div 
+                                    key={group.category} 
+                                    style={{ 
+                                      marginBottom: groupIndex < verbGroups.length - 1 ? 'var(--pf-t--global--spacer--md)' : 0,
+                                      padding: 'var(--pf-t--global--spacer--md)',
+                                      border: '1px solid var(--pf-t--global--border--color--default)',
+                                      borderRadius: 'var(--pf-t--global--border--radius--default)',
+                                      backgroundColor: 'var(--pf-t--global--background--color--primary--default)',
+                                    }}
+                                  >
+                                    <Split hasGutter style={{ marginBottom: 'var(--pf-t--global--spacer--sm)' }}>
+                                      <SplitItem isFilled>
+                                        <Content component="p" style={{ fontWeight: 600, margin: 0 }}>
+                                          {group.category}
+                                        </Content>
+                                        <Content component="small" className="pf-v6-u-color-200" style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
+                                          {group.description}
+                                        </Content>
+                                      </SplitItem>
+                                      <SplitItem>
+                                        <Button
+                                          variant="link"
+                                          isInline
+                                          onClick={() => handleVerbGroupToggle(rule.id, groupVerbNames, !allGroupSelected)}
+                                          style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}
+                                        >
+                                          {allGroupSelected ? 'Deselect all' : 'Select all'}
+                                        </Button>
+                                      </SplitItem>
+                                    </Split>
+                                    
+                                    <Grid hasGutter span={3}>
+                                      {group.verbs.map(verb => (
+                                        <GridItem span={3} key={verb.name}>
+                                          <Checkbox
+                                            id={`verb-${rule.id}-${verb.name}`}
+                                            label={
+                                              <span title={verb.description}>
+                                                <strong>{verb.label}</strong>
+                                                <br />
+                                                <span style={{ fontSize: 'var(--pf-t--global--font--size--sm)', color: 'var(--pf-t--global--color--200)' }}>
+                                                  {verb.description}
+                                                </span>
+                                              </span>
+                                            }
+                                            isChecked={rule.verbs.includes(verb.name)}
+                                            onChange={(_event, checked) => handleVerbToggle(rule.id, verb.name, checked)}
+                                          />
+                                        </GridItem>
+                                      ))}
+                                    </Grid>
+                                  </div>
+                                );
+                              })}
                             </FormGroup>
                           </ExpandableSection>
                         </div>

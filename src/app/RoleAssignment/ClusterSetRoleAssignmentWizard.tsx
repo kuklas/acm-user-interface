@@ -31,6 +31,8 @@ import {
   SplitItem,
   ToggleGroup,
   ToggleGroupItem,
+  EmptyState,
+  EmptyStateBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { CaretDownIcon, CheckCircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, FilterIcon, SyncAltIcon } from '@patternfly/react-icons';
@@ -1615,16 +1617,6 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                 {/* Show projects table if "Limit to specific projects" is selected */}
                 {clusterScope === 'projects' && (
                   <div style={{ marginTop: '16px' }}>
-                    {/* Note alert for multiple clusters */}
-                    {selectedClusters.length > 1 && (
-                      <Alert
-                        variant="info"
-                        isInline
-                        title={`Note: ${filteredProjects.length === 0 ? 'No' : filteredProjects.length} common project${filteredProjects.length === 1 ? '' : 's'} found across all ${selectedClusters.length} selected clusters.`}
-                        style={{ marginBottom: '16px' }}
-                      />
-                    )}
-                    
                     {/* Toolbar with Name dropdown and Search */}
                     <Toolbar style={{ padding: 0, marginBottom: '8px' }}>
                       <ToolbarContent style={{ padding: 0 }}>
@@ -1673,11 +1665,13 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         {filteredProjects.length === 0 ? (
                           <Tr>
                             <Td colSpan={4} style={{ textAlign: 'center', padding: '40px' }}>
-                              <Content>
-                                {selectedClusters.length > 1 
-                                  ? 'No common projects found across the selected clusters.'
-                                  : 'No projects found.'}
-                              </Content>
+                              <EmptyState>
+                                <EmptyStateBody>
+                                  {selectedClusters.length > 1 
+                                    ? 'No common projects found across the selected clusters. Go back and select different clusters, or create projects with the same name on these clusters.'
+                                    : 'No projects available in the selected cluster.'}
+                                </EmptyStateBody>
+                              </EmptyState>
                             </Td>
                           </Tr>
                         ) : (

@@ -335,7 +335,7 @@ const Roles: React.FunctionComponent = () => {
             </ToolbarItem>
             <ToolbarItem>
               <Button variant="primary" onClick={handleCreateRole}>
-                Create Custom Role
+                Create custom role
               </Button>
             </ToolbarItem>
             <ToolbarItem>

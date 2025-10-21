@@ -1879,31 +1879,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 {/* Show projects table below if partial access is selected */}
                 {clusterScope === 'projects' && (
               <div style={{ marginTop: '24px' }}>
-                    {/* Warning if no common projects found for multiple clusters */}
-                    {selectedClusters.length > 1 && filteredProjectsForClusters.length === 0 && (
-                      <Alert
-                        variant="warning"
-                        isInline
-                        title="No common projects found"
-                        style={{ marginBottom: '16px' }}
-                      >
-                        <p>
-                          The {selectedClusters.length} selected clusters do not have any projects in common. 
-                          Please go back and either:
-                        </p>
-                        <ul style={{ marginTop: '8px', marginLeft: '20px' }}>
-                          <li>Select "Full access to all selected clusters" to grant access to all projects on those clusters</li>
-                          <li>Select only one cluster to choose specific projects from it</li>
-                          <li>Select different clusters that have common projects</li>
-                        </ul>
-                      </Alert>
-                    )}
-                    
-                    <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
-                      {selectedClusters.length === 1
-                        ? 'Select one or more projects from the selected cluster.'
-                        : `Select common projects that exist across all ${selectedClusters.length} selected clusters.`}
-                    </Content>
                     <Toolbar>
                   <ToolbarContent>
                     <ToolbarItem>
@@ -1956,12 +1931,12 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   <Tbody>
                         {filteredProjectsForClusters.length === 0 ? (
                           <Tr>
-                            <Td colSpan={4}>
+                            <Td colSpan={4} style={{ textAlign: 'center', padding: '40px' }}>
                               <EmptyState>
                                 <EmptyStateBody>
                                   {selectedClusters.length > 1 
-                                    ? 'No common projects found across the selected clusters.'
-                                    : 'No projects found in the selected cluster.'}
+                                    ? 'No common projects found across the selected clusters. Go back and select different clusters, or create projects with the same name on these clusters.'
+                                    : 'No projects available in the selected cluster.'}
                                 </EmptyStateBody>
                               </EmptyState>
                           </Td>

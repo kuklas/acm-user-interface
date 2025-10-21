@@ -49,6 +49,10 @@ export const InstanceTypes: React.FunctionComponent = () => {
   // State management
   const [activeTabKey, setActiveTabKey] = React.useState<number>(0);
   const [isNameSortOpen, setIsNameSortOpen] = React.useState(false);
+  const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
+  const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
+  const [selectedCluster, setSelectedCluster] = React.useState('All clusters');
+  const [selectedProject, setSelectedProject] = React.useState('All projects');
   const [searchValue, setSearchValue] = React.useState('');
   const [openKebabId, setOpenKebabId] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
@@ -83,6 +87,17 @@ export const InstanceTypes: React.FunctionComponent = () => {
     }
     return allInstanceTypes;
   }, [isImpersonatingDevTeam]);
+
+  // Get unique clusters and projects for filter dropdowns
+  const uniqueClusters = React.useMemo(() => {
+    const clusters = [...new Set(instanceTypes.map(it => it.cluster))];
+    return ['All clusters', ...clusters.sort()];
+  }, [instanceTypes]);
+
+  const uniqueProjects = React.useMemo(() => {
+    const projects = [...new Set(instanceTypes.map(it => it.project))];
+    return ['All projects', ...projects.sort()];
+  }, [instanceTypes]);
 
   const totalItems = 55; // Simulating total of 55 items as shown in screenshot
 
@@ -126,6 +141,60 @@ export const InstanceTypes: React.FunctionComponent = () => {
       {/* Toolbar */}
       <Toolbar>
         <ToolbarContent>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isClusterFilterOpen}
+              onSelect={(event, value) => {
+                setSelectedCluster(value as string);
+                setIsClusterFilterOpen(false);
+              }}
+              onOpenChange={(isOpen) => setIsClusterFilterOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)}
+                  isExpanded={isClusterFilterOpen}
+                >
+                  {selectedCluster}
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                {uniqueClusters.map((cluster) => (
+                  <DropdownItem key={cluster} value={cluster}>
+                    {cluster}
+                  </DropdownItem>
+                ))}
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isProjectFilterOpen}
+              onSelect={(event, value) => {
+                setSelectedProject(value as string);
+                setIsProjectFilterOpen(false);
+              }}
+              onOpenChange={(isOpen) => setIsProjectFilterOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsProjectFilterOpen(!isProjectFilterOpen)}
+                  isExpanded={isProjectFilterOpen}
+                >
+                  {selectedProject}
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                {uniqueProjects.map((project) => (
+                  <DropdownItem key={project} value={project}>
+                    {project}
+                  </DropdownItem>
+                ))}
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
           <ToolbarItem>
             <Dropdown
               isOpen={isNameSortOpen}
