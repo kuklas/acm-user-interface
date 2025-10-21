@@ -190,7 +190,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
     setSelectedProjects([]);
     setProjectSearch('');
     setShowClusterSetSelection(false);
-    setShowClusterSelection(false);
     setShowScopeSelection(false);
     setShowProjectSelection(false);
     setIsEverythingExampleExpanded(false);
@@ -1580,7 +1579,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                       setSelectedClusters([]);
                       setSelectedProjects([]);
                         setShowClusterSetSelection(false);
-                      setShowClusterSelection(false);
                       setShowScopeSelection(false);
                       setIsResourceScopeOpen(false);
                     }}
@@ -1596,7 +1594,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         setSelectedClusters([]);
                         setSelectedProjects([]);
                         setShowClusterSetSelection(false);
-                        setShowClusterSelection(false);
                         setShowScopeSelection(false);
                         setClusterSetScope('everything'); // Reset to default
                         setIsResourceScopeOpen(false);
@@ -1613,7 +1610,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                       setSelectedClusters([]);
                       setSelectedProjects([]);
                         setShowClusterSetSelection(false);
-                        setShowClusterSelection(false);
                       setShowScopeSelection(false);
                         setClusterScope('everything'); // Reset to default
                       setIsResourceScopeOpen(false);
@@ -2987,7 +2983,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                 )}
 
                 {/* Clusters scope - examples removed (now in drawer) */}
-                {false && resourceScope === 'clusters' && !showClusterSelection && (
+                {false && (
                   <div style={{ display: 'none' }}>
                       <div style={{ 
                     padding: '16px', 
