@@ -17,7 +17,7 @@ body,
 .pf-v6-c-page,
 .pf-v6-c-page__main,
 .pf-v6-c-page__main-section,
-.pf-v6-c-page__main-section > *:not(.templates-page-container):not(.catalog-page-container):not(.instance-types-page-container) {
+.pf-v6-c-page__main-section > *:not(.templates-page-container):not(.catalog-page-container):not(.instance-types-page-container):not(.search-page-container) {
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
@@ -291,6 +291,19 @@ body,
   max-width: 100% !important;
 }
 
+/* Search page container - HIGHEST PRIORITY */
+.pf-v6-c-page__main .pf-v6-c-page__main-section .search-page-container,
+.pf-v6-c-page__main-section .search-page-container,
+div.search-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 24px !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 /* Catalog page container */
 .catalog-page-container {
   background-color: #f5f5f5 !important;
@@ -403,7 +416,7 @@ body,
 
 /* Ensure all parent containers allow full width without overflow */
 .pf-v6-c-page__main-section,
-.pf-v6-c-page__main-section > *:not(.templates-page-container):not(.catalog-page-container):not(.instance-types-page-container),
+.pf-v6-c-page__main-section > *:not(.templates-page-container):not(.catalog-page-container):not(.instance-types-page-container):not(.search-page-container),
 .pf-v6-c-page__main-section > * > * {
   width: 100% !important;
   max-width: 100% !important;

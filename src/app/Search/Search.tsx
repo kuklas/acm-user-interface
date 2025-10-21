@@ -68,55 +68,55 @@ export const Search: React.FunctionComponent = () => {
   const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
 
   return (
-    <>
-      <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--primary--default)' }}>
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '24px' }}>
-          <FlexItem>
-            <Title headingLevel="h1" size="2xl">Search</Title>
-          </FlexItem>
-          <FlexItem>
-            <Alert
-              variant="warning"
-              isInline
-              isPlain
-              title="Search is disabled on some clusters"
-              style={{ padding: '8px 16px' }}
-            />
-          </FlexItem>
-        </Flex>
+    <div className="search-page-container">
+      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '24px' }}>
+        <FlexItem>
+          <Title headingLevel="h1" size="2xl">Search</Title>
+        </FlexItem>
+        <FlexItem>
+          <Alert
+            variant="warning"
+            isInline
+            isPlain
+            title="Search is disabled on some clusters"
+            style={{ padding: '8px 16px' }}
+          />
+        </FlexItem>
+      </Flex>
 
-        <Toolbar style={{ padding: 0, marginBottom: '16px' }}>
-          <ToolbarContent style={{ padding: 0 }}>
-            <ToolbarItem>
-              <Dropdown
-                isOpen={isSavedSearchesOpen}
-                onSelect={() => setIsSavedSearchesOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsSavedSearchesOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle 
-                    ref={toggleRef} 
-                    onClick={() => setIsSavedSearchesOpen(!isSavedSearchesOpen)}
-                    isExpanded={isSavedSearchesOpen}
-                  >
-                    Saved searches
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  <DropdownItem key="saved1">My saved search 1</DropdownItem>
-                  <DropdownItem key="saved2">My saved search 2</DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </ToolbarItem>
-            <ToolbarItem align={{ default: 'alignEnd' }}>
-              <Button variant="link" icon={<ExternalLinkAltIcon />} iconPosition="end">
-                Open new search tab
-              </Button>
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
+      <Toolbar style={{ padding: 0, marginBottom: '24px' }}>
+        <ToolbarContent style={{ padding: 0 }}>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isSavedSearchesOpen}
+              onSelect={() => setIsSavedSearchesOpen(false)}
+              onOpenChange={(isOpen: boolean) => setIsSavedSearchesOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle 
+                  ref={toggleRef} 
+                  onClick={() => setIsSavedSearchesOpen(!isSavedSearchesOpen)}
+                  isExpanded={isSavedSearchesOpen}
+                >
+                  Saved searches
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem key="saved1">My saved search 1</DropdownItem>
+                <DropdownItem key="saved2">My saved search 2</DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
+          <ToolbarItem align={{ default: 'alignEnd' }}>
+            <Button variant="link" icon={<ExternalLinkAltIcon />} iconPosition="end">
+              Open new search tab
+            </Button>
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
 
-        <div style={{ position: 'relative', marginBottom: '32px' }}>
+      <div>
+        <div style={{ position: 'relative', marginBottom: '48px' }}>
           <SearchInput
             placeholder='Search by keywords or filters, for example "label:environment=production my-cluster"'
             value={searchValue}
@@ -142,7 +142,7 @@ export const Search: React.FunctionComponent = () => {
           </div>
         </div>
 
-        <Title headingLevel="h2" size="lg" style={{ marginBottom: '16px' }}>
+        <Title headingLevel="h2" size="lg" style={{ marginBottom: '24px' }}>
           Suggested search templates
         </Title>
 
@@ -223,7 +223,7 @@ export const Search: React.FunctionComponent = () => {
           ))}
         </Grid>
       </div>
-    </>
+    </div>
   );
 };
 
