@@ -31,7 +31,7 @@ import {
   EmptyStateBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -47,14 +47,27 @@ const mockUsers = dbUsers.map((user, index) => ({
   name: `${user.firstName} ${user.lastName}`,
   username: user.username,
   provider: 'LDAP',
+  created: new Date(user.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
 }));
 
-const mockGroups = dbGroups.map((group, index) => ({
-  id: index + 1,
-  dbId: group.id,
-  name: group.name,
-  users: group.userIds.length,
-}));
+const mockGroups = dbGroups.map((group, index) => {
+  // Determine sync source and last synced (same logic as GroupsTable)
+  const isLocal = group.name === 'local-admins' || group.name === 'test-group' || index % 7 === 0;
+  const syncSources = ['PeteMobile LDAP', 'PeteMobile SSO', 'GitHub Enterprise'];
+  const syncSource = isLocal ? 'Local' : syncSources[index % syncSources.length];
+  const syncTimes = ['2 hours ago', '5 hours ago', '1 day ago', '3 days ago', 'Yesterday'];
+  const lastSynced = isLocal ? null : syncTimes[index % syncTimes.length];
+  
+  return {
+    id: index + 1,
+    dbId: group.id,
+    name: group.name,
+    users: group.userIds.length,
+    syncSource,
+    lastSynced,
+    created: '2024-01-15',
+  };
+});
 
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
@@ -90,9 +103,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
   const [groupsPage, setGroupsPage] = React.useState(1);
   const [groupsPerPage, setGroupsPerPage] = React.useState(10);
   const [isUserFilterOpen, setIsUserFilterOpen] = React.useState(false);
-  const [userFilterType, setUserFilterType] = React.useState('Name');
+  const [userFilterType, setUserFilterType] = React.useState('User');
   const [isGroupFilterOpen, setIsGroupFilterOpen] = React.useState(false);
-  const [groupFilterType, setGroupFilterType] = React.useState('Name');
+  const [groupFilterType, setGroupFilterType] = React.useState('Group');
   
   // Step 2: Resources - Hierarchical structure
   const [resourceScope, setResourceScope] = React.useState<'everything' | 'cluster-sets' | 'clusters'>('everything');
@@ -102,13 +115,13 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
   const [selectedClusterSets, setSelectedClusterSets] = React.useState<number[]>([]);
   const [clusterSetSearch, setClusterSetSearch] = React.useState('');
   const [isClusterSetFilterOpen, setIsClusterSetFilterOpen] = React.useState(false);
-  const [clusterSetFilterType, setClusterSetFilterType] = React.useState('Name');
+  const [clusterSetFilterType, setClusterSetFilterType] = React.useState('Cluster set');
   
   // Clusters selection (can be multiple)
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
   const [clusterSearch, setClusterSearch] = React.useState('');
   const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
-  const [clusterFilterType, setClusterFilterType] = React.useState('Name');
+  const [clusterFilterType, setClusterFilterType] = React.useState('Cluster');
   
   // Cluster scope - after selecting clusters
   const [clusterScope, setClusterScope] = React.useState<'everything' | 'projects'>('everything');
@@ -122,11 +135,10 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
   const [selectedProjects, setSelectedProjects] = React.useState<number[]>([]);
   const [projectSearch, setProjectSearch] = React.useState('');
   const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
-  const [projectFilterType, setProjectFilterType] = React.useState('Name');
+  const [projectFilterType, setProjectFilterType] = React.useState('Project');
   
   // Substep tracking
   const [showClusterSetSelection, setShowClusterSetSelection] = React.useState(false);
-  const [showClusterSelection, setShowClusterSelection] = React.useState(false);
   const [showScopeSelection, setShowScopeSelection] = React.useState(false);
   const [showProjectSelection, setShowProjectSelection] = React.useState(false);
   
@@ -344,14 +356,19 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
   };
 
   // Filter functions for users and groups
-  const filteredUsers = mockUsers.filter(user =>
-    user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-    user.username.toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const filteredUsers = mockUsers.filter(user => {
+    if (!userSearch) return true;
+    
+    // Search in both name and username for "User" filter
+    return user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+           user.username.toLowerCase().includes(userSearch.toLowerCase());
+  });
 
-  const filteredGroups = mockGroups.filter(group =>
-    group.name.toLowerCase().includes(groupSearch.toLowerCase())
-  );
+  const filteredGroups = mockGroups.filter(group => {
+    if (!groupSearch) return true;
+    
+    return group.name.toLowerCase().includes(groupSearch.toLowerCase());
+  });
 
   // Pagination handlers for users and groups
   const onSetUsersPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
@@ -1112,12 +1129,12 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
           flexShrink: 0
         }}>
           <Title headingLevel="h1" size="2xl" id="role-wizard-title">
-            Create role assignment
+            Create role assignment for {roleName}
           </Title>
           <Content component="p" style={{ marginTop: '0.5rem', color: '#6a6e73' }}>
-            Assign the <strong>{roleName}</strong> role to a user or group for specific resources.{' '}
+            A role assignment specifies a distinct action users or groups can perform when associated with a particular role.{' '}
             <Button variant="link" isInline component="a" href="#" onClick={(e) => e.preventDefault()}>
-              See example of the yaml file and learn more about User management
+              Learn more about user management, including an example YAML file.
             </Button>
           </Content>
         </div>
@@ -1311,11 +1328,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setUserFilterType('Name'); setIsUserFilterOpen(false); }}>
-                            Name
-                          </DropdownItem>
-                          <DropdownItem onClick={() => { setUserFilterType('Username'); setIsUserFilterOpen(false); }}>
-                            Username
+                          <DropdownItem onClick={() => { setUserFilterType('User'); setIsUserFilterOpen(false); }}>
+                            User
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -1345,9 +1359,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                   <Thead>
                     <Tr>
                       <Th width={10}></Th>
-                      <Th>Name</Th>
-                      <Th>Username</Th>
+                      <Th>User</Th>
                       <Th>Identity provider</Th>
+                      <Th>Created</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -1369,9 +1383,21 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                               onChange={() => setSelectedUser(user.id)}
                             />
                           </Td>
-                          <Td dataLabel="Name">{user.name}</Td>
-                          <Td dataLabel="Username">{user.username}</Td>
+                          <Td dataLabel="User">
+                            <Button 
+                              variant="link" 
+                              isInline 
+                              component="a" 
+                              href={`#/user-management/identities/${encodeURIComponent(user.username)}`}
+                              target="_blank"
+                              style={{ padding: 0, fontSize: 'inherit' }}
+                            >
+                              {user.name}
+                            </Button>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>{user.username}</div>
+                          </Td>
                           <Td dataLabel="Identity provider">{user.provider}</Td>
+                          <Td dataLabel="Created">{user.created}</Td>
                         </Tr>
                       ))}
                   </Tbody>
@@ -1405,8 +1431,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setGroupFilterType('Name'); setIsGroupFilterOpen(false); }}>
-                            Name
+                          <DropdownItem onClick={() => { setGroupFilterType('Group'); setIsGroupFilterOpen(false); }}>
+                            Group
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -1436,8 +1462,11 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                   <Thead>
                     <Tr>
                       <Th width={10}></Th>
-                      <Th>Name</Th>
-                      <Th>Users</Th>
+                      <Th width={20}>Group</Th>
+                      <Th width={15}>Members</Th>
+                      <Th width={20}>Sync Source</Th>
+                      <Th width={20}>Last Synced</Th>
+                      <Th width={15}>Created</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -1459,8 +1488,34 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                               onChange={() => setSelectedGroup(group.id)}
                             />
                           </Td>
-                          <Td dataLabel="Name">{group.name}</Td>
-                          <Td dataLabel="Users">{group.users}</Td>
+                          <Td dataLabel="Group" width={20}>
+                            <Button 
+                              variant="link" 
+                              isInline 
+                              component="a" 
+                              href={`#/user-management/identities/groups/${encodeURIComponent(group.name)}`}
+                              target="_blank"
+                              style={{ padding: 0, fontSize: 'inherit' }}
+                            >
+                              {group.name}
+                            </Button>
+                          </Td>
+                          <Td dataLabel="Members" width={15}>{group.users}</Td>
+                          <Td dataLabel="Sync Source" width={20}>
+                            {group.syncSource === 'Local' ? (
+                              <Label color="grey">{group.syncSource}</Label>
+                            ) : (
+                              <Label color="blue" icon={<SyncAltIcon />}>{group.syncSource}</Label>
+                            )}
+                          </Td>
+                          <Td dataLabel="Last Synced" width={20}>
+                            {group.lastSynced ? (
+                              <span>{group.lastSynced}</span>
+                            ) : (
+                              <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
+                            )}
+                          </Td>
+                          <Td dataLabel="Created" width={15}>{group.created}</Td>
                         </Tr>
                       ))}
                   </Tbody>
@@ -1474,16 +1529,16 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
         {currentStep === 2 && (
           <>
             {/* Only show title, description, and initial dropdown when NOT in any substep */}
-            {!showClusterSetSelection && !showClusterSelection && !showScopeSelection && (
+            {!showClusterSetSelection && !showScopeSelection && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <Title headingLevel="h2" size="xl">
+              <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
                 Select resources
-              </Title>
+            </Title>
               <Button 
                 variant="link" 
                 onClick={() => setIsDrawerExpanded(true)}
-                style={{ fontSize: '14px' }}
+                style={{ padding: 0 }}
               >
                 View examples
               </Button>
@@ -1504,9 +1559,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     variant="default"
                     style={{ width: '100%' }}
                   >
-                      {resourceScope === 'everything' && 'Everything'}
-                      {resourceScope === 'cluster-sets' && 'Select cluster set(s)'}
-                      {resourceScope === 'clusters' && 'Select cluster(s)'}
+                      {resourceScope === 'everything' && 'Global access'}
+                      {resourceScope === 'cluster-sets' && 'Select cluster sets'}
+                      {resourceScope === 'clusters' && 'Select clusters'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -1517,11 +1572,11 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                 }}
               >
                 <DropdownList>
-                  <DropdownItem
+                    <DropdownItem
                       key="everything"
-                    onClick={() => {
-                        setResourceScope('everything');
-                        setSelectedClusterSets([]);
+                      onClick={() => {
+                      setResourceScope('everything');
+                      setSelectedClusterSets([]);
                       setSelectedClusters([]);
                       setSelectedProjects([]);
                         setShowClusterSetSelection(false);
@@ -1531,7 +1586,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     }}
                       description="Grant access to all resources across all clusters registered in ACM"
                     >
-                      Everything
+                      Global access
                     </DropdownItem>
                     <DropdownItem
                       key="cluster-sets"
@@ -1546,9 +1601,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         setClusterSetScope('everything'); // Reset to default
                         setIsResourceScopeOpen(false);
                       }}
-                      description="Select one or more cluster sets, then optionally drill down to specific clusters and projects"
+                      description="Grant access to 1 or more cluster sets. Optionally, narrow this access to specific clusters and projects."
                     >
-                      Select cluster set(s)
+                      Select cluster sets
                   </DropdownItem>
                   <DropdownItem
                     key="clusters"
@@ -1563,9 +1618,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         setClusterScope('everything'); // Reset to default
                       setIsResourceScopeOpen(false);
                     }}
-                      description="Select specific cluster(s), then optionally narrow down to projects"
+                      description="Grant access to 1 or more clusters. Optionally, narrow this access to projects."
                   >
-                      Select cluster(s)
+                      Select clusters
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
@@ -1595,8 +1650,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                             }}
                           >
                             <DropdownList>
-                              <DropdownItem onClick={() => { setClusterSetFilterType('Name'); setIsClusterSetFilterOpen(false); }}>
-                                Name
+                              <DropdownItem onClick={() => { setClusterSetFilterType('Cluster set'); setIsClusterSetFilterOpen(false); }}>
+                                Cluster set
                               </DropdownItem>
                             </DropdownList>
                           </Dropdown>
@@ -1685,8 +1740,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                             }}
                           >
                             <DropdownList>
-                              <DropdownItem onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>
-                                Name
+                              <DropdownItem onClick={() => { setClusterFilterType('Cluster'); setIsClusterFilterOpen(false); }}>
+                                Cluster
                               </DropdownItem>
                             </DropdownList>
                           </Dropdown>
@@ -3731,8 +3786,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setClusterSetFilterType('Name'); setIsClusterSetFilterOpen(false); }}>
-                            Name
+                          <DropdownItem onClick={() => { setClusterSetFilterType('Cluster set'); setIsClusterSetFilterOpen(false); }}>
+                            Cluster set
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -3888,8 +3943,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>
-                            Name
+                          <DropdownItem onClick={() => { setClusterFilterType('Cluster'); setIsClusterFilterOpen(false); }}>
+                            Cluster
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -4018,8 +4073,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         style={{ width: '100%' }}
                       >
                         {clusterScope === 'everything'
-                          ? (selectedClusters.length === 1 ? 'Full cluster access' : 'Full access to all selected clusters')
-                          : (selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Common projects')}
+                          ? 'Cluster role assignment'
+                          : (selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments')}
                       </MenuToggle>
                     )}
                     shouldFocusToggleOnSelect
@@ -4038,10 +4093,10 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '✓ Full access: All current and future projects/namespaces on this cluster'
-                          : `✓ Full access: All current and future projects/namespaces across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to all current and future resources on the cluster.'
+                          : 'Grant access to all current and future resources on the clusters'}
                       >
-                        {selectedClusters.length === 1 ? 'Full cluster access' : 'Full access to all selected clusters'}
+                        Cluster role assignment
                       </DropdownItem>
                       <DropdownItem
                         key="projects"
@@ -4051,10 +4106,10 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '→ Limited access: Choose specific projects/namespaces from this cluster'
-                          : `→ Limited access: Choose projects/namespaces that exist across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to specific projects/namespaces on the cluster.'
+                          : 'Grant access to common projects/namespaces across the selected clusters.'}
                       >
-                        {selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Common projects'}
+                        {selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments'}
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -4076,7 +4131,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           Please go back and either:
                         </p>
                         <ul style={{ marginTop: '8px', marginLeft: '20px' }}>
-                          <li>Select "Full access to all selected clusters" to grant access to all projects on those clusters</li>
+                          <li>Select "Cluster role assignment" to grant access to all projects on those clusters</li>
                           <li>Select only one cluster to choose specific projects from it</li>
                           <li>Select different clusters that have common projects</li>
                         </ul>
@@ -4112,8 +4167,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setProjectFilterType('Name'); setIsProjectFilterOpen(false); }}>
-                            Name
+                          <DropdownItem onClick={() => { setProjectFilterType('Project'); setIsProjectFilterOpen(false); }}>
+                            Project
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -4263,136 +4318,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
               );
             })()}
 
-            {/* SUB-STEP: Clusters Table - only for 'clusters' path (not cluster-sets, as it shows inline) */}
-            {(resourceScope === 'clusters' && showClusterSelection && !showScopeSelection) && (
-              <div>
-                <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
-                  Select clusters
-                </Title>
-                <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
-                  Select one or more clusters. You can then choose to grant full access to these clusters or narrow down to specific projects.
-                </Content>
-                <Toolbar>
-                  <ToolbarContent>
-                    <ToolbarItem>
-                      <Dropdown
-                        isOpen={isClusterFilterOpen}
-                        onSelect={() => setIsClusterFilterOpen(false)}
-                        onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle 
-                            ref={toggleRef} 
-                            onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} 
-                            isExpanded={isClusterFilterOpen}
-                            variant="default"
-                          >
-                            {clusterFilterType}
-                          </MenuToggle>
-                        )}
-                        popperProps={{
-                          appendTo: () => document.body,
-                          
-                          
-                        }}
-                      >
-                        <DropdownList>
-                          <DropdownItem onClick={() => { setClusterFilterType('Name'); setIsClusterFilterOpen(false); }}>
-                            Name
-                          </DropdownItem>
-                        </DropdownList>
-                      </Dropdown>
-                    </ToolbarItem>
-                    <ToolbarItem>
-                      <SearchInput
-                        placeholder="Search clusters"
-                        value={clusterSearch}
-                        onChange={(_event, value) => setClusterSearch(value)}
-                        onClear={() => setClusterSearch('')}
-                      />
-                    </ToolbarItem>
-                    <ToolbarItem align={{ default: 'alignEnd' }}>
-                      <Pagination
-                        itemCount={filteredClusters.length}
-                        perPage={clustersPerPage}
-                        page={clustersPage}
-                        onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                        onPerPageSelect={(_event, perPage) => {
-                          setClustersPerPage(perPage);
-                          setClustersPage(1);
-                        }}
-                        variant="top"
-                        isCompact
-                      />
-                    </ToolbarItem>
-                  </ToolbarContent>
-                </Toolbar>
-                <Table aria-label="Clusters table" variant="compact">
-                  <Thead>
-                    <Tr>
-                      <Th width={10}></Th>
-                      <Th>Cluster name</Th>
-                      <Th>Cluster set</Th>
-                      <Th>Status</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredClusters
-                      .slice((clustersPage - 1) * clustersPerPage, clustersPage * clustersPerPage)
-                      .map((cluster) => (
-                      <Tr
-                        key={cluster.id}
-                        isSelectable
-                        isClickable
-                        isRowSelected={selectedClusters.includes(cluster.id)}
-                        onRowClick={() => {
-                          if (selectedClusters.includes(cluster.id)) {
-                            setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
-                          } else {
-                            setSelectedClusters([...selectedClusters, cluster.id]);
-                          }
-                        }}
-                      >
-                        <Td>
-                          <Checkbox
-                            id={`cluster-${cluster.id}`}
-                            isChecked={selectedClusters.includes(cluster.id)}
-                            onChange={() => {
-                              if (selectedClusters.includes(cluster.id)) {
-                                setSelectedClusters(selectedClusters.filter(id => id !== cluster.id));
-                              } else {
-                                setSelectedClusters([...selectedClusters, cluster.id]);
-                              }
-                            }}
-                          />
-                        </Td>
-                        <Td dataLabel="Cluster name">
-                          <div style={{ fontWeight: selectedClusters.includes(cluster.id) ? '600' : 'normal' }}>
-                            {cluster.name}
-                          </div>
-                        </Td>
-                        <Td dataLabel="Cluster set">{cluster.clusterSet}</Td>
-                        <Td dataLabel="Status">
-                          <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
-                            {cluster.status}
-                          </Label>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-                <Pagination
-                  itemCount={filteredClusters.length}
-                  perPage={clustersPerPage}
-                  page={clustersPage}
-                  onSetPage={(_event, pageNumber) => setClustersPage(pageNumber)}
-                  onPerPageSelect={(_event, perPage) => {
-                    setClustersPerPage(perPage);
-                    setClustersPage(1);
-                  }}
-                  variant="bottom"
-                />
-              </div>
-            )}
 
             {/* SUB-STEP: Choose Access Level after selecting clusters (for 'clusters' path only) */}
             {resourceScope === 'clusters' && showScopeSelection && !showProjectSelection && (() => {
@@ -4419,8 +4344,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         style={{ width: '100%' }}
                       >
                         {clusterScope === 'everything'
-                          ? (selectedClusters.length === 1 ? 'Full access to selected cluster' : 'Full access to selected clusters')
-                          : (selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Specify common projects')}
+                          ? 'Cluster role assignment'
+                          : (selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments')}
                       </MenuToggle>
                     )}
                     shouldFocusToggleOnSelect
@@ -4440,10 +4365,10 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '✓ Full access: All current and future projects/namespaces on this cluster'
-                          : `✓ Full access: All current and future projects/namespaces across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to all current and future resources on the cluster.'
+                          : 'Grant access to all current and future resources on the clusters'}
                       >
-                      {selectedClusters.length === 1 ? 'Full access to selected cluster' : 'Full access to selected clusters'}
+                        Cluster role assignment
                       </DropdownItem>
                       <DropdownItem
                         key="projects"
@@ -4453,10 +4378,10 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '→ Limited access: Choose specific projects/namespaces from this cluster'
-                        : '→ Limited access: Choose projects/namespaces that exist across all selected clusters'}
+                          ? 'Grant access to specific projects/namespaces on the cluster.'
+                          : 'Grant access to common projects/namespaces across the selected clusters.'}
                       >
-                      {selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Specify common projects'}
+                        {selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments'}
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -4499,8 +4424,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         }}
                       >
                         <DropdownList>
-                          <DropdownItem onClick={() => { setProjectFilterType('Name'); setIsProjectFilterOpen(false); }}>
-                            Name
+                          <DropdownItem onClick={() => { setProjectFilterType('Project'); setIsProjectFilterOpen(false); }}>
+                            Project
                           </DropdownItem>
                         </DropdownList>
                       </Dropdown>
@@ -4870,7 +4795,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
               backgroundColor: '#ffffff',
               flexShrink: 0
             }}>
-              {currentStep > 1 && (
+              {(currentStep > 1 || showScopeSelection || showProjectSelection) && (
                 <Button variant="secondary" onClick={handleBack}>
                   Back
                 </Button>

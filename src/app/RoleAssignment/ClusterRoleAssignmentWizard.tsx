@@ -29,7 +29,7 @@ import {
   PaginationVariant,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -45,14 +45,27 @@ const mockUsers = dbUsers.map((user, index) => ({
   name: `${user.firstName} ${user.lastName}`,
   username: user.username,
   provider: 'LDAP',
+  created: new Date(user.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
 }));
 
-const mockGroups = dbGroups.map((group, index) => ({
+const mockGroups = dbGroups.map((group, index) => {
+  // Determine sync source and last synced (same logic as GroupsTable)
+  const isLocal = group.name === 'local-admins' || group.name === 'test-group' || index % 7 === 0;
+  const syncSources = ['PeteMobile LDAP', 'PeteMobile SSO', 'GitHub Enterprise'];
+  const syncSource = isLocal ? 'Local' : syncSources[index % syncSources.length];
+  const syncTimes = ['2 hours ago', '5 hours ago', '1 day ago', '3 days ago', 'Yesterday'];
+  const lastSynced = isLocal ? null : syncTimes[index % syncTimes.length];
+  
+  return {
   id: index + 1,
   dbId: group.id,
   name: group.name,
   users: group.userIds.length,
-}));
+    syncSource,
+    lastSynced,
+    created: '2024-01-15',
+  };
+});
 
 const mockRoles = dbRoles.map((role, index) => ({
   id: index + 1,
@@ -506,6 +519,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                         <Th width={10}></Th>
                         <Th>User</Th>
                         <Th>Identity provider</Th>
+                        <Th>Created</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -532,14 +546,22 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                             />
                           </Td>
                           <Td dataLabel="User">
-                            <div style={{ fontWeight: selectedUser === user.id ? '600' : 'normal' }}>
+                            <Button 
+                              variant="link" 
+                              isInline 
+                              component="a" 
+                              href={`#/user-management/identities/${encodeURIComponent(user.username)}`}
+                              target="_blank"
+                              style={{ padding: 0, fontSize: 'inherit', fontWeight: selectedUser === user.id ? '600' : 'normal' }}
+                            >
                               {user.name}
-                            </div>
+                            </Button>
                             <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
                               {user.username}
                             </div>
                           </Td>
-                          <Td dataLabel="Identity provider">LDAP</Td>
+                          <Td dataLabel="Identity provider">{user.provider}</Td>
+                          <Td dataLabel="Created">{user.created}</Td>
                         </Tr>
                       ))}
                     </Tbody>
@@ -625,8 +647,11 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                     <Thead>
                       <Tr>
                         <Th width={10}></Th>
-                        <Th>Group</Th>
-                        <Th>Users</Th>
+                        <Th width={20}>Group</Th>
+                        <Th width={15}>Members</Th>
+                        <Th width={20}>Sync Source</Th>
+                        <Th width={20}>Last Synced</Th>
+                        <Th width={15}>Created</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -652,12 +677,34 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                               }}
                             />
                           </Td>
-                          <Td dataLabel="Group">
-                            <div style={{ fontWeight: selectedGroup === group.id ? '600' : 'normal' }}>
+                          <Td dataLabel="Group" width={20}>
+                            <Button 
+                              variant="link" 
+                              isInline 
+                              component="a" 
+                              href={`#/user-management/identities/groups/${encodeURIComponent(group.name)}`}
+                              target="_blank"
+                              style={{ padding: 0, fontSize: 'inherit', fontWeight: selectedGroup === group.id ? '600' : 'normal' }}
+                            >
                               {group.name}
-                            </div>
+                            </Button>
                           </Td>
-                          <Td dataLabel="Users">{group.users}</Td>
+                          <Td dataLabel="Members" width={15}>{group.users}</Td>
+                          <Td dataLabel="Sync Source" width={20}>
+                            {group.syncSource === 'Local' ? (
+                              <Label color="grey">{group.syncSource}</Label>
+                            ) : (
+                              <Label color="blue" icon={<SyncAltIcon />}>{group.syncSource}</Label>
+                            )}
+                          </Td>
+                          <Td dataLabel="Last Synced" width={20}>
+                            {group.lastSynced ? (
+                              <span>{group.lastSynced}</span>
+                            ) : (
+                              <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
+                            )}
+                          </Td>
+                          <Td dataLabel="Created" width={15}>{group.created}</Td>
                         </Tr>
                       ))}
                     </Tbody>
