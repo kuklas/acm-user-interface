@@ -1379,7 +1379,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       variant="default"
                       style={{ width: '100%' }}
                     >
-                      {resourceScope === 'all' ? 'Everything in the cluster set' : 'Select specific clusters'}
+                      {resourceScope === 'all' ? 'Cluster set role assignment' : 'Cluster role assignment'}
                     </MenuToggle>
                   )}
                   shouldFocusToggleOnSelect
@@ -1393,9 +1393,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         setSelectedProjects([]);
                         setIsResourceScopeOpen(false);
                       }}
-                      description="Applies to all current and future clusters and resources in this cluster set"
+                      description="Grant access to all current and future resources on the cluster set."
                     >
-                      Everything in the cluster set
+                      Cluster set role assignment
                     </DropdownItem>
                     <DropdownItem
                       key="clusters"
@@ -1405,14 +1405,14 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                         setSelectedProjects([]);
                         setIsResourceScopeOpen(false);
                       }}
-                      description="Choose individual clusters, then optionally narrow down to specific projects"
+                      description="Grant access to specific clusters on the cluster set. Optionally, narrow this access to projects on the selected clusters."
                     >
-                      Select specific clusters
+                      Cluster role assignment
                     </DropdownItem>
                   </DropdownList>
                 </Dropdown>
 
-                {/* Show clusters table inline when "Select specific clusters" is selected */}
+                {/* Show clusters table inline when "Cluster role assignment" is selected */}
                 {resourceScope === 'clusters' && (
                   <div style={{ marginTop: '24px' }}>
                     <Toolbar>
@@ -1992,7 +1992,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   Select resources
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                  {resourceScope === 'all' ? 'Everything in the cluster set' : 'Assign to specific'}
+                  {resourceScope === 'all' ? 'Cluster set role assignment' : 'Cluster role assignment'}
                 </Content>
                 
                 {resourceScope === 'clusters' && (

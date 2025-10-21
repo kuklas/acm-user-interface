@@ -3872,8 +3872,8 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         style={{ width: '100%' }}
                       >
                         {clusterSetScope === 'everything'
-                          ? 'Full access to selected cluster sets'
-                          : 'Partial access - Specify clusters'}
+                          ? 'Cluster set role assignment'
+                          : 'Cluster role assignment'}
                       </MenuToggle>
                     )}
                     shouldFocusToggleOnSelect
@@ -3891,9 +3891,11 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setSelectedClusters([]);
                           setIsClusterSetScopeOpen(false);
                         }}
-                        description="✓ Full access: All current and future clusters and their resources in the selected cluster sets"
+                        description={selectedClusterSets.length === 1
+                          ? 'Grant access to all current and future resources on the cluster set.'
+                          : 'Grant access to all current and future resources on the cluster sets.'}
                       >
-                        Full access to selected cluster sets
+                        Cluster set role assignment
                       </DropdownItem>
                       <DropdownItem
                         key="partial"
@@ -3901,9 +3903,11 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           setClusterSetScope('partial');
                           setIsClusterSetScopeOpen(false);
                         }}
-                        description="→ Limited access: Choose specific clusters from the selected cluster sets"
+                        description={selectedClusterSets.length === 1
+                          ? 'Grant access to specific clusters on the cluster set. Optionally, narrow this access to projects on the selected clusters.'
+                          : 'Grant access to specific clusters on the cluster sets. Optionally, narrow this access to common projects on the selected clusters.'}
                       >
-                        Partial access - Specify clusters
+                        Cluster role assignment
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -4718,7 +4722,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           Access level
                         </Content>
                         <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                          Full access to all clusters in selected cluster sets
+                          Cluster set role assignment
                         </Content>
                       </>
                     )}

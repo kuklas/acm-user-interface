@@ -37,6 +37,10 @@ const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
   const connectedUsers = getUsersByIdentityProvider(idp.id);
   const connectedClusters = getClustersByIdentityProvider(idp.id);
   
+  // Generate last synced times (similar to Groups table)
+  const syncTimes = ['2 hours ago', '5 hours ago', '1 day ago', '3 days ago', 'Yesterday', '6 hours ago'];
+  const lastSynced = syncTimes[index % syncTimes.length];
+  
   return {
     id: index + 1,
     name: idp.name,
@@ -45,6 +49,7 @@ const mockIdentityProviders = dbIdentityProviders.map((idp, index) => {
     description: idp.description,
     users: connectedUsers.length, // Actual count of users from database
     clusters: connectedClusters.map(c => c.name), // Cluster names from database
+    lastSynced,
   };
 });
 
@@ -237,11 +242,12 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
                   isSelected: isAllSelected,
                 }}
               />
-              <Th width={showClustersColumn ? 25 : 30}>Identity provider</Th>
-              <Th width={showClustersColumn ? 15 : 20}>Type</Th>
-              <Th width={showClustersColumn ? 15 : 20}>Status</Th>
-              <Th width={showClustersColumn ? 15 : 30}>Connected Users</Th>
-              {showClustersColumn && <Th width={30}>Clusters</Th>}
+              <Th width={showClustersColumn ? 20 : 25}>Identity provider</Th>
+              <Th width={showClustersColumn ? 10 : 15}>Type</Th>
+              <Th width={showClustersColumn ? 10 : 15}>Status</Th>
+              <Th width={showClustersColumn ? 10 : 15}>Connected Users</Th>
+              <Th width={showClustersColumn ? 15 : 20}>Last Synced</Th>
+              {showClustersColumn && <Th width={25}>Clusters</Th>}
             </Tr>
           </Thead>
           <Tbody>
@@ -254,7 +260,7 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
                     isSelected: selectedProviders.has(provider.id),
                   }}
                 />
-                <Td dataLabel="Identity provider" width={showClustersColumn ? 25 : 30} style={{ textAlign: 'left' }}>
+                <Td dataLabel="Identity provider" width={showClustersColumn ? 20 : 25} style={{ textAlign: 'left' }}>
                   <Button
                     variant="link"
                     isInline
@@ -264,15 +270,16 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
                     {provider.name}
                   </Button>
                 </Td>
-                <Td dataLabel="Type" width={showClustersColumn ? 15 : 20}>
+                <Td dataLabel="Type" width={showClustersColumn ? 10 : 15}>
                   <Label color="blue">{provider.type}</Label>
                 </Td>
-                <Td dataLabel="Status" width={showClustersColumn ? 15 : 20}>
+                <Td dataLabel="Status" width={showClustersColumn ? 10 : 15}>
                   <Label color={provider.status === 'Active' ? 'green' : 'grey'}>{provider.status}</Label>
                 </Td>
-                <Td dataLabel="Connected Users" width={showClustersColumn ? 15 : 30}>{provider.users}</Td>
+                <Td dataLabel="Connected Users" width={showClustersColumn ? 10 : 15}>{provider.users}</Td>
+                <Td dataLabel="Last Synced" width={showClustersColumn ? 15 : 20}>{provider.lastSynced}</Td>
                 {showClustersColumn && (
-                  <Td dataLabel="Clusters" width={30}>
+                  <Td dataLabel="Clusters" width={25}>
                     {provider.clusters.length > 0 ? (
                       <Split hasGutter>
                         {provider.clusters.slice(0, 2).map((cluster, index) => (

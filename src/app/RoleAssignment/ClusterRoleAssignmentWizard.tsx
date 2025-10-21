@@ -749,7 +749,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                     variant="default"
                     style={{ width: '100%' }}
                   >
-                  {resourceScope === 'full' ? 'Full access' : 'Partial access'}
+                  {resourceScope === 'full' ? 'Cluster role assignment' : 'Project role assignment'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -767,9 +767,9 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                       setSelectedProjects([]);
                       setIsResourceScopeOpen(false);
                     }}
-                  description="Grant access to all current and future projects in this cluster"
+                  description="Grant access to all current and future resources on the cluster."
                   >
-                  Full access
+                  Cluster role assignment
                   </DropdownItem>
                   <DropdownItem
                   key="partial"
@@ -778,9 +778,9 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                       setSelectedProjects([]);
                       setIsResourceScopeOpen(false);
                     }}
-                  description="Select specific projects to grant access to"
+                  description="Grant access to specific projects on the cluster."
                   >
-                  Partial access
+                  Project role assignment
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
