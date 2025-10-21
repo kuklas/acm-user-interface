@@ -22,9 +22,10 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { 
-  ExternalLinkAltIcon, 
-  InfoCircleIcon, 
-  ShareAltIcon,
+  ArrowRightIcon,
+  QuestionCircleIcon,
+  ExportIcon,
+  ExternalLinkAltIcon,
   EllipsisVIcon,
   FileIcon,
 } from '@patternfly/react-icons';
@@ -68,88 +69,116 @@ export const Search: React.FunctionComponent = () => {
   const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
 
   return (
-    <div className="search-page-container">
-      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }} style={{ marginBottom: '24px' }}>
-        <FlexItem>
-          <Title headingLevel="h1" size="2xl">Search</Title>
-        </FlexItem>
-        <FlexItem>
-          <Alert
-            variant="warning"
-            isInline
-            isPlain
-            title="Search is disabled on some clusters"
-            style={{ padding: '8px 16px' }}
-          />
-        </FlexItem>
-      </Flex>
+    <>
+      {/* Header Wrapper - White Background */}
+      <div className="search-page-header" style={{ 
+        backgroundColor: '#ffffff', 
+        padding: '24px',
+        width: '100%',
+        boxSizing: 'border-box'
+      } as React.CSSProperties}>
+        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+          <FlexItem>
+            <Title headingLevel="h1" size="2xl">Search</Title>
+          </FlexItem>
+          <FlexItem>
+            <Alert
+              variant="warning"
+              isInline
+              isPlain
+              title="Search is disabled on some clusters"
+              style={{ padding: '8px 16px' }}
+            />
+          </FlexItem>
+        </Flex>
 
-      <Toolbar style={{ padding: 0, marginBottom: '24px' }}>
-        <ToolbarContent style={{ padding: 0 }}>
-          <ToolbarItem>
-            <Dropdown
-              isOpen={isSavedSearchesOpen}
-              onSelect={() => setIsSavedSearchesOpen(false)}
-              onOpenChange={(isOpen: boolean) => setIsSavedSearchesOpen(isOpen)}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle 
-                  ref={toggleRef} 
-                  onClick={() => setIsSavedSearchesOpen(!isSavedSearchesOpen)}
-                  isExpanded={isSavedSearchesOpen}
-                >
-                  Saved searches
-                </MenuToggle>
-              )}
-            >
-              <DropdownList>
-                <DropdownItem key="saved1">My saved search 1</DropdownItem>
-                <DropdownItem key="saved2">My saved search 2</DropdownItem>
-              </DropdownList>
-            </Dropdown>
-          </ToolbarItem>
-          <ToolbarItem align={{ default: 'alignEnd' }}>
-            <Button variant="link" icon={<ExternalLinkAltIcon />} iconPosition="end">
-              Open new search tab
-            </Button>
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
+        {/* 16px spacer */}
+        <div style={{ height: '16px' }} />
 
-      <div>
-        <div style={{ position: 'relative', marginBottom: '48px' }}>
-          <SearchInput
-            placeholder='Search by keywords or filters, for example "label:environment=production my-cluster"'
-            value={searchValue}
-            onChange={(_event, value) => setSearchValue(value)}
-            onClear={() => setSearchValue('')}
-            style={{ width: '100%' }}
-          />
-          <div style={{ 
-            position: 'absolute', 
-            right: '12px', 
-            top: '50%', 
-            transform: 'translateY(-50%)', 
-            display: 'flex', 
-            gap: '8px',
-            alignItems: 'center',
-          }}>
-            <Button variant="plain" aria-label="Info">
-              <InfoCircleIcon />
-            </Button>
-            <Button variant="plain" aria-label="Share">
-              <ShareAltIcon />
-            </Button>
-          </div>
-        </div>
+        <Toolbar style={{ padding: 0, marginBottom: 0 }}>
+          <ToolbarContent style={{ padding: 0 }}>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isSavedSearchesOpen}
+                onSelect={() => setIsSavedSearchesOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsSavedSearchesOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setIsSavedSearchesOpen(!isSavedSearchesOpen)}
+                    isExpanded={isSavedSearchesOpen}
+                  >
+                    Saved searches
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="saved1">My saved search 1</DropdownItem>
+                  <DropdownItem key="saved2">My saved search 2</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Button variant="link" icon={<ExternalLinkAltIcon />} iconPosition="end">
+                Open new search tab
+              </Button>
+            </ToolbarItem>
+          </ToolbarContent>
+        </Toolbar>
+      </div>
 
-        <Title headingLevel="h2" size="lg" style={{ marginBottom: '24px' }}>
+      {/* Content Wrapper - Gray Background */}
+      <div className="search-page-content" style={{
+        backgroundColor: '#f5f5f5',
+        padding: '24px',
+        width: '100%',
+        minHeight: 'calc(100vh - 300px)',
+        boxSizing: 'border-box'
+      } as React.CSSProperties}>
+        <Flex gap={{ default: 'gapSm' }}>
+          <FlexItem flex={{ default: 'flex_1' }}>
+            <SearchInput
+              placeholder='Search by keywords or filters, for example "label:environment=production my-cluster"'
+              value={searchValue}
+              onChange={(_event, value) => setSearchValue(value)}
+              onClear={() => setSearchValue('')}
+              style={{ width: '100%' }}
+            />
+          </FlexItem>
+          <FlexItem>
+            <Button variant="control" aria-label="Submit search">
+              <ArrowRightIcon />
+            </Button>
+          </FlexItem>
+          <FlexItem>
+            <Button variant="control" aria-label="Help">
+              <QuestionCircleIcon />
+            </Button>
+          </FlexItem>
+          <FlexItem>
+            <Button variant="secondary">Save search</Button>
+          </FlexItem>
+          <FlexItem>
+            <Button variant="control" aria-label="Export results">
+              <ExportIcon />
+            </Button>
+          </FlexItem>
+        </Flex>
+
+        {/* 24px spacer */}
+        <div style={{ height: '24px' }} />
+
+        <Title headingLevel="h2" size="lg">
           Suggested search templates
         </Title>
+
+        {/* 16px spacer */}
+        <div style={{ height: '16px' }} />
 
         <Grid hasGutter span={3}>
           {searchTemplates.map((template) => (
             <GridItem key={template.id}>
-              <Card isFullHeight style={{ backgroundColor: 'var(--pf-t--global--background--color--secondary--default)' }}>
+              <Card isFullHeight style={{ backgroundColor: '#ffffff' }}>
                 <CardHeader
                   actions={{
                     actions: (
@@ -223,7 +252,7 @@ export const Search: React.FunctionComponent = () => {
           ))}
         </Grid>
       </div>
-    </div>
+    </>
   );
 };
 
