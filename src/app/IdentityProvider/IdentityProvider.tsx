@@ -526,8 +526,7 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
           <FormGroup label="Enable automatic sync" fieldId="sync-enabled">
             <Switch
               id="sync-enabled"
-              label="Enabled"
-              labelOff="Disabled"
+              label={syncEnabled ? "Enabled" : "Disabled"}
               isChecked={syncEnabled}
               onChange={(_event, checked) => setSyncEnabled(checked)}
             />
