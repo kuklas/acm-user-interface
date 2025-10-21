@@ -17,13 +17,13 @@ export const IdentitiesPage: React.FunctionComponent = () => {
   const renderTabContent = () => {
     switch (activeTabKey) {
       case 0:
-        return <UsersTable />;
-      case 1:
         return <GroupsTable />;
+      case 1:
+        return <UsersTable />;
       case 2:
         return <ServiceAccountsTable />;
       default:
-        return <UsersTable />;
+        return <GroupsTable />;
     }
   };
 
@@ -37,8 +37,8 @@ export const IdentitiesPage: React.FunctionComponent = () => {
           Manage all identities including users, groups, and service accounts in one place. Assign access individually or by group, where users automatically inherit their group's permissions.
         </div>
         <Tabs activeKey={activeTabKey} onSelect={handleTabClick} aria-label="Identity tabs">
-          <Tab eventKey={0} title={<TabTitleText>Users</TabTitleText>} aria-label="Users tab" />
-          <Tab eventKey={1} title={<TabTitleText>Groups</TabTitleText>} aria-label="Groups tab" />
+          <Tab eventKey={0} title={<TabTitleText>Groups</TabTitleText>} aria-label="Groups tab" />
+          <Tab eventKey={1} title={<TabTitleText>Users</TabTitleText>} aria-label="Users tab" />
           <Tab eventKey={2} title={<TabTitleText>Service accounts</TabTitleText>} aria-label="Service accounts tab" />
         </Tabs>
       </div>

@@ -29,19 +29,31 @@ import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/reac
 import { useNavigate } from 'react-router-dom';
 import { getAllGroups } from '@app/data';
 import { useImpersonation } from '@app/contexts/ImpersonationContext';
+import { GroupRoleAssignmentWizard } from '@app/RoleAssignment/GroupRoleAssignmentWizard';
 
 // Get groups from centralized database
 const dbGroups = getAllGroups();
 
 // Transform groups from database to component format
-const mockGroups = dbGroups.map((group, index) => ({
-  id: index + 1,
-  name: group.name,
-  members: group.userIds.length,
-  created: '2024-01-15', // Could be added to schema later
-  syncSource: group.type === 'team' || group.type === 'project' ? 'Local' : 'Corporate LDAP',
-  lastSynced: group.type === 'regional' ? '2 hours ago' : null,
-}));
+const mockGroups = dbGroups.map((group, index) => {
+  // Most groups are synced from Identity Providers, only a few are Local
+  const isLocal = group.name === 'local-admins' || group.name === 'test-group' || index % 7 === 0;
+  
+  const syncSources = ['PeteMobile LDAP', 'PeteMobile SSO', 'GitHub Enterprise'];
+  const syncSource = isLocal ? 'Local' : syncSources[index % syncSources.length];
+  
+  const syncTimes = ['2 hours ago', '5 hours ago', '1 day ago', '3 days ago', 'Yesterday'];
+  const lastSynced = isLocal ? null : syncTimes[index % syncTimes.length];
+  
+  return {
+    id: index + 1,
+    name: group.name,
+    members: group.userIds.length,
+    created: '2024-01-15', // Could be added to schema later
+    syncSource,
+    lastSynced,
+  };
+});
 
 export const GroupsTable: React.FunctionComponent = () => {
   const navigate = useNavigate();
@@ -57,6 +69,8 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [perPage, setPerPage] = React.useState(10);
   const [isImpersonateModalOpen, setIsImpersonateModalOpen] = React.useState(false);
   const [impersonateGroupName, setImpersonateGroupName] = React.useState('');
+  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
+  const [selectedGroupForWizard, setSelectedGroupForWizard] = React.useState('');
 
   const paginatedGroups = mockGroups.slice((page - 1) * perPage, page * perPage);
 
@@ -105,6 +119,17 @@ export const GroupsTable: React.FunctionComponent = () => {
     setImpersonateGroupName(groupName);
     setIsImpersonateModalOpen(true);
     setOpenRowMenuId(null);
+  };
+
+  const handleCreateRoleAssignment = (groupName: string) => {
+    setSelectedGroupForWizard(groupName);
+    setIsWizardOpen(true);
+    setOpenRowMenuId(null);
+  };
+
+  const handleWizardComplete = (data: any) => {
+    console.log('Role assignment created:', data);
+    setIsWizardOpen(false);
   };
 
   const handleImpersonateConfirm = () => {
@@ -283,28 +308,37 @@ export const GroupsTable: React.FunctionComponent = () => {
               </Td>
               <Td dataLabel="Created" width={15}>{group.created}</Td>
               <Td dataLabel="Actions" width={10} style={{ textAlign: 'right' }}>
-                <Dropdown
-                  isOpen={openRowMenuId === group.id}
-                  onSelect={() => setOpenRowMenuId(null)}
-                  onOpenChange={(isOpen: boolean) => {
-                    if (!isOpen) {
-                      setOpenRowMenuId(null);
-                    }
-                  }}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      aria-label="Actions menu"
-                      variant="plain"
-                      onClick={() => toggleRowMenu(group.id)}
-                      isExpanded={openRowMenuId === group.id}
-                    >
-                      <EllipsisVIcon />
-                    </MenuToggle>
-                  )}
-                  shouldFocusToggleOnSelect
-                >
+                  <Dropdown
+                    isOpen={openRowMenuId === group.id}
+                    onSelect={() => setOpenRowMenuId(null)}
+                    onOpenChange={(isOpen: boolean) => {
+                      if (!isOpen) {
+                        setOpenRowMenuId(null);
+                      }
+                    }}
+                    popperProps={{
+                      placement: 'bottom-end'
+                    }}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        aria-label="Actions menu"
+                        variant="plain"
+                        onClick={() => toggleRowMenu(group.id)}
+                        isExpanded={openRowMenuId === group.id}
+                      >
+                        <EllipsisVIcon />
+                      </MenuToggle>
+                    )}
+                    shouldFocusToggleOnSelect
+                  >
                   <DropdownList>
+                    <DropdownItem
+                      key="create-role-assignment"
+                      onClick={() => handleCreateRoleAssignment(group.name)}
+                    >
+                      Create role assignment
+                    </DropdownItem>
                     <DropdownItem
                       key="impersonate"
                       onClick={() => handleImpersonateGroup(group.name)}
@@ -313,7 +347,6 @@ export const GroupsTable: React.FunctionComponent = () => {
                     </DropdownItem>
                     <DropdownItem
                       key="delete"
-                      icon={<TrashIcon />}
                       onClick={() => handleDeleteGroup(group.id, group.name)}
                       isDisabled={group.syncSource !== 'Local'}
                       description={group.syncSource !== 'Local' ? 'Synced groups cannot be deleted locally' : undefined}
@@ -376,6 +409,13 @@ export const GroupsTable: React.FunctionComponent = () => {
           </Button>
         </ModalFooter>
       </Modal>
+
+      <GroupRoleAssignmentWizard 
+        isOpen={isWizardOpen} 
+        onClose={() => setIsWizardOpen(false)}
+        groupName={selectedGroupForWizard}
+        onComplete={handleWizardComplete}
+      />
     </div>
   );
 };

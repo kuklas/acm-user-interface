@@ -29,9 +29,11 @@ import {
   PaginationVariant,
   EmptyState,
   EmptyStateBody,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, FilterIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -159,6 +161,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const [rolesPerPage, setRolesPerPage] = React.useState(10);
   const [isRoleFilterOpen, setIsRoleFilterOpen] = React.useState(false);
   const [roleFilterType, setRoleFilterType] = React.useState('All');
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = React.useState(false);
+  const [categoryFilter, setCategoryFilter] = React.useState('All');
 
   // Ref for wizard content to enable scrolling
   const wizardContentRef = React.useRef<HTMLDivElement>(null);
@@ -196,6 +200,12 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   };
 
   // Filter roles based on search and type
+  // Get unique categories for filter
+  const uniqueCategories = React.useMemo(() => {
+    const categories = Array.from(new Set(mockRoles.map(role => role.category)));
+    return ['All', ...categories.sort()];
+  }, []);
+
   const filteredRoles = mockRoles.filter(role => {
     // Filter by search (search both displayName and technical name)
     const matchesSearch = role.displayName.toLowerCase().includes(roleSearch.toLowerCase()) ||
@@ -204,7 +214,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
     // Filter by type
     const matchesType = roleFilterType === 'All' || role.type === roleFilterType;
     
-    return matchesSearch && matchesType;
+    // Filter by category
+    const matchesCategory = categoryFilter === 'All' || role.category === categoryFilter;
+    
+    return matchesSearch && matchesType && matchesCategory;
   });
 
   const handleNext = () => {
@@ -1104,7 +1117,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           <Content component="p" style={{ marginTop: '0.5rem', color: '#6a6e73' }}>
             A role assignment specifies a distinct action users or groups can perform when associated with a particular role.{' '}
             <Button variant="link" isInline component="a" href="#" onClick={(e) => e.preventDefault()}>
-              See example of the yaml file and learn more about User management
+              Learn more about user management, including an example YAML file.
             </Button>
           </Content>
         </div>
@@ -1264,9 +1277,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     variant="default"
                     style={{ width: '100%' }}
                   >
-                      {resourceScope === 'everything' && 'Everything'}
-                      {resourceScope === 'cluster-sets' && 'Select cluster set(s)'}
-                      {resourceScope === 'clusters' && 'Select cluster(s)'}
+                      {resourceScope === 'everything' && 'Global access'}
+                      {resourceScope === 'cluster-sets' && 'Select cluster sets'}
+                      {resourceScope === 'clusters' && 'Select clusters'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -1280,7 +1293,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     <DropdownItem
                       key="everything"
                       onClick={() => {
-                        setResourceScope('everything');
+                      setResourceScope('everything');
                       setSelectedClusterSets([]);
                       setSelectedClusters([]);
                       setSelectedProjects([]);
@@ -1289,7 +1302,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     }}
                       description="Grant access to all resources across all clusters registered in ACM"
                     >
-                      Everything
+                      Global access
                     </DropdownItem>
                     <DropdownItem
                       key="cluster-sets"
@@ -1302,9 +1315,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         setClusterSetScope('everything'); // Reset to default
                         setIsResourceScopeOpen(false);
                       }}
-                      description="Select one or more cluster sets, then optionally drill down to specific clusters and projects"
+                      description="Grant access to 1 or more cluster sets. Optionally, narrow this access to specific clusters and projects."
                     >
-                      Select cluster set(s)
+                      Select cluster sets
                   </DropdownItem>
                   <DropdownItem
                     key="clusters"
@@ -1317,9 +1330,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         setClusterScope('everything'); // Reset to default
                       setIsResourceScopeOpen(false);
                     }}
-                      description="Select specific cluster(s), then optionally narrow down to projects"
+                      description="Grant access to 1 or more clusters. Optionally, narrow this access to projects."
                   >
-                      Select cluster(s)
+                      Select clusters
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
@@ -1405,7 +1418,22 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           </Td>
                             <Td dataLabel="Cluster set name">
                               <div style={{ fontWeight: selectedClusterSets.includes(clusterSet.id) ? '600' : 'normal' }}>
-                                {clusterSet.name}
+                                <a 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(`${window.location.origin}${window.location.pathname}#/infrastructure/clusters/${encodeURIComponent(clusterSet.name)}`, '_blank');
+                                  }}
+                                  style={{ 
+                                    color: 'var(--pf-t--global--color--brand--default)',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                                >
+                                  {clusterSet.name}
+                                </a>
                             </div>
                           </Td>
                             <Td dataLabel="Clusters">{clusterSet.clusterCount}</Td>
@@ -1514,7 +1542,22 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           </Td>
                             <Td dataLabel="Cluster name">
                               <div style={{ fontWeight: selectedClusters.includes(cluster.id) ? '600' : 'normal' }}>
-                                {cluster.name}
+                                <a 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(`${window.location.origin}${window.location.pathname}#/infrastructure/clusters/${encodeURIComponent(cluster.name)}`, '_blank');
+                                  }}
+                                  style={{ 
+                                    color: 'var(--pf-t--global--color--brand--default)',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                                >
+                                  {cluster.name}
+                                </a>
                             </div>
                           </Td>
                             <Td dataLabel="Cluster set">{cluster.clusterSet}</Td>
@@ -1579,8 +1622,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     style={{ width: '100%' }}
                   >
                         {clusterSetScope === 'everything'
-                          ? 'Full access to selected cluster sets'
-                          : 'Partial access - Specify clusters'}
+                          ? 'Cluster set role assignment'
+                          : 'Cluster role assignment'}
                   </MenuToggle>
                 )}
                 shouldFocusToggleOnSelect
@@ -1598,9 +1641,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                       setSelectedClusters([]);
                           setIsClusterSetScopeOpen(false);
                         }}
-                        description="✓ Full access: All current and future clusters and their resources in the selected cluster sets"
+                        description="Grant access to all current and future resources on the cluster set"
                       >
-                        Full access to selected cluster sets
+                        Cluster set role assignment
                   </DropdownItem>
                   <DropdownItem
                         key="partial"
@@ -1608,9 +1651,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           setClusterSetScope('partial');
                           setIsClusterSetScopeOpen(false);
                         }}
-                        description="→ Limited access: Choose specific clusters from the selected cluster sets"
+                        description="Grant access to specific clusters on the cluster set. Optionally, narrow this access to projects on the selected clusters."
                       >
-                        Partial access - Specify clusters
+                        Cluster role assignment
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
@@ -1719,7 +1762,22 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         </Td>
                             <Td dataLabel="Name">
                               <div style={{ fontWeight: selectedClusters.includes(cluster.id) ? '600' : 'normal' }}>
-                                {cluster.name}
+                                <a 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(`${window.location.origin}${window.location.pathname}#/infrastructure/clusters/${encodeURIComponent(cluster.name)}`, '_blank');
+                                  }}
+                                  style={{ 
+                                    color: 'var(--pf-t--global--color--brand--default)',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                                >
+                                  {cluster.name}
+                                </a>
                               </div>
                             </Td>
                             <Td dataLabel="Status">
@@ -1776,8 +1834,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         style={{ width: '100%' }}
                       >
                         {clusterScope === 'everything'
-                          ? (selectedClusters.length === 1 ? 'Full cluster access' : 'Full access to all selected clusters')
-                          : (selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Common projects')}
+                          ? 'Cluster role assignment'
+                          : (selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments')}
                       </MenuToggle>
                     )}
                     shouldFocusToggleOnSelect
@@ -1796,10 +1854,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '✓ Full access: All current and future projects/namespaces on this cluster'
-                          : `✓ Full access: All current and future projects/namespaces across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to all current and future resources on the cluster.'
+                          : 'Grant access to all current and future resources on the clusters'}
                       >
-                        {selectedClusters.length === 1 ? 'Full cluster access' : 'Full access to all selected clusters'}
+                        Cluster role assignment
                       </DropdownItem>
                       <DropdownItem
                         key="projects"
@@ -1809,10 +1867,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '→ Limited access: Choose specific projects/namespaces from this cluster'
-                          : `→ Limited access: Choose projects/namespaces that exist across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to specific projects on the cluster.'
+                          : 'Grant access to projects with the same name across selected clusters'}
                       >
-                        {selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Common projects'}
+                        {selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments'}
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -2047,8 +2105,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                         style={{ width: '100%' }}
                       >
                         {clusterScope === 'everything'
-                          ? (selectedClusters.length === 1 ? 'Full access to selected cluster' : 'Full access to selected clusters')
-                          : (selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Specify common projects')}
+                          ? 'Cluster role assignment'
+                          : (selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments')}
                       </MenuToggle>
                     )}
                     shouldFocusToggleOnSelect
@@ -2068,10 +2126,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '✓ Full access: All current and future projects/namespaces on this cluster'
-                          : `✓ Full access: All current and future projects/namespaces across all ${selectedClusters.length} clusters`}
+                          ? 'Grant access to all current and future resources on the cluster.'
+                          : 'Grant access to all current and future resources on the clusters'}
                       >
-                      {selectedClusters.length === 1 ? 'Full access to selected cluster' : 'Full access to selected clusters'}
+                      Cluster role assignment
                       </DropdownItem>
                       <DropdownItem
                         key="projects"
@@ -2081,10 +2139,10 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           setIsClusterScopeOpen(false);
                         }}
                         description={selectedClusters.length === 1
-                          ? '→ Limited access: Choose specific projects/namespaces from this cluster'
-                        : '→ Limited access: Choose projects/namespaces that exist across all selected clusters'}
+                          ? 'Grant access to specific projects on the cluster.'
+                        : 'Grant access to projects with the same name across selected clusters'}
                       >
-                      {selectedClusters.length === 1 ? 'Partial access - Specify projects' : 'Partial access - Specify common projects'}
+                      {selectedClusters.length === 1 ? 'Project role assignment' : 'Common projects role assignments'}
                       </DropdownItem>
                     </DropdownList>
                   </Dropdown>
@@ -2283,25 +2341,42 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         {/* Step 2: Select Role */}
         {currentStep === 2 && (
           <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+            <Title headingLevel="h2" size="xl" style={{ marginBottom: '8px' }}>
               Select role
             </Title>
+            <Content component="p" style={{ marginBottom: 'var(--pf-t--global--spacer--md)', color: '#6a6e73' }}>
+              Choose a role to assign. Need a custom role?{' '}
+              <Button 
+                variant="link" 
+                isInline 
+                component="a" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(`${window.location.origin}${window.location.pathname}#/user-management/roles/create`, '_blank');
+                }}
+              >
+                Create one here
+              </Button>{' '}
+              and return to this workflow.
+            </Content>
             
-            <Toolbar>
-              <ToolbarContent>
+            <Toolbar style={{ flexWrap: 'nowrap' }}>
+              <ToolbarContent style={{ flexWrap: 'nowrap' }}>
                 <ToolbarItem>
                   <Dropdown
-                    isOpen={isRoleFilterOpen}
-                    onSelect={() => setIsRoleFilterOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsRoleFilterOpen(isOpen)}
+                    isOpen={isCategoryFilterOpen}
+                    onSelect={() => setIsCategoryFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsCategoryFilterOpen(isOpen)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
-                        onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)} 
-                        isExpanded={isRoleFilterOpen}
+                        onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)} 
+                        isExpanded={isCategoryFilterOpen}
                         variant="default"
+                        icon={<FilterIcon />}
                       >
-                        {roleFilterType}
+                        {categoryFilter === 'All' ? 'Category' : categoryFilter}
                       </MenuToggle>
                     )}
                     popperProps={{
@@ -2309,24 +2384,69 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     }}
                   >
                     <DropdownList>
-                      <DropdownItem onClick={() => { setRoleFilterType('All'); setIsRoleFilterOpen(false); }}>
-                        All
-                      </DropdownItem>
-                      <DropdownItem onClick={() => { setRoleFilterType('Default'); setIsRoleFilterOpen(false); }}>
-                        Default
-                      </DropdownItem>
-                      <DropdownItem onClick={() => { setRoleFilterType('Custom'); setIsRoleFilterOpen(false); }}>
-                        Custom
-                      </DropdownItem>
+                      {uniqueCategories.map(category => (
+                        <DropdownItem 
+                          key={category}
+                          onClick={() => { 
+                            setCategoryFilter(category); 
+                            setIsCategoryFilterOpen(false);
+                            setRolesPage(1);
+                          }}
+                        >
+                          {category}
+                        </DropdownItem>
+                      ))}
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
-                <ToolbarItem>
+                <ToolbarItem style={{ minWidth: '120px', maxWidth: '140px' }}>
                   <SearchInput
                     placeholder="Search roles"
                     value={roleSearch}
                     onChange={(_event, value) => setRoleSearch(value)}
                     onClear={() => setRoleSearch('')}
+                  />
+                </ToolbarItem>
+                <ToolbarItem>
+                  <ToggleGroup aria-label="Role type filter">
+                    <ToggleGroupItem
+                      text="All"
+                      isSelected={roleFilterType === 'All'}
+                      onChange={() => {
+                        setRoleFilterType('All');
+                        setRolesPage(1);
+                      }}
+                    />
+                    <ToggleGroupItem
+                      text="Default"
+                      isSelected={roleFilterType === 'Default'}
+                      onChange={() => {
+                        setRoleFilterType('Default');
+                        setRolesPage(1);
+                      }}
+                    />
+                    <ToggleGroupItem
+                      text="Custom"
+                      isSelected={roleFilterType === 'Custom'}
+                      onChange={() => {
+                        setRoleFilterType('Custom');
+                        setRolesPage(1);
+                      }}
+                    />
+                  </ToggleGroup>
+                </ToolbarItem>
+                <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={filteredRoles.length}
+                    perPage={rolesPerPage}
+                    page={rolesPage}
+                    onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
+                    onPerPageSelect={(_event, perPage) => {
+                      setRolesPerPage(perPage);
+                      setRolesPage(1);
+                    }}
+                    variant={PaginationVariant.top}
+                    isCompact
                   />
                 </ToolbarItem>
               </ToolbarContent>
@@ -2361,7 +2481,22 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
                       <div>
                         <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                          {role.displayName}
+                          <a 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(`${window.location.origin}${window.location.pathname}#/user-management/roles/${encodeURIComponent(role.name)}`, '_blank');
+                            }}
+                            style={{ 
+                              color: 'var(--pf-t--global--color--brand--default)',
+                              textDecoration: 'none',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {role.displayName}
+                          </a>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                           {role.name}
@@ -2619,7 +2754,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 </Button>
               ) : (
                 <Button variant="primary" onClick={handleFinish}>
-                  Finish
+                  Create
                 </Button>
               )}{' '}
               <Button variant="link" onClick={handleClose}>

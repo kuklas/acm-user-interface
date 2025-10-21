@@ -4881,7 +4881,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                 </Button>
               ) : (
                 <Button variant="primary" onClick={handleFinish}>
-                  Finish
+                  Create
                 </Button>
               )}{' '}
               <Button variant="link" onClick={handleClose}>

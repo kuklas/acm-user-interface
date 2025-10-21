@@ -41,7 +41,7 @@ import {
   AlertGroup,
   AlertActionCloseButton,
 } from '@patternfly/react-core';
-import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon, CheckIcon } from '@patternfly/react-icons';
+import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon, CheckIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { GroupRoleAssignmentWizard } from '@app/RoleAssignment/GroupRoleAssignmentWizard';
@@ -179,21 +179,62 @@ const GroupDetail: React.FunctionComponent = () => {
     setShowSuccessAlert(true);
   };
 
-  const DetailsTab = () => (
-    <Card>
-      <CardBody>
-        <Title headingLevel="h3" size="md" className="pf-v6-u-mb-md">
-          General information
-        </Title>
-        <DescriptionList isHorizontal>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Group name</DescriptionListTerm>
-            <DescriptionListDescription>{groupName}</DescriptionListDescription>
-          </DescriptionListGroup>
-        </DescriptionList>
-      </CardBody>
-    </Card>
-  );
+  const DetailsTab = () => {
+    // Get group data from centralized database
+    const allGroups = getAllGroups();
+    const currentGroup = allGroups.find(g => g.name === groupName);
+    const groupUsers = currentGroup ? getUsersByGroup(currentGroup.id) : [];
+    
+    // Determine sync source and last synced (same logic as GroupsTable)
+    const groupIndex = allGroups.findIndex(g => g.name === groupName);
+    const isLocal = groupName === 'local-admins' || groupName === 'test-group' || groupIndex % 7 === 0;
+    
+    const syncSources = ['PeteMobile LDAP', 'PeteMobile SSO', 'GitHub Enterprise'];
+    const syncSource = isLocal ? 'Local' : syncSources[groupIndex % syncSources.length];
+    
+    const syncTimes = ['2 hours ago', '5 hours ago', '1 day ago', '3 days ago', 'Yesterday'];
+    const lastSynced = isLocal ? null : syncTimes[groupIndex % syncTimes.length];
+    
+    return (
+      <Card>
+        <CardBody>
+          <Title headingLevel="h3" size="md" className="pf-v6-u-mb-md">
+            General information
+          </Title>
+          <DescriptionList isHorizontal>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Group name</DescriptionListTerm>
+              <DescriptionListDescription>{groupName}</DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Sync source</DescriptionListTerm>
+              <DescriptionListDescription>
+                {isLocal ? (
+                  <Label color="grey">{syncSource}</Label>
+                ) : (
+                  <Label color="blue" icon={<SyncAltIcon />}>{syncSource}</Label>
+                )}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+            {lastSynced && (
+              <DescriptionListGroup>
+                <DescriptionListTerm>Last synced</DescriptionListTerm>
+                <DescriptionListDescription>{lastSynced}</DescriptionListDescription>
+              </DescriptionListGroup>
+            )}
+            <DescriptionListGroup>
+              <DescriptionListTerm>Created</DescriptionListTerm>
+              <DescriptionListDescription>2024-01-15</DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Number of users</DescriptionListTerm>
+              <DescriptionListDescription>{groupUsers.length}</DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+        </CardBody>
+      </Card>
+    );
+  };
 
   const YAMLTab = () => (
     <Card>
@@ -299,7 +340,7 @@ users:
                 No role assignment created yet
               </Title>
               <EmptyStateBody>
-                Description text that allows users to easily understand what this is for and how does it help them achieve their needs.
+                Role assignments grant users or groups the specific permissions they need to perform specific actions within a project.
               </EmptyStateBody>
               <EmptyStateActions>
                 <Button variant="primary" onClick={handleCreateRoleAssignment}>
@@ -308,7 +349,7 @@ users:
               </EmptyStateActions>
               <EmptyStateBody>
                 <Button component="a" href="#" variant="link">
-                  Link to documentation
+                  Learn more about role assignments
                 </Button>
               </EmptyStateBody>
             </EmptyState>
@@ -512,6 +553,11 @@ users:
     const currentGroup = allGroups.find(g => g.name === groupName);
     const groupUsers = currentGroup ? getUsersByGroup(currentGroup.id) : [];
     
+    // Determine if group is synced from Identity Provider (same logic as GroupsTable)
+    const groupIndex = allGroups.findIndex(g => g.name === groupName);
+    const isLocal = groupName === 'local-admins' || groupName === 'test-group' || groupIndex % 7 === 0;
+    const isSynced = !isLocal;
+    
     // Transform users from database to component format
     const mockUsers = groupUsers.map((user, index) => ({
       id: index + 1,
@@ -576,7 +622,7 @@ users:
         <CardBody>
           <Toolbar>
             <ToolbarContent>
-              {selectedUsers.size > 0 && (
+              {!isSynced && selectedUsers.size > 0 && (
                 <>
                   <ToolbarGroup>
                     <ToolbarItem>
@@ -644,16 +690,20 @@ users:
                   onClear={() => setSearchValue('')}
                 />
               </ToolbarItem>
-              <ToolbarItem>
-                <Button variant={ButtonVariant.primary} onClick={handleAddUser}>
-                  Add user
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Button variant={ButtonVariant.secondary} onClick={handleRemoveUser}>
-                  Remove user
-                </Button>
-              </ToolbarItem>
+              {!isSynced && (
+                <>
+                  <ToolbarItem>
+                    <Button variant={ButtonVariant.primary} onClick={handleAddUser}>
+                      Add user
+                    </Button>
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <Button variant={ButtonVariant.secondary} onClick={handleRemoveUser}>
+                      Remove user
+                    </Button>
+                  </ToolbarItem>
+                </>
+              )}
               <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Pagination
                   itemCount={filteredUsers.length}
@@ -670,12 +720,14 @@ users:
           <Table aria-label="Users table" variant="compact">
             <Thead>
               <Tr>
-              <Th
-                select={{
-                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                  isSelected: isAllSelected,
-                }}
-              />
+              {!isSynced && (
+                <Th
+                  select={{
+                    onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
+                    isSelected: isAllSelected,
+                  }}
+                />
+              )}
                 <Th width={40} sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>Name</FlexItem>
@@ -706,19 +758,21 @@ users:
                     </FlexItem>
                   </Flex>
                 </Th>
-                <Th width={10}>Actions</Th>
+                {!isSynced && <Th width={10}>Actions</Th>}
               </Tr>
             </Thead>
             <Tbody>
               {paginatedUsers.map((user) => (
                 <Tr key={user.id}>
-                  <Td
-                    select={{
-                      rowIndex: user.id,
-                      onSelect: (_event, isSelecting) => handleSelectUser(user.id, isSelecting),
-                      isSelected: selectedUsers.has(user.id),
-                    }}
-                  />
+                  {!isSynced && (
+                    <Td
+                      select={{
+                        rowIndex: user.id,
+                        onSelect: (_event, isSelecting) => handleSelectUser(user.id, isSelecting),
+                        isSelected: selectedUsers.has(user.id),
+                      }}
+                    />
+                  )}
                   <Td dataLabel="Name">
                     <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
                       <FlexItem>
@@ -753,11 +807,13 @@ users:
                     <Label color="blue">{user.identityProvider}</Label>
                   </Td>
                   <Td dataLabel="Created">{user.created}</Td>
-                  <Td dataLabel="Actions">
-                    <Button variant="plain" aria-label="Actions">
-                      <Icon><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></Icon>
-                    </Button>
-                  </Td>
+                  {!isSynced && (
+                    <Td dataLabel="Actions">
+                      <Button variant="plain" aria-label="Actions">
+                        <Icon><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></Icon>
+                      </Button>
+                    </Td>
+                  )}
                 </Tr>
               ))}
             </Tbody>

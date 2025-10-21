@@ -1010,7 +1010,22 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                     <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
                       <div>
                       <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                          {role.displayName}
+                          <a 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(`${window.location.origin}${window.location.pathname}#/user-management/roles/${encodeURIComponent(role.name)}`, '_blank');
+                            }}
+                            style={{ 
+                              color: 'var(--pf-t--global--color--brand--default)',
+                              textDecoration: 'none',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {role.displayName}
+                          </a>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                         {role.name}
@@ -1205,7 +1220,7 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
                 </Button>
               ) : (
                 <Button variant="primary" onClick={handleFinish}>
-                  Finish
+                  Create
                 </Button>
               )}{' '}
               <Button variant="link" onClick={handleClose}>

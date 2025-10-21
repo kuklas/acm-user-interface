@@ -29,9 +29,11 @@ import {
   PaginationVariant,
   Split,
   SplitItem,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, FilterIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -151,6 +153,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [roleFilterType, setRoleFilterType] = React.useState('All');
   const [rolesPage, setRolesPage] = React.useState(1);
   const [rolesPerPage, setRolesPerPage] = React.useState(10);
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = React.useState(false);
+  const [categoryFilter, setCategoryFilter] = React.useState('All');
   
   // Bulk selector dropdowns
   const [isUserBulkSelectorOpen, setIsUserBulkSelectorOpen] = React.useState(false);
@@ -331,6 +335,12 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     cluster.name.toLowerCase().includes(clusterSearch.toLowerCase())
   );
 
+  // Get unique categories for filter
+  const uniqueCategories = React.useMemo(() => {
+    const categories = Array.from(new Set(mockRoles.map(role => role.category)));
+    return ['All', ...categories.sort()];
+  }, []);
+
   const filteredRoles = mockRoles.filter(role => {
     // Filter by search (search both displayName and technical name)
     const matchesSearch = role.displayName.toLowerCase().includes(roleSearch.toLowerCase()) ||
@@ -339,7 +349,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     // Filter by type
     const matchesType = roleFilterType === 'All' || role.type === roleFilterType;
     
-    return matchesSearch && matchesType;
+    // Filter by category
+    const matchesCategory = categoryFilter === 'All' || role.category === categoryFilter;
+    
+    return matchesSearch && matchesType && matchesCategory;
   });
 
   // Filter projects based on selected clusters and search
@@ -1445,7 +1458,24 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                                   isSelected,
                                 }}
                               />
-                              <Td dataLabel="Name">{cluster.name}</Td>
+                              <Td dataLabel="Name">
+                                <a 
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(`${window.location.origin}${window.location.pathname}#/infrastructure/clusters/${encodeURIComponent(cluster.name)}`, '_blank');
+                                  }}
+                                  style={{ 
+                                    color: 'var(--pf-t--global--color--brand--default)',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                                >
+                                  {cluster.name}
+                                </a>
+                              </Td>
                               <Td dataLabel="Status">
                                 <Label color={cluster.status === 'Ready' ? 'green' : 'red'} isCompact>
                                   {cluster.status}
@@ -1654,25 +1684,42 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         {/* Step 3: Select Role */}
         {currentStep === 3 && (
           <>
-            <Title headingLevel="h2" size="xl" style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+            <Title headingLevel="h2" size="xl" style={{ marginBottom: '8px' }}>
               Select role
             </Title>
+            <Content component="p" style={{ marginBottom: 'var(--pf-t--global--spacer--md)', color: '#6a6e73' }}>
+              Choose a role to assign. Need a custom role?{' '}
+              <Button 
+                variant="link" 
+                isInline 
+                component="a" 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(`${window.location.origin}${window.location.pathname}#/user-management/roles/create`, '_blank');
+                }}
+              >
+                Create one here
+              </Button>{' '}
+              and return to this workflow.
+            </Content>
             
-            <Toolbar>
-              <ToolbarContent>
+            <Toolbar style={{ flexWrap: 'nowrap' }}>
+              <ToolbarContent style={{ flexWrap: 'nowrap' }}>
                 <ToolbarItem>
                   <Dropdown
-                    isOpen={isRoleFilterOpen}
-                    onSelect={() => setIsRoleFilterOpen(false)}
-                    onOpenChange={(isOpen: boolean) => setIsRoleFilterOpen(isOpen)}
+                    isOpen={isCategoryFilterOpen}
+                    onSelect={() => setIsCategoryFilterOpen(false)}
+                    onOpenChange={(isOpen: boolean) => setIsCategoryFilterOpen(isOpen)}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle 
                         ref={toggleRef} 
-                        onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)} 
-                        isExpanded={isRoleFilterOpen}
+                        onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)} 
+                        isExpanded={isCategoryFilterOpen}
                         variant="default"
+                        icon={<FilterIcon />}
                       >
-                        {roleFilterType}
+                        {categoryFilter === 'All' ? 'Category' : categoryFilter}
                       </MenuToggle>
                     )}
                     popperProps={{
@@ -1680,24 +1727,69 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     }}
                   >
                     <DropdownList>
-                      <DropdownItem onClick={() => { setRoleFilterType('All'); setIsRoleFilterOpen(false); }}>
-                        All
-                      </DropdownItem>
-                      <DropdownItem onClick={() => { setRoleFilterType('Default'); setIsRoleFilterOpen(false); }}>
-                        Default
-                      </DropdownItem>
-                      <DropdownItem onClick={() => { setRoleFilterType('Custom'); setIsRoleFilterOpen(false); }}>
-                        Custom
-                      </DropdownItem>
+                      {uniqueCategories.map(category => (
+                        <DropdownItem 
+                          key={category}
+                          onClick={() => { 
+                            setCategoryFilter(category); 
+                            setIsCategoryFilterOpen(false);
+                            setRolesPage(1);
+                          }}
+                        >
+                          {category}
+                        </DropdownItem>
+                      ))}
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
-                <ToolbarItem>
+                <ToolbarItem style={{ minWidth: '180px', maxWidth: '240px' }}>
                   <SearchInput
                     placeholder="Search roles"
                     value={roleSearch}
                     onChange={(_event, value) => setRoleSearch(value)}
                     onClear={() => setRoleSearch('')}
+                  />
+                </ToolbarItem>
+                <ToolbarItem>
+                  <ToggleGroup aria-label="Role type filter">
+                    <ToggleGroupItem
+                      text="All"
+                      isSelected={roleFilterType === 'All'}
+                      onChange={() => {
+                        setRoleFilterType('All');
+                        setRolesPage(1);
+                      }}
+                    />
+                    <ToggleGroupItem
+                      text="Default"
+                      isSelected={roleFilterType === 'Default'}
+                      onChange={() => {
+                        setRoleFilterType('Default');
+                        setRolesPage(1);
+                      }}
+                    />
+                    <ToggleGroupItem
+                      text="Custom"
+                      isSelected={roleFilterType === 'Custom'}
+                      onChange={() => {
+                        setRoleFilterType('Custom');
+                        setRolesPage(1);
+                      }}
+                    />
+                  </ToggleGroup>
+                </ToolbarItem>
+                <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                  <Pagination
+                    itemCount={filteredRoles.length}
+                    perPage={rolesPerPage}
+                    page={rolesPage}
+                    onSetPage={(_event, pageNumber) => setRolesPage(pageNumber)}
+                    onPerPageSelect={(_event, perPage) => {
+                      setRolesPerPage(perPage);
+                      setRolesPage(1);
+                    }}
+                    variant={PaginationVariant.top}
+                    isCompact
                   />
                 </ToolbarItem>
               </ToolbarContent>
@@ -1732,7 +1824,22 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                     <Td dataLabel="Role" style={{ textAlign: 'left', wordBreak: 'break-word' }}>
                       <div>
                         <div style={{ fontWeight: selectedRole === role.id ? '600' : 'normal' }}>
-                          {role.displayName}
+                          <a 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(`${window.location.origin}${window.location.pathname}#/user-management/roles/${encodeURIComponent(role.name)}`, '_blank');
+                            }}
+                            style={{ 
+                              color: 'var(--pf-t--global--color--brand--default)',
+                              textDecoration: 'none',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {role.displayName}
+                          </a>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--pf-t--global--text--color--subtle)' }}>
                           {role.name}
@@ -1947,7 +2054,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                 </Button>
               ) : (
                 <Button variant="primary" onClick={handleFinish}>
-                  Finish
+                  Create
                 </Button>
               )}{' '}
               <Button variant="link" onClick={handleClose}>
