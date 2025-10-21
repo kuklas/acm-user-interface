@@ -27,6 +27,7 @@ import Virtualization from '@app/FleetVirtualization/Virtualization';
 import { Catalog } from '@app/FleetVirtualization/Catalog';
 import { Templates } from '@app/FleetVirtualization/Templates';
 import { InstanceTypes } from '@app/FleetVirtualization/InstanceTypes';
+import { Search } from '@app/Search/Search';
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
@@ -89,7 +90,7 @@ const routes: AppRouteConfig[] = [
     ],
   },
   {
-    element: <Dashboard />,
+    element: <Search />,
     label: 'Search',
     path: '/search',
     title: 'ACM | Search',
