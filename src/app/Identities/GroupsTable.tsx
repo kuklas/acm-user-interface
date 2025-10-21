@@ -317,7 +317,7 @@ export const GroupsTable: React.FunctionComponent = () => {
                       }
                     }}
                     popperProps={{
-                      position: 'bottom-end'
+                      position: 'end'
                     }}
                     toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                       <MenuToggle
