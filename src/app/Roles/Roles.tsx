@@ -23,9 +23,11 @@ import {
   MenuToggleElement,
   Pagination,
   PaginationVariant,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { EllipsisVIcon, FilterIcon } from '@patternfly/react-icons';
+import { EllipsisVIcon, FilterIcon, CaretDownIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 import { getAllRoles } from '@app/data';
@@ -77,6 +79,7 @@ const Roles: React.FunctionComponent = () => {
   const [typeFilter, setTypeFilter] = React.useState<'All' | 'Default' | 'Custom'>('All');
   const [categoryFilter, setCategoryFilter] = React.useState<string>('All categories');
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = React.useState(false);
+  const [bulkSelectorDropdownOpen, setBulkSelectorDropdownOpen] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<{
     index: number;
     direction: 'asc' | 'desc';
@@ -151,19 +154,32 @@ const Roles: React.FunctionComponent = () => {
   const isAllSelected = selectableRoles.length > 0 && selectableRoles.every(role => selectedRoles.has(role.id));
   const isPartiallySelected = selectedRoles.size > 0 && !isAllSelected;
 
-  const handleSelectAll = (isSelecting: boolean) => {
+  const handleSelectPage = () => {
     const newSelected = new Set(selectedRoles);
-    if (isSelecting) {
-      // Only select Custom roles, not Default roles
-      paginatedRoles.forEach(role => {
-        if (role.type !== 'Default') {
-          newSelected.add(role.id);
-        }
-      });
-    } else {
-      paginatedRoles.forEach(role => newSelected.delete(role.id));
-    }
+    // Only select Custom roles on this page
+    paginatedRoles.forEach(role => {
+      if (role.type !== 'Default') {
+        newSelected.add(role.id);
+      }
+    });
     setSelectedRoles(newSelected);
+    setBulkSelectorDropdownOpen(false);
+  };
+
+  const handleSelectAllRoles = () => {
+    const newSelected = new Set<number>();
+    // Only select Custom roles across all pages
+    sortedRoles.forEach(role => {
+      if (role.type !== 'Default') {
+        newSelected.add(role.id);
+      }
+    });
+    setSelectedRoles(newSelected);
+    setBulkSelectorDropdownOpen(false);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedRoles(new Set());
   };
 
   const handleSelectRole = (roleId: number, isSelecting: boolean) => {
@@ -202,7 +218,63 @@ const Roles: React.FunctionComponent = () => {
     <>
       <div className="table-content-card">
         <Toolbar>
-          <ToolbarContent>
+          <ToolbarContent style={{ gap: '8px' }}>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={bulkSelectorDropdownOpen}
+                onSelect={() => setBulkSelectorDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setBulkSelectorDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => {
+                      if (selectedRoles.size > 0) {
+                        handleDeselectAll();
+                      } else {
+                        setBulkSelectorDropdownOpen(!bulkSelectorDropdownOpen);
+                      }
+                    }}
+                    variant="plain"
+                    style={{
+                      border: '1px solid var(--pf-t--global--border--color--default)',
+                      borderRadius: 'var(--pf-t--global--border--radius--small)',
+                      padding: '6px 8px',
+                      minWidth: 'auto',
+                    }}
+                  >
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <FlexItem>
+                        <Checkbox
+                          isChecked={isAllSelected}
+                          onChange={(event, checked) => {
+                            event.stopPropagation();
+                            if (checked) {
+                              handleSelectPage();
+                            } else {
+                              handleDeselectAll();
+                            }
+                          }}
+                          aria-label="Select all"
+                          id="select-all-roles-checkbox"
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <CaretDownIcon />
+                      </FlexItem>
+                    </Flex>
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="select-page" onClick={handleSelectPage}>
+                    Select page ({selectableRoles.length} items)
+                  </DropdownItem>
+                  <DropdownItem key="select-all" onClick={handleSelectAllRoles}>
+                    Select all ({sortedRoles.filter(r => r.type !== 'Default').length} items)
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem>
               <Dropdown
                 isOpen={isCategoryFilterOpen}
@@ -294,12 +366,7 @@ const Roles: React.FunctionComponent = () => {
         <Table aria-label="Roles table" variant="compact">
           <Thead>
             <Tr>
-              <Th
-                select={{
-                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                  isSelected: isAllSelected,
-                }}
-              />
+              <Th />
               <Th 
                 width={25}
                 sort={{ 

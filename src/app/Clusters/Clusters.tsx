@@ -29,7 +29,7 @@ import {
   CardBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
-import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon, RedoIcon } from '@patternfly/react-icons';
+import { FilterIcon, InfoCircleIcon, ExternalLinkAltIcon, CheckIcon, ArrowUpIcon, SyncAltIcon, RedoIcon, CaretDownIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { getAllClusters, getAllClusterSets, getClustersByClusterSet, getAllNamespaces } from '@app/data';
 
@@ -360,6 +360,12 @@ const Clusters: React.FunctionComponent = () => {
     const [labelsDropdownOpen, setLabelsDropdownOpen] = React.useState(false);
     const [actionsDropdownOpen, setActionsDropdownOpen] = React.useState(false);
     const [refreshDropdownOpen, setRefreshDropdownOpen] = React.useState(false);
+    const [bulkSelectorDropdownOpen, setBulkSelectorDropdownOpen] = React.useState(false);
+    
+    // Selection states
+    const [selectedClusters, setSelectedClusters] = React.useState<Set<number>>(new Set());
+    const [page, setPage] = React.useState(1);
+    const [perPage, setPerPage] = React.useState(10);
     
     // Filter states
     const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
@@ -439,10 +445,100 @@ const Clusters: React.FunctionComponent = () => {
                             selectedEnvironments.length > 0 ||
                             selectedRegions.length > 0;
     
+    // Pagination
+    const paginatedClusters = filteredClusters.slice((page - 1) * perPage, page * perPage);
+    
+    // Bulk selection handlers
+    const handleSelectPage = () => {
+      const newSelected = new Set(selectedClusters);
+      paginatedClusters.forEach(cluster => newSelected.add(cluster.id));
+      setSelectedClusters(newSelected);
+      setBulkSelectorDropdownOpen(false);
+    };
+    
+    const handleSelectAll = () => {
+      const newSelected = new Set(filteredClusters.map(cluster => cluster.id));
+      setSelectedClusters(newSelected);
+      setBulkSelectorDropdownOpen(false);
+    };
+    
+    const handleDeselectAll = () => {
+      setSelectedClusters(new Set());
+    };
+    
+    const handleSelectCluster = (clusterId: number, isSelecting: boolean) => {
+      const newSelected = new Set(selectedClusters);
+      if (isSelecting) {
+        newSelected.add(clusterId);
+      } else {
+        newSelected.delete(clusterId);
+      }
+      setSelectedClusters(newSelected);
+    };
+    
+    const isAllPageSelected = paginatedClusters.length > 0 && paginatedClusters.every(cluster => selectedClusters.has(cluster.id));
+    const isSomePageSelected = selectedClusters.size > 0 && !isAllPageSelected;
+    
     return (
       <div className="table-content-card">
         <Toolbar>
           <ToolbarContent style={{ gap: '8px' }}>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={bulkSelectorDropdownOpen}
+                onSelect={() => setBulkSelectorDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setBulkSelectorDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => {
+                      if (selectedClusters.size > 0) {
+                        handleDeselectAll();
+                      } else {
+                        setBulkSelectorDropdownOpen(!bulkSelectorDropdownOpen);
+                      }
+                    }}
+                    variant="plain"
+                    style={{
+                      border: '1px solid var(--pf-t--global--border--color--default)',
+                      borderRadius: 'var(--pf-t--global--border--radius--small)',
+                      padding: '6px 8px',
+                      minWidth: 'auto',
+                    }}
+                  >
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <FlexItem>
+                        <Checkbox
+                          isChecked={isAllPageSelected}
+                          onChange={(event, checked) => {
+                            event.stopPropagation();
+                            if (checked) {
+                              handleSelectPage();
+                            } else {
+                              handleDeselectAll();
+                            }
+                          }}
+                          aria-label="Select all"
+                          id="select-all-checkbox"
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <CaretDownIcon />
+                      </FlexItem>
+                    </Flex>
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="select-page" onClick={handleSelectPage}>
+                    Select page ({paginatedClusters.length} items)
+                  </DropdownItem>
+                  <DropdownItem key="select-all" onClick={handleSelectAll}>
+                    Select all ({filteredClusters.length} items)
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem>
               <Dropdown
                 isOpen={filterDropdownOpen}
@@ -527,17 +623,6 @@ const Clusters: React.FunctionComponent = () => {
                 </DropdownList>
               </Dropdown>
             </ToolbarItem>
-            <ToolbarItem>
-              <Pagination
-                itemCount={filteredClusters.length}
-                perPage={perPage}
-                page={page}
-                onSetPage={onSetPage}
-                onPerPageSelect={onPerPageSelect}
-                variant={PaginationVariant.top}
-                isCompact
-              />
-            </ToolbarItem>
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ whiteSpace: 'nowrap', color: 'var(--pf-t--global--text--color--regular)' }}>
@@ -592,6 +677,18 @@ const Clusters: React.FunctionComponent = () => {
                     </DropdownItem>
                   </DropdownList>
                 </Dropdown>
+                <Pagination
+                  itemCount={filteredClusters.length}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+                  onPerPageSelect={(_event, newPerPage) => {
+                    setPerPage(newPerPage);
+                    setPage(1);
+                  }}
+                  variant={PaginationVariant.top}
+                  isCompact
+                />
               </div>
             </ToolbarItem>
           </ToolbarContent>
@@ -600,12 +697,7 @@ const Clusters: React.FunctionComponent = () => {
       <Table aria-label="Clusters table">
         <Thead>
           <Tr>
-            <Th>
-              <Checkbox
-                id="select-all-clusters-header"
-                aria-label="Select all clusters"
-              />
-            </Th>
+            <Th />
             <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>Name</Th>
             <Th>Namespace</Th>
             <Th>Status</Th>
@@ -620,14 +712,15 @@ const Clusters: React.FunctionComponent = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {filteredClusters.slice((page - 1) * perPage, page * perPage).map((cluster) => (
+          {paginatedClusters.map((cluster) => (
             <Tr key={cluster.id}>
-              <Td>
-                <Checkbox
-                  id={`select-cluster-${cluster.id}`}
-                  aria-label={`Select cluster ${cluster.name}`}
-                />
-              </Td>
+              <Td
+                select={{
+                  rowIndex: cluster.id,
+                  onSelect: (_event, isSelecting) => handleSelectCluster(cluster.id, isSelecting),
+                  isSelected: selectedClusters.has(cluster.id),
+                }}
+              />
               <Td dataLabel="Name">
                 <Button variant="link" onClick={() => navigate(`/infrastructure/clusters/${cluster.name}`)}>
                   {cluster.name}
@@ -689,26 +782,62 @@ const Clusters: React.FunctionComponent = () => {
         </Tbody>
       </Table>
 
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem align={{ default: 'alignEnd' }}>
-            <Pagination
-              itemCount={filteredClusters.length}
-              perPage={perPage}
-              page={page}
-              onSetPage={onSetPage}
-              widgetId="bottom-pagination"
-              onPerPageSelect={onPerPageSelect}
-              variant={PaginationVariant.bottom}
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
+      <div style={{ padding: '16px' }}>
+        <Pagination
+          itemCount={filteredClusters.length}
+          perPage={perPage}
+          page={page}
+          onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+          widgetId="bottom-pagination"
+          onPerPageSelect={(_event, newPerPage) => {
+            setPerPage(newPerPage);
+            setPage(1);
+          }}
+          variant={PaginationVariant.bottom}
+        />
+      </div>
     </div>
     );
   };
 
-  const ClusterSetsTab = () => (
+  const ClusterSetsTab = () => {
+    const [selectedClusterSets, setSelectedClusterSets] = React.useState<Set<number>>(new Set());
+    const [bulkSelectorDropdownOpen, setBulkSelectorDropdownOpen] = React.useState(false);
+    const [page, setPage] = React.useState(1);
+    const [perPage, setPerPage] = React.useState(10);
+    
+    const paginatedClusterSets = mockClusterSets.slice((page - 1) * perPage, page * perPage);
+    
+    const handleSelectPage = () => {
+      const newSelected = new Set(selectedClusterSets);
+      paginatedClusterSets.forEach(clusterSet => newSelected.add(clusterSet.id));
+      setSelectedClusterSets(newSelected);
+      setBulkSelectorDropdownOpen(false);
+    };
+    
+    const handleSelectAll = () => {
+      const newSelected = new Set(mockClusterSets.map(clusterSet => clusterSet.id));
+      setSelectedClusterSets(newSelected);
+      setBulkSelectorDropdownOpen(false);
+    };
+    
+    const handleDeselectAll = () => {
+      setSelectedClusterSets(new Set());
+    };
+    
+    const handleSelectClusterSet = (clusterSetId: number, isSelecting: boolean) => {
+      const newSelected = new Set(selectedClusterSets);
+      if (isSelecting) {
+        newSelected.add(clusterSetId);
+      } else {
+        newSelected.delete(clusterSetId);
+      }
+      setSelectedClusterSets(newSelected);
+    };
+    
+    const isAllPageSelected = paginatedClusterSets.length > 0 && paginatedClusterSets.every(cs => selectedClusterSets.has(cs.id));
+    
+    return (
     <div>
       <Card className="pf-v6-u-mb-lg">
         <CardBody>
@@ -746,12 +875,62 @@ const Clusters: React.FunctionComponent = () => {
       <div style={{ marginTop: '16px' }}>
         <div className="table-content-card">
         <Toolbar>
-          <ToolbarContent>
+          <ToolbarContent style={{ gap: '8px' }}>
             <ToolbarItem>
-              <Checkbox
-                id="select-all-cluster-sets"
-                aria-label="Select all cluster sets"
-              />
+              <Dropdown
+                isOpen={bulkSelectorDropdownOpen}
+                onSelect={() => setBulkSelectorDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setBulkSelectorDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => {
+                      if (selectedClusterSets.size > 0) {
+                        handleDeselectAll();
+                      } else {
+                        setBulkSelectorDropdownOpen(!bulkSelectorDropdownOpen);
+                      }
+                    }}
+                    variant="plain"
+                    style={{
+                      border: '1px solid var(--pf-t--global--border--color--default)',
+                      borderRadius: 'var(--pf-t--global--border--radius--small)',
+                      padding: '6px 8px',
+                      minWidth: 'auto',
+                    }}
+                  >
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <FlexItem>
+                        <Checkbox
+                          isChecked={isAllPageSelected}
+                          onChange={(event, checked) => {
+                            event.stopPropagation();
+                            if (checked) {
+                              handleSelectPage();
+                            } else {
+                              handleDeselectAll();
+                            }
+                          }}
+                          aria-label="Select all"
+                          id="select-all-cluster-sets-checkbox"
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <CaretDownIcon />
+                      </FlexItem>
+                    </Flex>
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="select-page" onClick={handleSelectPage}>
+                    Select page ({paginatedClusterSets.length} items)
+                  </DropdownItem>
+                  <DropdownItem key="select-all" onClick={handleSelectAll}>
+                    Select all ({mockClusterSets.length} items)
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
             </ToolbarItem>
             <ToolbarItem>
               <SearchInput
@@ -785,24 +964,26 @@ const Clusters: React.FunctionComponent = () => {
                 </DropdownList>
               </Dropdown>
             </ToolbarItem>
-            <ToolbarItem>
-              <Button variant="plain" aria-label="Refresh">
-                <Icon>
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </Icon>
-              </Button>
+            <ToolbarItem align={{ default: 'alignEnd' }}>
+              <Pagination
+                itemCount={mockClusterSets.length}
+                perPage={perPage}
+                page={page}
+                onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+                onPerPageSelect={(_event, newPerPage) => {
+                  setPerPage(newPerPage);
+                  setPage(1);
+                }}
+                variant={PaginationVariant.top}
+                isCompact
+              />
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
         <Table aria-label="Cluster sets table">
           <Thead>
             <Tr>
-              <Th>
-                <Checkbox
-                  id="select-all-cluster-sets-header"
-                  aria-label="Select all cluster sets"
-                />
-              </Th>
+              <Th />
               <Th sort={{ columnIndex: 0, sortBy: { index: 0, direction: 'asc' } }}>Name</Th>
               <Th>Cluster status</Th>
               <Th>
@@ -819,14 +1000,15 @@ const Clusters: React.FunctionComponent = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {mockClusterSets.map((clusterSet) => (
+            {paginatedClusterSets.map((clusterSet) => (
               <Tr key={clusterSet.id}>
-                <Td>
-                  <Checkbox
-                    id={`select-cluster-set-${clusterSet.id}`}
-                    aria-label={`Select cluster set ${clusterSet.name}`}
-                  />
-                </Td>
+                <Td
+                  select={{
+                    rowIndex: clusterSet.id,
+                    onSelect: (_event, isSelecting) => handleSelectClusterSet(clusterSet.id, isSelecting),
+                    isSelected: selectedClusterSets.has(clusterSet.id),
+                  }}
+                />
                 <Td dataLabel="Name">
                   <Flex spaceItems={{ default: 'spaceItemsXs' }}>
                     <FlexItem>
@@ -881,25 +1063,25 @@ const Clusters: React.FunctionComponent = () => {
           </Tbody>
         </Table>
 
-        <Toolbar>
-          <ToolbarContent>
-            <ToolbarItem align={{ default: 'alignEnd' }}>
-              <Pagination
-                itemCount={mockClusterSets.length}
-                perPage={perPage}
-                page={page}
-                onSetPage={onSetPage}
-                widgetId="bottom-pagination"
-                onPerPageSelect={onPerPageSelect}
-                variant={PaginationVariant.bottom}
-              />
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
+        <div style={{ padding: '16px' }}>
+          <Pagination
+            itemCount={mockClusterSets.length}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_event, pageNumber) => setPage(pageNumber)}
+            widgetId="bottom-pagination"
+            onPerPageSelect={(_event, newPerPage) => {
+              setPerPage(newPerPage);
+              setPage(1);
+            }}
+            variant={PaginationVariant.bottom}
+          />
+        </div>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const ClusterPoolsTab = () => (
     <div>

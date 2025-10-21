@@ -23,9 +23,11 @@ import {
   ModalFooter,
   Title,
   Alert,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon } from '@patternfly/react-icons';
+import { SyncAltIcon, CogIcon, EllipsisVIcon, TrashIcon, CaretDownIcon } from '@patternfly/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllGroups } from '@app/data';
 import { useImpersonation } from '@app/contexts/ImpersonationContext';
@@ -61,7 +63,8 @@ export const GroupsTable: React.FunctionComponent = () => {
   const [searchValue, setSearchValue] = React.useState('');
   const [filterType, setFilterType] = React.useState('Group');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
-  const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
+  const [selectedGroups, setSelectedGroups] = React.useState<Set<number>>(new Set());
+  const [bulkSelectorDropdownOpen, setBulkSelectorDropdownOpen] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isActionsOpen, setIsActionsOpen] = React.useState(false);
   const [openRowMenuId, setOpenRowMenuId] = React.useState<number | null>(null);
@@ -74,21 +77,34 @@ export const GroupsTable: React.FunctionComponent = () => {
 
   const paginatedGroups = mockGroups.slice((page - 1) * perPage, page * perPage);
 
-  const handleGroupSelect = (groupId: number, isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedGroups([...selectedGroups, groupId]);
-    } else {
-      setSelectedGroups(selectedGroups.filter(id => id !== groupId));
-    }
+  const handleSelectPage = () => {
+    const newSelected = new Set(selectedGroups);
+    paginatedGroups.forEach(group => newSelected.add(group.id));
+    setSelectedGroups(newSelected);
+    setBulkSelectorDropdownOpen(false);
   };
 
-  const handleSelectAllGroups = (isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedGroups(mockGroups.map(group => group.id));
-    } else {
-      setSelectedGroups([]);
-    }
+  const handleSelectAll = () => {
+    const newSelected = new Set(mockGroups.map(group => group.id));
+    setSelectedGroups(newSelected);
+    setBulkSelectorDropdownOpen(false);
   };
+
+  const handleDeselectAll = () => {
+    setSelectedGroups(new Set());
+  };
+
+  const handleGroupSelect = (groupId: number, isSelected: boolean) => {
+    const newSelected = new Set(selectedGroups);
+    if (isSelected) {
+      newSelected.add(groupId);
+    } else {
+      newSelected.delete(groupId);
+    }
+    setSelectedGroups(newSelected);
+  };
+
+  const isAllPageSelected = paginatedGroups.length > 0 && paginatedGroups.every(group => selectedGroups.has(group.id));
 
   const handleSyncGroups = () => {
     console.log('Syncing groups from external identity providers...');
@@ -149,7 +165,63 @@ export const GroupsTable: React.FunctionComponent = () => {
   return (
     <div className="table-content-card">
       <Toolbar>
-        <ToolbarContent>
+        <ToolbarContent style={{ gap: '8px' }}>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={bulkSelectorDropdownOpen}
+              onSelect={() => setBulkSelectorDropdownOpen(false)}
+              onOpenChange={(isOpen: boolean) => setBulkSelectorDropdownOpen(isOpen)}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => {
+                    if (selectedGroups.size > 0) {
+                      handleDeselectAll();
+                    } else {
+                      setBulkSelectorDropdownOpen(!bulkSelectorDropdownOpen);
+                    }
+                  }}
+                  variant="plain"
+                  style={{
+                    border: '1px solid var(--pf-t--global--border--color--default)',
+                    borderRadius: 'var(--pf-t--global--border--radius--small)',
+                    padding: '6px 8px',
+                    minWidth: 'auto',
+                  }}
+                >
+                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                    <FlexItem>
+                      <Checkbox
+                        isChecked={isAllPageSelected}
+                        onChange={(event, checked) => {
+                          event.stopPropagation();
+                          if (checked) {
+                            handleSelectPage();
+                          } else {
+                            handleDeselectAll();
+                          }
+                        }}
+                        aria-label="Select all"
+                        id="select-all-groups-checkbox"
+                      />
+                    </FlexItem>
+                    <FlexItem>
+                      <CaretDownIcon />
+                    </FlexItem>
+                  </Flex>
+                </MenuToggle>
+              )}
+            >
+              <DropdownList>
+                <DropdownItem key="select-page" onClick={handleSelectPage}>
+                  Select page ({paginatedGroups.length} items)
+                </DropdownItem>
+                <DropdownItem key="select-all" onClick={handleSelectAll}>
+                  Select all ({mockGroups.length} items)
+                </DropdownItem>
+              </DropdownList>
+            </Dropdown>
+          </ToolbarItem>
           <ToolbarItem>
             <Dropdown
               isOpen={isFilterOpen}
@@ -246,22 +318,7 @@ export const GroupsTable: React.FunctionComponent = () => {
       <Table aria-label="Groups table" variant="compact">
         <Thead>
           <Tr>
-            <Th>
-              <Checkbox
-                id="select-all-groups"
-                isChecked={paginatedGroups.length > 0 && paginatedGroups.every(group => selectedGroups.includes(group.id))}
-                onChange={(event, checked) => {
-                  if (checked) {
-                    setSelectedGroups(Array.from(new Set([...selectedGroups, ...paginatedGroups.map(g => g.id)])));
-                  } else {
-                    const pageGroupIds = paginatedGroups.map(g => g.id);
-                    setSelectedGroups(selectedGroups.filter(id => !pageGroupIds.includes(id)));
-                  }
-                }}
-                aria-label="Select all groups on page"
-                style={{ transform: 'scale(0.7)' }}
-              />
-            </Th>
+            <Th />
             <Th width={20}>Group</Th>
             <Th width={15}>Members</Th>
             <Th width={20}>Sync Source</Th>
@@ -273,15 +330,13 @@ export const GroupsTable: React.FunctionComponent = () => {
         <Tbody>
           {paginatedGroups.map((group) => (
             <Tr key={group.id}>
-              <Td>
-                <Checkbox
-                  id={`select-group-${group.id}`}
-                  isChecked={selectedGroups.includes(group.id)}
-                  onChange={(event, checked) => handleGroupSelect(group.id, checked)}
-                  aria-label={`Select ${group.name}`}
-                  style={{ transform: 'scale(0.7)' }}
-                />
-              </Td>
+              <Td
+                select={{
+                  rowIndex: group.id,
+                  onSelect: (_event, isSelecting) => handleGroupSelect(group.id, isSelecting),
+                  isSelected: selectedGroups.has(group.id),
+                }}
+              />
               <Td dataLabel="Group" width={20}>
                 <Button
                   variant="link"

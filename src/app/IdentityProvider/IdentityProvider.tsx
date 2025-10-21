@@ -22,9 +22,16 @@ import {
   SplitItem,
   Pagination,
   PaginationVariant,
+  Switch,
+  FormHelperText,
+  HelperText,
+  HelperTextItem,
+  Flex,
+  FlexItem,
+  Checkbox,
 } from '@patternfly/react-core';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { PlusCircleIcon, FilterIcon } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, IAction } from '@patternfly/react-table';
+import { PlusCircleIcon, FilterIcon, CaretDownIcon } from '@patternfly/react-icons';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { useNavigate } from 'react-router-dom';
 import { getAllIdentityProviders, getUsersByIdentityProvider, getClustersByIdentityProvider } from '@app/data';
@@ -69,10 +76,14 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
   const [selectedProviders, setSelectedProviders] = React.useState<Set<number>>(new Set());
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [isAddProviderOpen, setIsAddProviderOpen] = React.useState(false);
+  const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+  const [bulkSelectorDropdownOpen, setBulkSelectorDropdownOpen] = React.useState(false);
+  const [isConfigureSyncModalOpen, setIsConfigureSyncModalOpen] = React.useState(false);
+  const [selectedProviderForSync, setSelectedProviderForSync] = React.useState<number | null>(null);
+  const [syncSchedule, setSyncSchedule] = React.useState('0 0 * * *');
+  const [syncEnabled, setSyncEnabled] = React.useState(true);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
-
-  const paginatedProviders = mockIdentityProviders.slice((page - 1) * perPage, page * perPage);
 
   const providerTypes = ['OAuth', 'OIDC', 'LDAP', 'SAML'];
 
@@ -109,17 +120,25 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
     handleModalClose();
   };
 
-  const isAllSelected = paginatedProviders.length > 0 && paginatedProviders.every(provider => selectedProviders.has(provider.id));
-  const isPartiallySelected = selectedProviders.size > 0 && !isAllSelected;
+  const paginatedProviders = mockIdentityProviders.slice((page - 1) * perPage, page * perPage);
+  
+  const isAllPageSelected = paginatedProviders.length > 0 && paginatedProviders.every(provider => selectedProviders.has(provider.id));
 
-  const handleSelectAll = (isSelecting: boolean) => {
+  const handleSelectPage = () => {
     const newSelected = new Set(selectedProviders);
-    if (isSelecting) {
-      paginatedProviders.forEach(provider => newSelected.add(provider.id));
-    } else {
-      paginatedProviders.forEach(provider => newSelected.delete(provider.id));
-    }
+    paginatedProviders.forEach(provider => newSelected.add(provider.id));
     setSelectedProviders(newSelected);
+    setBulkSelectorDropdownOpen(false);
+  };
+
+  const handleSelectAllProviders = () => {
+    const newSelected = new Set(mockIdentityProviders.map(provider => provider.id));
+    setSelectedProviders(newSelected);
+    setBulkSelectorDropdownOpen(false);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedProviders(new Set());
   };
 
   const handleSelectProvider = (providerId: number, isSelecting: boolean) => {
@@ -132,11 +151,95 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
     setSelectedProviders(newSelected);
   };
 
+  const handleManualSync = (providerId?: number) => {
+    // Simulate manual sync
+    if (providerId) {
+      console.log('Manually syncing provider:', providerId);
+    } else {
+      console.log('Manually syncing providers:', Array.from(selectedProviders));
+    }
+    setIsActionsOpen(false);
+    // In a real app, this would trigger an API call
+  };
+
+  const handleConfigureSyncModal = (providerId?: number) => {
+    setIsActionsOpen(false);
+    setSelectedProviderForSync(providerId || null);
+    setIsConfigureSyncModalOpen(true);
+  };
+
+  const handleSaveAutoSync = () => {
+    console.log('Saving auto-sync configuration:', { 
+      providerId: selectedProviderForSync, 
+      syncSchedule, 
+      syncEnabled 
+    });
+    setIsConfigureSyncModalOpen(false);
+    setSelectedProviderForSync(null);
+    // In a real app, this would save to backend
+  };
+
   return (
     <>
       <div className="table-content-card">
         <Toolbar>
-          <ToolbarContent>
+          <ToolbarContent style={{ gap: '8px' }}>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={bulkSelectorDropdownOpen}
+                onSelect={() => setBulkSelectorDropdownOpen(false)}
+                onOpenChange={(isOpen: boolean) => setBulkSelectorDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => {
+                      if (selectedProviders.size > 0) {
+                        handleDeselectAll();
+                      } else {
+                        setBulkSelectorDropdownOpen(!bulkSelectorDropdownOpen);
+                      }
+                    }}
+                    variant="plain"
+                    style={{
+                      border: '1px solid var(--pf-t--global--border--color--default)',
+                      borderRadius: 'var(--pf-t--global--border--radius--small)',
+                      padding: '6px 8px',
+                      minWidth: 'auto',
+                    }}
+                  >
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <FlexItem>
+                        <Checkbox
+                          isChecked={isAllPageSelected}
+                          onChange={(event, checked) => {
+                            event.stopPropagation();
+                            if (checked) {
+                              handleSelectPage();
+                            } else {
+                              handleDeselectAll();
+                            }
+                          }}
+                          aria-label="Select all"
+                          id="select-all-providers-checkbox"
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <CaretDownIcon />
+                      </FlexItem>
+                    </Flex>
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="select-page" onClick={handleSelectPage}>
+                    Select page ({paginatedProviders.length} items)
+                  </DropdownItem>
+                  <DropdownItem key="select-all" onClick={handleSelectAllProviders}>
+                    Select all ({mockIdentityProviders.length} items)
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem>
               <Dropdown
                 isOpen={isFilterOpen}
@@ -217,6 +320,32 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
                 </DropdownList>
               </Dropdown>
             </ToolbarItem>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isActionsOpen}
+                onSelect={() => setIsActionsOpen(false)}
+                onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsActionsOpen(!isActionsOpen)}
+                    isExpanded={isActionsOpen}
+                    isDisabled={selectedProviders.size === 0}
+                  >
+                    Actions
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem key="manual-sync" onClick={handleManualSync}>
+                    Manually sync
+                  </DropdownItem>
+                  <DropdownItem key="configure-sync" onClick={handleConfigureSyncModal}>
+                    Configure automatic sync
+                  </DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Pagination
                 itemCount={mockIdentityProviders.length}
@@ -236,18 +365,14 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
         <Table aria-label="Identity providers table" variant="compact">
           <Thead>
             <Tr>
-              <Th
-                select={{
-                  onSelect: (_event, isSelecting) => handleSelectAll(isSelecting),
-                  isSelected: isAllSelected,
-                }}
-              />
+              <Th />
               <Th width={showClustersColumn ? 20 : 25}>Identity provider</Th>
               <Th width={showClustersColumn ? 10 : 15}>Type</Th>
               <Th width={showClustersColumn ? 10 : 15}>Status</Th>
               <Th width={showClustersColumn ? 10 : 15}>Connected Users</Th>
               <Th width={showClustersColumn ? 15 : 20}>Last Synced</Th>
               {showClustersColumn && <Th width={25}>Clusters</Th>}
+              <Th />
             </Tr>
           </Thead>
           <Tbody>
@@ -298,6 +423,20 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
                     )}
                   </Td>
                 )}
+                <Td isActionCell>
+                  <ActionsColumn
+                    items={[
+                      {
+                        title: 'Manually sync',
+                        onClick: () => handleManualSync(provider.id),
+                      },
+                      {
+                        title: 'Configure automatic sync',
+                        onClick: () => handleConfigureSyncModal(provider.id),
+                      },
+                    ]}
+                  />
+                </Td>
               </Tr>
             ))}
           </Tbody>
@@ -372,6 +511,70 @@ const IdentityProvider: React.FunctionComponent<IdentityProviderProps> = ({ show
             Add Provider
           </Button>{' '}
           <Button variant="link" onClick={handleModalClose}>
+            Cancel
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        variant={ModalVariant.medium}
+        title="Configure automatic sync"
+        isOpen={isConfigureSyncModalOpen}
+        onClose={() => setIsConfigureSyncModalOpen(false)}
+      >
+        <Form>
+          <FormGroup label="Enable automatic sync" fieldId="sync-enabled">
+            <Switch
+              id="sync-enabled"
+              label="Enabled"
+              labelOff="Disabled"
+              isChecked={syncEnabled}
+              onChange={(_event, checked) => setSyncEnabled(checked)}
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem>
+                  When enabled, the identity provider will automatically sync on the specified schedule.
+                </HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+          
+          <FormGroup label="Sync schedule (Cron expression)" isRequired fieldId="sync-schedule">
+            <TextInput
+              isRequired
+              type="text"
+              id="sync-schedule"
+              name="sync-schedule"
+              value={syncSchedule}
+              onChange={(_event, value) => setSyncSchedule(value)}
+              placeholder="0 0 * * *"
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem>
+                  Enter a cron expression to define when the sync should occur. Example: "0 0 * * *" runs daily at midnight.
+                </HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+
+          <FormGroup label="Common examples" fieldId="examples">
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem>• <strong>0 * * * *</strong> - Every hour</HelperTextItem>
+                <HelperTextItem>• <strong>0 0 * * *</strong> - Daily at midnight</HelperTextItem>
+                <HelperTextItem>• <strong>0 0 * * 0</strong> - Weekly on Sunday at midnight</HelperTextItem>
+                <HelperTextItem>• <strong>0 0 1 * *</strong> - Monthly on the 1st at midnight</HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+        </Form>
+        <div className="pf-v6-u-mt-md">
+          <Button variant="primary" onClick={handleSaveAutoSync}>
+            Save configuration
+          </Button>{' '}
+          <Button variant="link" onClick={() => setIsConfigureSyncModalOpen(false)}>
             Cancel
           </Button>
         </div>
