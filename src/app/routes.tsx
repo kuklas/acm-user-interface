@@ -89,15 +89,10 @@ const routes: AppRouteConfig[] = [
     ],
   },
   {
+    element: <Dashboard />,
     label: 'Search',
-    routes: [
-      {
-        element: <Dashboard />,
-        label: 'Search',
-        path: '/search',
-        title: 'ACM | Search',
-      },
-    ],
+    path: '/search',
+    title: 'ACM | Search',
   },
   {
     label: 'Infrastructure',
