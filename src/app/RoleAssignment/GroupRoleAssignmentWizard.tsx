@@ -1143,81 +1143,113 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             flexShrink: 0,
             margin: 0
           }}>
-            {renderStepIndicator(1, 'Select resources')}
+            {renderStepIndicator(1, 'Scope')}
             
-            {/* Substeps for cluster-sets */}
-            {currentStep === 1 && resourceScope === 'cluster-sets' && (
+            {/* Substeps for cluster-sets - keep visible even on later steps */}
+            {resourceScope === 'cluster-sets' && (
               <>
-                {(showScopeSelection || showProjectSelection) && (
+                {/* Show "Select cluster sets" substep when cluster sets option is selected */}
+                {selectedClusterSets.length >= 0 && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
-                    {showScopeSelection && (
                     <div style={{ 
                       padding: '0.5rem 0.75rem',
                       fontSize: '14px',
                       color: '#6a6e73',
                       cursor: 'default',
-                        backgroundColor: showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
+                      backgroundColor: currentStep === 1 && !showScopeSelection ? '#f5f5f5' : 'transparent',
                       borderRadius: '4px',
                       marginBottom: '0'
                     }}>
-                        Choose access level
+                      Select cluster sets
                     </div>
-                    )}
-                    {showProjectSelection && (
-                      <div style={{ 
-                        padding: '0.5rem 0.75rem',
-                        fontSize: '14px',
-                        color: '#6a6e73',
-                        cursor: 'default',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
-                        marginBottom: '0'
-                      }}>
-                        Choose cluster-level access
-                      </div>
-                    )}
                   </div>
                 )}
-              </>
-            )}
-            
-            {/* Substeps for clusters */}
-            {currentStep === 1 && resourceScope === 'clusters' && (
-              <>
-                {(showScopeSelection || showProjectSelection) && (
+                {showScopeSelection && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
-                    {showScopeSelection && (
-                      <div style={{ 
-                        padding: '0.5rem 0.75rem',
-                        fontSize: '14px',
-                        color: '#6a6e73',
-                        cursor: 'default',
-                        backgroundColor: showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
-                        borderRadius: '4px',
-                        marginBottom: '0'
-                      }}>
-                        Choose access level
-                      </div>
-                    )}
-                    {showProjectSelection && (
-                      <div style={{ 
-                        padding: '0.5rem 0.75rem',
-                        fontSize: '14px',
-                        color: '#6a6e73',
-                        cursor: 'default',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
-                        marginBottom: '0'
-                      }}>
-                        Select projects
-                      </div>
-                    )}
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: currentStep === 1 && showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Define cluster set granularity
+                    </div>
+                  </div>
+                )}
+                {showProjectSelection && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: currentStep === 1 ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Define cluster granularity
+                    </div>
                   </div>
                 )}
               </>
             )}
             
-            {renderStepIndicator(2, 'Select role')}
+            {/* Substeps for clusters - keep visible even on later steps */}
+            {resourceScope === 'clusters' && (
+              <>
+                {/* Show "Select clusters" substep when clusters option is selected */}
+                {selectedClusters.length >= 0 && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: currentStep === 1 && !showScopeSelection ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Select clusters
+                    </div>
+                  </div>
+                )}
+                {showScopeSelection && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: currentStep === 1 && showScopeSelection && !showProjectSelection ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Define cluster granularity
+                    </div>
+                  </div>
+                )}
+                {showProjectSelection && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: currentStep === 1 ? '#f5f5f5' : 'transparent',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Select projects
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {renderStepIndicator(2, 'Roles')}
             {renderStepIndicator(3, 'Review')}
           </div>
           
@@ -1251,7 +1283,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
-                Select resources
+                Scope
             </Title>
               <Button 
                 variant="link" 
@@ -1261,8 +1293,11 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 View examples
               </Button>
             </div>
-            <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+            <Content component="p" style={{ marginBottom: '8px', color: '#6a6e73', fontSize: '14px' }}>
                   Define the scope of access by selecting which resources this role will apply to.
+            </Content>
+            <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '13px', fontWeight: 500 }}>
+                  Select one option:
             </Content>
 
               <Dropdown
@@ -1302,7 +1337,12 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     }}
                       description="Grant access to all resources across all clusters registered in ACM"
                     >
-                      Global access
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span>Global access</span>
+                        {resourceScope === 'everything' && (
+                          <span style={{ color: '#0066cc', marginLeft: '8px' }}>✓</span>
+                        )}
+                      </div>
                     </DropdownItem>
                     <DropdownItem
                       key="cluster-sets"
@@ -1317,7 +1357,12 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                       }}
                       description="Grant access to 1 or more cluster sets. Optionally, narrow this access to specific clusters and projects."
                     >
-                      Select cluster sets
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span>Select cluster sets</span>
+                        {resourceScope === 'cluster-sets' && (
+                          <span style={{ color: '#0066cc', marginLeft: '8px' }}>✓</span>
+                        )}
+                      </div>
                   </DropdownItem>
                   <DropdownItem
                     key="clusters"
@@ -1332,7 +1377,12 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     }}
                       description="Grant access to 1 or more clusters. Optionally, narrow this access to projects."
                   >
-                      Select clusters
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span>Select clusters</span>
+                        {resourceScope === 'clusters' && (
+                          <span style={{ color: '#0066cc', marginLeft: '8px' }}>✓</span>
+                        )}
+                      </div>
                   </DropdownItem>
                 </DropdownList>
               </Dropdown>
@@ -1814,7 +1864,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               return (
               <div key="cluster-level-access-selection">
                 <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
-                  Choose cluster-level access
+                  Define cluster granularity
                 </Title>
                 <Content component="p" style={{ marginBottom: '24px', color: '#6a6e73', fontSize: '14px' }}>
                   Define the level of access for the {selectedClusters.length} selected cluster{selectedClusters.length > 1 ? 's' : ''}.
@@ -2317,7 +2367,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         {currentStep === 2 && (
           <>
             <Title headingLevel="h2" size="xl" style={{ marginBottom: '8px' }}>
-              Select role
+              Roles
             </Title>
             <Content component="p" style={{ marginBottom: 'var(--pf-t--global--spacer--md)', color: '#6a6e73' }}>
               Choose a role to assign. Need a custom role?{' '}
