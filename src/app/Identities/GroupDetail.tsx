@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Title,
   Tabs,
@@ -44,15 +44,14 @@ import {
 import { CubesIcon, FilterIcon, InfoCircleIcon, EllipsisVIcon, CheckIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
-import { GroupRoleAssignmentWizard } from '@app/RoleAssignment/GroupRoleAssignmentWizard';
 import { getAllGroups, getUsersByGroup, getAllClusters, getAllClusterSets, getAllNamespaces } from '@app/data';
 
 const GroupDetail: React.FunctionComponent = () => {
   const { groupName } = useParams<{ groupName: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
-  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   const [page, setPage] = React.useState(1);
@@ -77,12 +76,97 @@ const GroupDetail: React.FunctionComponent = () => {
   
   useDocumentTitle(`ACM | ${groupName}`);
 
+  // Check if we're returning from wizard with success
+  React.useEffect(() => {
+    if (location.state?.roleAssignmentCreated && location.state?.wizardData) {
+      const wizardData = location.state.wizardData;
+      
+      // Get data from database
+      const allClusters = getAllClusters();
+      const allClusterSets = getAllClusterSets();
+      const allNamespaces = getAllNamespaces();
+      
+      // Extract cluster names and project names from wizard data
+      const clusterNames: string[] = [];
+      const projectNames: string[] = [];
+      
+      if (wizardData.primaryScope === 'everything') {
+        clusterNames.push('All resources');
+        projectNames.push('All projects');
+      } else if (wizardData.resourceScope === 'cluster-set') {
+        // Handle cluster sets
+        if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
+          const clusterSetNames = wizardData.selectedClusterSets
+            .map((id: number) => allClusterSets.find(cs => cs.id === id)?.name)
+            .filter(Boolean);
+          clusterNames.push(...clusterSetNames);
+          projectNames.push('All projects');
+        }
+      } else if (wizardData.resourceScope === 'clusters') {
+        // Handle individual clusters
+        if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+          const selectedClusterNames = wizardData.selectedClusters
+            .map((id: number) => allClusters.find(c => c.id === id)?.name)
+            .filter(Boolean);
+          clusterNames.push(...selectedClusterNames);
+          projectNames.push('All projects');
+        }
+      } else if (wizardData.resourceScope === 'projects' || wizardData.resourceScope === 'common-project') {
+        // Handle projects
+        if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+          const selectedProjectNames = wizardData.selectedProjects
+            .map((id: number) => allNamespaces.find(n => n.id === id)?.name)
+            .filter(Boolean);
+          projectNames.push(...selectedProjectNames);
+          
+          // Get cluster name for single cluster projects
+          if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+            const clusterName = allClusters.find(c => c.id === wizardData.selectedClusters[0])?.name;
+            if (clusterName) {
+              clusterNames.push(clusterName);
+            }
+          }
+        }
+      }
+      
+      // Create new role assignment
+      const newAssignment: RoleAssignment = {
+        id: `ra-${Date.now()}`,
+        name: groupName || 'Unknown Group',
+        type: 'Group',
+        clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
+        namespaces: projectNames.length > 0 ? projectNames : ['All projects'],
+        roles: [wizardData.roleName || 'Unknown Role'],
+        status: 'Active',
+        assignedDate: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        }),
+        assignedBy: 'Walter Joseph Kovacs',
+        origin: 'Hub cluster',
+      };
+      
+      setRoleAssignments([...roleAssignments, newAssignment]);
+      setShowSuccessAlert(true);
+      
+      // Clear the state so it doesn't show again on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate, groupName, roleAssignments]);
+
   const handleTabClick = (_event: React.MouseEvent<HTMLElement, MouseEvent>, tabIndex: string | number) => {
     setActiveTabKey(tabIndex);
   };
 
   const handleCreateRoleAssignment = () => {
-    setIsWizardOpen(true);
+    navigate(`/user-management/groups/${groupName}/create-role-assignment`, {
+      state: { returnPath: `/user-management/groups/${groupName}` }
+    });
   };
 
   const onSetPage = (_event: React.MouseEvent | React.KeyboardEvent | MouseEvent, newPage: number) => {
@@ -93,91 +177,6 @@ const GroupDetail: React.FunctionComponent = () => {
     setPerPage(newPerPage);
   };
 
-  const handleWizardComplete = (wizardData: any) => {
-    // Get data from database
-    const allClusters = getAllClusters();
-    const allClusterSets = getAllClusterSets();
-    const allNamespaces = getAllNamespaces();
-    
-    // Extract cluster names and project names from wizard data
-    const clusterNames: string[] = [];
-    const projectNames: string[] = [];
-    
-    if (wizardData.resourceScope === 'everything') {
-      clusterNames.push('All resources');
-      projectNames.push('All projects');
-    } else if (wizardData.resourceScope === 'cluster-sets') {
-      // Handle cluster sets
-      if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
-        const clusterSetNames = wizardData.selectedClusterSets
-          .map((id: string) => allClusterSets.find(cs => cs.id === id)?.name)
-          .filter(Boolean);
-        clusterNames.push(...clusterSetNames);
-        
-        if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
-          const selectedClusterNames = wizardData.selectedClusters
-            .map((id: string) => allClusters.find(c => c.id === id)?.name)
-            .filter(Boolean);
-          clusterNames.length = 0; // Clear cluster set names
-          clusterNames.push(...selectedClusterNames);
-          
-          if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
-            const selectedProjectNames = wizardData.selectedProjects
-              .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
-              .filter(Boolean);
-            projectNames.push(...selectedProjectNames);
-          } else {
-            projectNames.push('All projects');
-          }
-        } else {
-          projectNames.push('All projects');
-        }
-      }
-    } else if (wizardData.resourceScope === 'clusters') {
-      // Handle individual clusters
-      if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
-        const selectedClusterNames = wizardData.selectedClusters
-          .map((id: string) => allClusters.find(c => c.id === id)?.name)
-          .filter(Boolean);
-        clusterNames.push(...selectedClusterNames);
-        
-        if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
-          const selectedProjectNames = wizardData.selectedProjects
-            .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
-            .filter(Boolean);
-          projectNames.push(...selectedProjectNames);
-        } else {
-          projectNames.push('All projects');
-        }
-      }
-    }
-    
-    // Create new role assignment
-    const newAssignment: RoleAssignment = {
-      id: `ra-${Date.now()}`,
-      name: groupName || 'Unknown Group',
-      type: 'Group',
-      clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
-      namespaces: projectNames.length > 0 ? projectNames : ['All projects'],
-      roles: [wizardData.roleName || 'Unknown Role'],
-      status: 'Active',
-      assignedDate: new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-      }),
-      assignedBy: 'Walter Joseph Kovacs',
-      origin: 'Hub cluster',
-    };
-    
-    setRoleAssignments([...roleAssignments, newAssignment]);
-    setIsWizardOpen(false);
-    setShowSuccessAlert(true);
-  };
 
   const DetailsTab = () => {
     // Get group data from centralized database
@@ -892,13 +891,6 @@ users:
           {activeTabKey === 3 && <UsersTab />}
         </div>
       </div>
-
-      <GroupRoleAssignmentWizard 
-        isOpen={isWizardOpen} 
-        onClose={() => setIsWizardOpen(false)}
-        onComplete={handleWizardComplete}
-        groupName={groupName || 'Unknown'}
-      />
 
       {/* Success Alert */}
       <AlertGroup isToast isLiveRegion>

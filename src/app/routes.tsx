@@ -11,6 +11,7 @@ import { RoleDetail } from '@app/Roles/RoleDetail';
 import { IdentityProviderDetail } from '@app/IdentityProvider/IdentityProviderDetail';
 import { AddLDAPProvider } from '@app/IdentityProvider/AddLDAPProvider';
 import { ProjectDetail } from '@app/Projects/ProjectDetail';
+import { GroupRoleAssignmentWizardPage } from '@app/RoleAssignment/GroupRoleAssignmentWizardPage';
 import { VirtualMachines } from '@app/VirtualMachines/VirtualMachines';
 import { HubVirtualMachines } from '@app/CorePlatforms/HubVirtualMachines';
 import { NotFound } from '@app/NotFound/NotFound';
@@ -196,6 +197,11 @@ const routes: AppRouteConfig[] = [
         element: <GroupDetail />,
         path: '/user-management/groups/:groupName',
         title: 'ACM | Group Detail',
+      },
+      {
+        element: <GroupRoleAssignmentWizardPage />,
+        path: '/user-management/groups/:groupName/create-role-assignment',
+        title: 'ACM | Create Role Assignment',
       },
       {
         element: <IdentityDetail />,

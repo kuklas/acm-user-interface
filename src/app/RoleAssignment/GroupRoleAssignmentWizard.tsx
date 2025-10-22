@@ -31,9 +31,11 @@ import {
   EmptyStateBody,
   ToggleGroup,
   ToggleGroupItem,
+  Card,
+  CardBody,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, FilterIcon } from '@patternfly/react-icons';
+import { CaretDownIcon, CheckCircleIcon, CircleIcon, AngleLeftIcon, AngleRightIcon, ResourcesEmptyIcon, TimesIcon, FilterIcon, GlobeIcon, CubesIcon, ServerIcon, FolderIcon, FolderOpenIcon } from '@patternfly/react-icons';
 import { getAllUsers, getAllGroups, getAllRoles, getAllClusters, getAllNamespaces, getAllClusterSets } from '@app/data';
 
 const dbUsers = getAllUsers();
@@ -108,9 +110,17 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const [clustersPage, setClustersPage] = React.useState(1);
   const [clustersPerPage, setClustersPerPage] = React.useState(10);
   
-  // Step 1: Resources - Hierarchical structure for Group wizard
-  const [resourceScope, setResourceScope] = React.useState<'everything' | 'cluster-sets' | 'clusters'>('everything');
+  // Step 1: Resources - Hierarchical progressive disclosure (default to scoped/clusters as most common)
+  const [primaryScope, setPrimaryScope] = React.useState<'everything' | 'scoped'>('scoped');
+  const [resourceScope, setResourceScope] = React.useState<'everything' | 'cluster-set' | 'clusters' | 'projects' | 'common-project'>('clusters');
   const [isResourceScopeOpen, setIsResourceScopeOpen] = React.useState(false);
+  
+  // For "Specific project(s)" - selected cluster for filtering projects
+  const [selectedProjectCluster, setSelectedProjectCluster] = React.useState<number | null>(null);
+  const [isProjectClusterDropdownOpen, setIsProjectClusterDropdownOpen] = React.useState(false);
+  
+  // For "Common projects" - track which cluster combination is being used
+  const [lockedClusterCombination, setLockedClusterCombination] = React.useState<string[] | null>(null);
   
   // Cluster sets selection
   const [selectedClusterSets, setSelectedClusterSets] = React.useState<number[]>([]);
@@ -138,9 +148,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const [isProjectFilterOpen, setIsProjectFilterOpen] = React.useState(false);
   const [projectFilterType, setProjectFilterType] = React.useState('Name');
   
-  // Substep tracking
+  // Substep tracking (showClusterSelection true by default since clusters is the default)
   const [showClusterSetSelection, setShowClusterSetSelection] = React.useState(false);
-  const [showClusterSelection, setShowClusterSelection] = React.useState(false);
+  const [showClusterSelection, setShowClusterSelection] = React.useState(true);
   const [showScopeSelection, setShowScopeSelection] = React.useState(false);
   const [showProjectSelection, setShowProjectSelection] = React.useState(false);
   
@@ -226,7 +236,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
       if (resourceScope === 'everything') {
         // No substeps needed, go directly to step 2 (role selection)
         setCurrentStep(2);
-      } else if (resourceScope === 'cluster-sets') {
+      } else if (resourceScope === 'cluster-set') {
         if (selectedClusterSets.length > 0 && !showScopeSelection) {
           // Cluster sets selected, show scope selection (full vs partial access)
           setShowScopeSelection(true);
@@ -254,6 +264,16 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           setCurrentStep(2);
         } else if (showScopeSelection && clusterScope === 'projects' && selectedProjects.length > 0) {
           // User chose partial access and selected projects, move to next step
+          setCurrentStep(2);
+        }
+      } else if (resourceScope === 'projects') {
+        // Projects table shows immediately, just need to have at least one selected
+        if (selectedProjects.length > 0) {
+          setCurrentStep(2);
+        }
+      } else if (resourceScope === 'common-project') {
+        // Common projects table shows immediately, just need to have at least one selected
+        if (selectedProjects.length > 0) {
           setCurrentStep(2);
         }
       }
@@ -309,8 +329,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         // Step 1: Resources - 'everything' doesn't require any selection
         if (resourceScope === 'everything') return false;
         
-        // For 'cluster-sets' path
-        if (resourceScope === 'cluster-sets') {
+        // For 'cluster-set' path (single cluster set)
+        if (resourceScope === 'cluster-set') {
           // Must select at least one cluster set
           if (!showScopeSelection && selectedClusterSets.length === 0) return true;
           // If scope selection shown with "everything", allow Next
@@ -331,7 +351,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           return false;
         }
         
-        // For 'clusters' path
+        // For 'clusters' path (with access level choice)
       if (resourceScope === 'clusters') {
           // Must select at least one cluster
           if (selectedClusters.length === 0) return true;
@@ -340,6 +360,20 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           // If partial access (projects) is selected, must select at least one project
           if (showScopeSelection && clusterScope === 'projects' && selectedProjects.length === 0) return true;
           return false;
+        }
+        
+        // For 'projects' path (specific projects - must select cluster first, then projects)
+        if (resourceScope === 'projects') {
+          // Must select a cluster first
+          if (!selectedProjectCluster) return true;
+          // Then must select at least one project
+          return selectedProjects.length === 0;
+        }
+        
+        // For 'common-project' path (common projects - table shows immediately)
+        if (resourceScope === 'common-project') {
+          // Must select at least one common project
+          return selectedProjects.length === 0;
         }
         
       return false;
@@ -1145,8 +1179,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
           }}>
             {renderStepIndicator(1, 'Select resources')}
             
-            {/* Substeps for cluster-sets */}
-            {currentStep === 1 && resourceScope === 'cluster-sets' && (
+            {/* Substeps for cluster-set */}
+            {currentStep === 1 && resourceScope === 'cluster-set' && (
               <>
                 {(showScopeSelection || showProjectSelection) && (
                   <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
@@ -1217,6 +1251,48 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </>
             )}
             
+            {/* Substeps for projects */}
+            {currentStep === 1 && resourceScope === 'projects' && (
+              <>
+                {showProjectSelection && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Select projects
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Substeps for common-project */}
+            {currentStep === 1 && resourceScope === 'common-project' && (
+              <>
+                {showProjectSelection && (
+                  <div style={{ marginLeft: '3.5rem', marginTop: '0', marginBottom: '0.5rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '14px',
+                      color: '#6a6e73',
+                      cursor: 'default',
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '4px',
+                      marginBottom: '0'
+                    }}>
+                      Select common projects
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
             {renderStepIndicator(2, 'Select role')}
             {renderStepIndicator(3, 'Review')}
           </div>
@@ -1246,9 +1322,6 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
         {/* Step 1: Select Resources */}
         {currentStep === 1 && (
           <>
-            {/* Only show title, description, and initial dropdown when NOT in any substep */}
-            {!showClusterSetSelection && !showScopeSelection && (
-          <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <Title headingLevel="h2" size="xl" style={{ margin: 0 }}>
                 Select resources
@@ -1262,83 +1335,309 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
               </Button>
             </div>
             <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
-                  Define the scope of access by selecting which resources this role will apply to.
+              Choose the level of access for this group.
             </Content>
 
-              <Dropdown
-                isOpen={isResourceScopeOpen}
-                onSelect={() => setIsResourceScopeOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsResourceScopeOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle 
-                    ref={toggleRef} 
-                    onClick={() => setIsResourceScopeOpen(!isResourceScopeOpen)} 
-                    isExpanded={isResourceScopeOpen}
-                    variant="default"
-                    style={{ width: '100%' }}
-                  >
-                      {resourceScope === 'everything' && 'Global access'}
-                      {resourceScope === 'cluster-sets' && 'Select cluster sets'}
-                      {resourceScope === 'clusters' && 'Select clusters'}
-                  </MenuToggle>
-                )}
-                shouldFocusToggleOnSelect
-                popperProps={{
-                  appendTo: () => document.body,
-                  
-                  
+            {/* Show selection status hint */}
+            {(selectedClusterSets.length > 0 || selectedClusters.length > 0 || selectedProjects.length > 0 || selectedProjectCluster || lockedClusterCombination) && (
+              <Content component="p" style={{ fontSize: '14px', color: '#06c', marginBottom: '12px', fontWeight: 500 }}>
+                {resourceScope === 'cluster-set' && selectedClusterSets.length > 0 && `✓ ${selectedClusterSets.length} cluster set selected`}
+                {resourceScope === 'clusters' && selectedClusters.length > 0 && `✓ ${selectedClusters.length} cluster${selectedClusters.length > 1 ? 's' : ''} selected`}
+                {resourceScope === 'projects' && selectedProjectCluster && selectedProjects.length === 0 && `✓ Cluster selected: ${mockClusters.find(c => c.id === selectedProjectCluster)?.name}`}
+                {resourceScope === 'projects' && selectedProjects.length > 0 && `✓ ${selectedProjects.length} project${selectedProjects.length > 1 ? 's' : ''} selected from ${mockClusters.find(c => c.id === selectedProjectCluster)?.name}`}
+                {resourceScope === 'common-project' && lockedClusterCombination && `✓ Locked to: ${lockedClusterCombination.join(', ')} (${selectedProjects.length} selected)`}
+                {resourceScope === 'common-project' && !lockedClusterCombination && selectedProjects.length > 0 && `✓ ${selectedProjects.length} common project${selectedProjects.length > 1 ? 's' : ''} selected`}
+              </Content>
+            )}
+
+            {/* Step 1: Primary scope selection - 2 main options (scoped first as most common) */}
+            <div style={{ marginBottom: '24px' }}>
+              
+              {/* Primary Option 1: Scoped access (most common - shown first and pre-selected) */}
+              <Card
+                isClickable
+                isSelectable
+                isSelected={primaryScope === 'scoped'}
+                onClick={() => {
+                  setPrimaryScope('scoped');
+                  // Set default to clusters if nothing selected yet
+                  if (resourceScope === 'everything') {
+                    setResourceScope('clusters');
+                    setShowClusterSelection(true);
+                  }
                 }}
+                style={{ cursor: 'pointer', marginBottom: '12px' }}
               >
-                <DropdownList>
-                    <DropdownItem
-                      key="everything"
+                <CardBody style={{ padding: '12px 16px' }}>
+                  <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                    <FlexItem>
+                      <Radio
+                        id="radio-primary-scoped"
+                        name="primary-scope"
+                        isChecked={primaryScope === 'scoped'}
+                        onChange={() => {}}
+                      />
+                    </FlexItem>
+                    <FlexItem flex={{ default: 'flex_1' }}>
+                      <div>
+                        <Content component="p" style={{ fontWeight: 600, margin: 0, fontSize: '14px' }}>
+                          Scoped access (select specific resources)
+                        </Content>
+                        <Content component="p" style={{ fontSize: '13px', color: '#6a6e73', margin: 0, marginTop: '2px' }}>
+                          Grant access to specific cluster sets, clusters, or projects
+                        </Content>
+                      </div>
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+
+              {/* Show resource type options directly below when "Scoped access" is selected */}
+              {primaryScope === 'scoped' && (
+              <div style={{ 
+                marginLeft: '32px', 
+                marginBottom: '24px',
+                paddingLeft: '16px',
+                borderLeft: '2px solid #06c'
+              }}>
+                {/* Group 1: Multi-cluster scope */}
+                <div style={{ marginBottom: '20px' }}>
+                  <Content component="p" style={{ 
+                    fontSize: '12px', 
+                    fontWeight: 600, 
+                    color: '#6a6e73', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.5px',
+                    marginBottom: '10px' 
+                  }}>
+                    Multi-cluster scope
+                  </Content>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Cluster set level option */}
+                    <Card
+                      isClickable
+                      isSelectable
+                      isSelected={resourceScope === 'cluster-set'}
                       onClick={() => {
-                      setResourceScope('everything');
-                      setSelectedClusterSets([]);
-                      setSelectedClusters([]);
-                      setSelectedProjects([]);
-                      setShowScopeSelection(false);
-                      setIsResourceScopeOpen(false);
-                    }}
-                      description="Grant access to all resources across all clusters registered in ACM"
-                    >
-                      Global access
-                    </DropdownItem>
-                    <DropdownItem
-                      key="cluster-sets"
-                      onClick={() => {
-                        setResourceScope('cluster-sets');
+                        setResourceScope('cluster-set');
                         setSelectedClusterSets([]);
                         setSelectedClusters([]);
                         setSelectedProjects([]);
+                        setShowClusterSetSelection(true);
+                        setShowClusterSelection(false);
                         setShowScopeSelection(false);
-                        setClusterSetScope('everything'); // Reset to default
-                        setIsResourceScopeOpen(false);
+                        setShowProjectSelection(false);
+                        setSelectedProjectCluster(null);
+                        setLockedClusterCombination(null);
                       }}
-                      description="Grant access to 1 or more cluster sets. Optionally, narrow this access to specific clusters and projects."
+                      style={{ cursor: 'pointer' }}
                     >
-                      Select cluster sets
-                  </DropdownItem>
-                  <DropdownItem
-                    key="clusters"
-                    onClick={() => {
-                      setResourceScope('clusters');
+                      <CardBody style={{ padding: '10px 14px' }}>
+                        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                          <FlexItem>
+                            <Radio
+                              id="radio-cluster-set"
+                              name="resource-scope"
+                              isChecked={resourceScope === 'cluster-set'}
+                              onChange={() => {}}
+                            />
+                          </FlexItem>
+                          <FlexItem flex={{ default: 'flex_1' }}>
+                            <Content component="p" style={{ fontWeight: 500, margin: 0, fontSize: '13px' }}>
+                              Cluster set level — Grant access to all clusters within a cluster set
+                            </Content>
+                          </FlexItem>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+
+                    {/* Common projects (multiple clusters) option */}
+                    <Card
+                      isClickable
+                      isSelectable
+                      isSelected={resourceScope === 'common-project'}
+                      onClick={() => {
+                        setResourceScope('common-project');
                         setSelectedClusterSets([]);
-                      setSelectedClusters([]);
-                      setSelectedProjects([]);
-                      setShowScopeSelection(false);
-                        setClusterScope('everything'); // Reset to default
-                      setIsResourceScopeOpen(false);
-                    }}
-                      description="Grant access to 1 or more clusters. Optionally, narrow this access to projects."
-                  >
-                      Select clusters
-                  </DropdownItem>
-                </DropdownList>
-              </Dropdown>
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setShowClusterSetSelection(false);
+                        setShowClusterSelection(false);
+                        setShowScopeSelection(false);
+                        setShowProjectSelection(false);
+                        setSelectedProjectCluster(null);
+                        setLockedClusterCombination(null);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CardBody style={{ padding: '10px 14px' }}>
+                        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                          <FlexItem>
+                            <Radio
+                              id="radio-common-project"
+                              name="resource-scope"
+                              isChecked={resourceScope === 'common-project'}
+                              onChange={() => {}}
+                            />
+                          </FlexItem>
+                          <FlexItem flex={{ default: 'flex_1' }}>
+                            <Content component="p" style={{ fontWeight: 500, margin: 0, fontSize: '13px' }}>
+                              Common projects — Grant access to projects across multiple clusters
+                            </Content>
+                          </FlexItem>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Subtle divider between groups */}
+                <div style={{ 
+                  height: '1px', 
+                  backgroundColor: '#d2d2d2', 
+                  margin: '20px 0' 
+                }} />
+
+                {/* Group 2: Single-cluster scope */}
+                <div>
+                  <Content component="p" style={{ 
+                    fontSize: '12px', 
+                    fontWeight: 600, 
+                    color: '#6a6e73', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.5px',
+                    marginBottom: '10px' 
+                  }}>
+                    Single-cluster scope
+                  </Content>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Cluster level option */}
+                    <Card
+                      isClickable
+                      isSelectable
+                      isSelected={resourceScope === 'clusters'}
+                      onClick={() => {
+                        setResourceScope('clusters');
+                        setSelectedClusterSets([]);
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setShowClusterSetSelection(false);
+                        setShowClusterSelection(true);
+                        setShowScopeSelection(false);
+                        setShowProjectSelection(false);
+                        setSelectedProjectCluster(null);
+                        setLockedClusterCombination(null);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CardBody style={{ padding: '10px 14px' }}>
+                        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                          <FlexItem>
+                            <Radio
+                              id="radio-clusters"
+                              name="resource-scope"
+                              isChecked={resourceScope === 'clusters'}
+                              onChange={() => {}}
+                            />
+                          </FlexItem>
+                          <FlexItem flex={{ default: 'flex_1' }}>
+                            <Content component="p" style={{ fontWeight: 500, margin: 0, fontSize: '13px' }}>
+                              Cluster level — Grant access to one or more specific clusters
+                            </Content>
+                          </FlexItem>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+
+                    {/* Specific projects (single cluster) option */}
+                    <Card
+                      isClickable
+                      isSelectable
+                      isSelected={resourceScope === 'projects'}
+                      onClick={() => {
+                        setResourceScope('projects');
+                        setSelectedClusterSets([]);
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setShowClusterSetSelection(false);
+                        setShowClusterSelection(false);
+                        setShowScopeSelection(false);
+                        setShowProjectSelection(false);
+                        setSelectedProjectCluster(null);
+                        setLockedClusterCombination(null);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CardBody style={{ padding: '10px 14px' }}>
+                        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                          <FlexItem>
+                            <Radio
+                              id="radio-projects"
+                              name="resource-scope"
+                              isChecked={resourceScope === 'projects'}
+                              onChange={() => {}}
+                            />
+                          </FlexItem>
+                          <FlexItem flex={{ default: 'flex_1' }}>
+                            <Content component="p" style={{ fontWeight: 500, margin: 0, fontSize: '13px' }}>
+                              Project level — Grant access to specific projects from a cluster
+                            </Content>
+                          </FlexItem>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+              )}
+
+              {/* Primary Option 2: Everything (less common - shown second) */}
+              <Card
+                isClickable
+                isSelectable
+                isSelected={primaryScope === 'everything'}
+                onClick={() => {
+                  setPrimaryScope('everything');
+                  setResourceScope('everything');
+                  setSelectedClusterSets([]);
+                  setSelectedClusters([]);
+                  setSelectedProjects([]);
+                  setShowClusterSetSelection(false);
+                  setShowClusterSelection(false);
+                  setShowScopeSelection(false);
+                  setShowProjectSelection(false);
+                  setSelectedProjectCluster(null);
+                  setLockedClusterCombination(null);
+                }}
+                style={{ cursor: 'pointer', marginTop: '12px' }}
+              >
+                <CardBody style={{ padding: '12px 16px' }}>
+                  <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                    <FlexItem>
+                      <Radio
+                        id="radio-primary-everything"
+                        name="primary-scope"
+                        isChecked={primaryScope === 'everything'}
+                        onChange={() => {}}
+                      />
+                    </FlexItem>
+                    <FlexItem flex={{ default: 'flex_1' }}>
+                      <div>
+                        <Content component="p" style={{ fontWeight: 600, margin: 0, fontSize: '14px' }}>
+                          Everything in Fleet Management
+                        </Content>
+                        <Content component="p" style={{ fontSize: '13px', color: '#6a6e73', margin: 0, marginTop: '2px' }}>
+                          Grant full access to all resources registered in ACM
+                        </Content>
+                      </div>
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+            </div>
                 
-                {/* Cluster sets table - inline below dropdown */}
-                {resourceScope === 'cluster-sets' && (
+                {/* Cluster set table - inline below card selection */}
+                {resourceScope === 'cluster-set' && (
                   <div style={{ marginTop: '16px' }}>
                   <Toolbar>
                     <ToolbarContent>
@@ -1444,7 +1743,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 </div>
                 )}
               
-                {/* Clusters table - inline below dropdown */}
+                {/* Clusters table - inline below card selection (only for 'clusters' option) */}
                 {resourceScope === 'clusters' && (
                   <div style={{ marginTop: '16px' }}>
                   <Toolbar>
@@ -1584,6 +1883,334 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 </div>
                 )}
 
+                {/* Projects table for 'projects' resource scope - appears immediately when card is selected */}
+                {resourceScope === 'projects' && (
+                  <div style={{ marginTop: '24px' }}>
+                    <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
+                      Select projects
+            </Title>
+            <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                      First, select which cluster you want to grant project-level access to.
+            </Content>
+
+                    {/* Cluster selector dropdown - required first */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <Label isRequired style={{ marginBottom: '8px', display: 'block' }}>Cluster</Label>
+              <Dropdown
+                        isOpen={isProjectClusterDropdownOpen}
+                        onSelect={() => setIsProjectClusterDropdownOpen(false)}
+                        onOpenChange={(isOpen: boolean) => setIsProjectClusterDropdownOpen(isOpen)}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                            onClick={() => setIsProjectClusterDropdownOpen(!isProjectClusterDropdownOpen)} 
+                            isExpanded={isProjectClusterDropdownOpen}
+                    variant="default"
+                            style={{ width: '300px' }}
+                  >
+                            {selectedProjectCluster 
+                              ? mockClusters.find(c => c.id === selectedProjectCluster)?.name 
+                              : 'Select a cluster'}
+                  </MenuToggle>
+                )}
+                popperProps={{
+                  appendTo: () => document.body,
+                }}
+              >
+                <DropdownList>
+                          {mockClusters.map((cluster) => (
+                  <DropdownItem
+                              key={cluster.id}
+                    onClick={() => {
+                                setSelectedProjectCluster(cluster.id);
+                                setSelectedProjects([]); // Clear any previous project selections
+                                setIsProjectClusterDropdownOpen(false);
+                              }}
+                            >
+                              {cluster.name}
+                  </DropdownItem>
+                          ))}
+                </DropdownList>
+              </Dropdown>
+                    </div>
+                    
+                    {/* Only show projects table after cluster is selected */}
+                    {selectedProjectCluster && (
+                      <>
+                        <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                          Select one or more projects from <strong>{mockClusters.find(c => c.id === selectedProjectCluster)?.name}</strong>.
+                  </Content>
+                    <Toolbar>
+                      <ToolbarContent>
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={isProjectFilterOpen}
+                            onSelect={() => setIsProjectFilterOpen(false)}
+                            onOpenChange={(isOpen: boolean) => setIsProjectFilterOpen(isOpen)}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle 
+                                ref={toggleRef} 
+                                onClick={() => setIsProjectFilterOpen(!isProjectFilterOpen)} 
+                                isExpanded={isProjectFilterOpen}
+                                variant="default"
+                              >
+                                {projectFilterType}
+                              </MenuToggle>
+                            )}
+                            popperProps={{
+                              appendTo: () => document.body,
+                            }}
+                          >
+                            <DropdownList>
+                              <DropdownItem onClick={() => { setProjectFilterType('Name'); setIsProjectFilterOpen(false); }}>
+                                Name
+                              </DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <SearchInput
+                            placeholder="Search projects"
+                            value={projectSearch}
+                            onChange={(_event, value) => setProjectSearch(value)}
+                            onClear={() => setProjectSearch('')}
+                          />
+                        </ToolbarItem>
+                        <ToolbarItem align={{ default: 'alignEnd' }}>
+                          <Pagination
+                            itemCount={mockProjects.filter(p => 
+                              p.clusterId === dbClusters.find(c => mockClusters.find(mc => mc.id === selectedProjectCluster)?.dbId === c.id)?.id &&
+                              p.name.toLowerCase().includes(projectSearch.toLowerCase())
+                            ).length}
+                            perPage={10}
+                            page={1}
+                            onSetPage={() => {}}
+                            onPerPageSelect={() => {}}
+                            variant="top"
+                            isCompact
+                          />
+                        </ToolbarItem>
+                      </ToolbarContent>
+                    </Toolbar>
+                    <Table aria-label="Projects table" variant="compact">
+                      <Thead>
+                        <Tr>
+                          <Th width={10}></Th>
+                          <Th>Project name</Th>
+                          <Th>Cluster</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {mockProjects
+                          .filter(p => 
+                            p.clusterId === dbClusters.find(c => mockClusters.find(mc => mc.id === selectedProjectCluster)?.dbId === c.id)?.id &&
+                            p.name.toLowerCase().includes(projectSearch.toLowerCase())
+                          )
+                          .map((project) => (
+                          <Tr
+                            key={project.id}
+                            isSelectable
+                            isClickable
+                            isRowSelected={selectedProjects.includes(project.id)}
+                            onRowClick={() => {
+                              if (selectedProjects.includes(project.id)) {
+                                setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                              } else {
+                                setSelectedProjects([...selectedProjects, project.id]);
+                              }
+                            }}
+                          >
+                            <Td>
+                              <Checkbox
+                                id={`project-${project.id}`}
+                                isChecked={selectedProjects.includes(project.id)}
+                                onChange={() => {
+                                  if (selectedProjects.includes(project.id)) {
+                                    setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                  } else {
+                                    setSelectedProjects([...selectedProjects, project.id]);
+                                  }
+                                }}
+                              />
+                            </Td>
+                            <Td dataLabel="Project name">{project.name}</Td>
+                            <Td dataLabel="Cluster">{project.clusterName}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                      </>
+                  )}
+                </div>
+                )}
+
+                {/* Projects table for 'common-project' resource scope - appears immediately when card is selected */}
+                {resourceScope === 'common-project' && (
+                  <div style={{ marginTop: '24px' }}>
+                    <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
+                      Select common projects
+                    </Title>
+                    {(() => {
+                      // Find projects that exist across multiple clusters (common projects)
+                      const projectsByName = mockProjects.reduce((acc, project) => {
+                        if (!acc[project.name]) {
+                          acc[project.name] = {
+                            name: project.name,
+                            clusters: [project.clusterName],
+                            ids: [project.id]
+                          };
+                        } else if (!acc[project.name].clusters.includes(project.clusterName)) {
+                          acc[project.name].clusters.push(project.clusterName);
+                          acc[project.name].ids.push(project.id);
+                        }
+                        return acc;
+                      }, {} as Record<string, { name: string; clusters: string[]; ids: number[] }>);
+                      
+                      // Only keep projects that exist on 2+ clusters
+                      let commonProjects = Object.values(projectsByName).filter(p => p.clusters.length >= 2);
+                      
+                      // If user has selected projects, filter to only show projects from the same cluster combination
+                      if (selectedProjects.length > 0 && !lockedClusterCombination) {
+                        // Lock in the cluster combination based on first selection
+                        const firstSelectedProject = commonProjects.find(p => p.ids.some(id => selectedProjects.includes(id)));
+                        if (firstSelectedProject) {
+                          setLockedClusterCombination(firstSelectedProject.clusters.sort());
+                        }
+                      }
+                      
+                      // Filter projects by locked cluster combination
+                      if (lockedClusterCombination) {
+                        commonProjects = commonProjects.filter(p => {
+                          const sortedClusters = p.clusters.slice().sort();
+                          return sortedClusters.length === lockedClusterCombination.length &&
+                                 sortedClusters.every((cluster, i) => cluster === lockedClusterCombination[i]);
+                        });
+                      }
+                      
+                      return (
+                      <>
+                        {/* Show alert when cluster combination is locked */}
+                        {lockedClusterCombination && selectedProjects.length > 0 && (
+                          <Alert 
+                            variant="info" 
+                            isInline 
+                            title="Cluster combination locked" 
+                            style={{ marginBottom: '16px' }}
+                          >
+                            <p>
+                              You've selected a project that exists on: <strong>{lockedClusterCombination.join(', ')}</strong>.
+                              {' '}Only common projects that exist on these same {lockedClusterCombination.length} clusters are shown below.
+                            </p>
+                            <Button 
+                              variant="link" 
+                              isInline 
+                              onClick={() => {
+                                setSelectedProjects([]);
+                                setLockedClusterCombination(null);
+                              }}
+                              style={{ paddingLeft: 0, marginTop: '8px' }}
+                            >
+                              Clear selection and choose different clusters
+                            </Button>
+                          </Alert>
+                        )}
+                        
+                        {commonProjects.length === 0 && !lockedClusterCombination && (
+                          <Alert variant="warning" isInline title="No common projects found" style={{ marginBottom: '16px' }}>
+                            <p>No projects with the same name were found across multiple clusters.</p>
+                          </Alert>
+                        )}
+                        
+                        {commonProjects.length === 0 && lockedClusterCombination && (
+                          <Alert variant="warning" isInline title="No more common projects" style={{ marginBottom: '16px' }}>
+                            <p>No other projects exist across the same {lockedClusterCombination.length} clusters ({lockedClusterCombination.join(', ')}).</p>
+                          </Alert>
+                        )}
+                        
+                        {commonProjects.length > 0 && (
+                          <>
+                            {!lockedClusterCombination && (
+                              <Content component="p" style={{ marginBottom: '16px', color: '#6a6e73', fontSize: '14px' }}>
+                                Projects that exist across multiple clusters ({commonProjects.length} found). Select a project to lock in the cluster combination.
+                              </Content>
+                            )}
+                            <Toolbar>
+                              <ToolbarContent>
+                                <ToolbarItem>
+                                  <SearchInput
+                                    placeholder="Search projects"
+                                    value={projectSearch}
+                                    onChange={(_event, value) => setProjectSearch(value)}
+                                    onClear={() => setProjectSearch('')}
+                                  />
+                                </ToolbarItem>
+                                <ToolbarItem align={{ default: 'alignEnd' }}>
+                                  <Pagination
+                                    itemCount={commonProjects.filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase())).length}
+                                    perPage={10}
+                                    page={1}
+                                    onSetPage={() => {}}
+                                    onPerPageSelect={() => {}}
+                                    variant="top"
+                                    isCompact
+                                  />
+                                </ToolbarItem>
+                              </ToolbarContent>
+                            </Toolbar>
+                            <Table aria-label="Common projects table" variant="compact">
+                              <Thead>
+                                <Tr>
+                                  <Th width={10}></Th>
+                                  <Th>Project name</Th>
+                                  <Th>Clusters</Th>
+                                </Tr>
+                              </Thead>
+                              <Tbody>
+                                {commonProjects
+                                  .filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase()))
+                                  .map((project, index) => (
+                                    <Tr
+                                      key={`common-${project.name}-${index}`}
+                                      isSelectable
+                                      isClickable
+                                      isRowSelected={project.ids.some(id => selectedProjects.includes(id))}
+                                      onRowClick={() => {
+                                        const firstId = project.ids[0];
+                                        if (selectedProjects.includes(firstId)) {
+                                          setSelectedProjects(selectedProjects.filter(id => !project.ids.includes(id)));
+                                        } else {
+                                          setSelectedProjects([...selectedProjects, ...project.ids]);
+                                        }
+                                      }}
+                                    >
+                                      <Td>
+                                        <Checkbox
+                                          id={`common-project-${project.name}-${index}`}
+                                          isChecked={project.ids.some(id => selectedProjects.includes(id))}
+                                          onChange={() => {
+                                            const firstId = project.ids[0];
+                                            if (selectedProjects.includes(firstId)) {
+                                              setSelectedProjects(selectedProjects.filter(id => !project.ids.includes(id)));
+                                            } else {
+                                              setSelectedProjects([...selectedProjects, ...project.ids]);
+                                            }
+                                          }}
+                                        />
+                                      </Td>
+                                      <Td dataLabel="Project name">{project.name}</Td>
+                                      <Td dataLabel="Clusters">{project.clusters.length} clusters: {project.clusters.join(', ')}</Td>
+                                    </Tr>
+                                  ))}
+                              </Tbody>
+                            </Table>
+                          </>
+                        )}
+                      </>
+                    );
+                    })()}
+                      </div>
+                )}
+
                 {/* Everything scope - no selection needed */}
                 {resourceScope === 'everything' && (
                   <>
@@ -1594,11 +2221,9 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                     {/* Tree view example for "Everything" */}
                   </>
                 )}
-              </>
-            )}
 
             {/* SUB-STEP 2: Choose Access Level - separate substep after selecting cluster sets */}
-            {resourceScope === 'cluster-sets' && showScopeSelection && !showProjectSelection && (() => {
+            {resourceScope === 'cluster-set' && showScopeSelection && !showProjectSelection && (() => {
               return (
               <div key="cluster-sets-scope-selection">
                 <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
@@ -1810,7 +2435,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
             })()}
 
             {/* SUB-STEP 3: Choose Cluster-Level Access - separate substep after selecting clusters */}
-            {resourceScope === 'cluster-sets' && showProjectSelection && selectedClusters.length > 0 && (() => {
+            {resourceScope === 'cluster-set' && showProjectSelection && selectedClusters.length > 0 && (() => {
               return (
               <div key="cluster-level-access-selection">
                 <Title headingLevel="h2" size="xl" style={{ marginBottom: '12px' }}>
@@ -2569,7 +3194,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                   </>
                 )}
                 
-                {resourceScope === 'cluster-sets' && (
+                {resourceScope === 'cluster-set' && (
                   <>
                     {selectedClusterSets.length > 0 && (
                   <>
@@ -2579,7 +3204,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                       fontWeight: 600,
                           color: '#151515'
                     }}>
-                          Cluster sets
+                          Cluster set
                     </Content>
                         <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '12px' }}>
                           {selectedClusterSets.map(id => mockClusterSets.find(cs => cs.id === id)?.name).filter(Boolean).join(', ')}
@@ -2637,7 +3262,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                           Access level
                         </Content>
                         <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                          Full access to all clusters in selected cluster sets
+                          Full access to all clusters in selected cluster set
                         </Content>
                       </>
                     )}
@@ -2647,11 +3272,11 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                 {resourceScope === 'clusters' && (
                   <>
                     {selectedClusters.length > 0 && (
-                      <>
-                        <Content component="p" style={{ 
-                          marginBottom: '4px', 
-                          fontSize: '14px', 
-                          fontWeight: 600,
+                  <>
+                    <Content component="p" style={{ 
+                      marginBottom: '4px', 
+                      fontSize: '14px', 
+                      fontWeight: 600,
                           color: '#151515'
                         }}>
                           Clusters
@@ -2678,6 +3303,82 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
                               return project?.name;
                             }).filter(Boolean).join(', ')
                           : 'None selected'
+                      }
+                    </Content>
+                  </>
+                )}
+
+                {resourceScope === 'projects' && (
+                  <>
+                    {selectedClusters.length > 0 && (
+                      <>
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                          color: '#151515'
+                        }}>
+                          Clusters
+                        </Content>
+                        <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '12px' }}>
+                          {selectedClusters.map(id => mockClusters.find(c => c.id === id)?.name).filter(Boolean).join(', ')}
+                        </Content>
+                      </>
+                    )}
+                    
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                      color: '#151515'
+                        }}>
+                          Projects
+                        </Content>
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                      {selectedProjects.length > 0 
+                        ? selectedProjects.map(id => {
+                            const project = mockProjects.find(p => p.id === id);
+                            return project?.name;
+                          }).filter(Boolean).join(', ')
+                        : 'None selected'
+                      }
+                        </Content>
+                      </>
+                    )}
+                
+                {resourceScope === 'common-project' && (
+                  <>
+                    {selectedClusters.length > 0 && (
+                      <>
+                        <Content component="p" style={{ 
+                          marginBottom: '4px', 
+                          fontSize: '14px', 
+                          fontWeight: 600,
+                          color: '#151515'
+                        }}>
+                          Clusters
+                        </Content>
+                        <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '12px' }}>
+                          {selectedClusters.map(id => mockClusters.find(c => c.id === id)?.name).filter(Boolean).join(', ')}
+                        </Content>
+                      </>
+                    )}
+                    
+                    <Content component="p" style={{ 
+                      marginBottom: '4px', 
+                      fontSize: '14px', 
+                      fontWeight: 600,
+                      color: '#151515'
+                    }}>
+                      Common projects
+                    </Content>
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                      {selectedProjects.length > 0 
+                        ? selectedProjects.map(id => {
+                            const project = mockProjects.find(p => p.id === id);
+                            return project?.name;
+                          }).filter(Boolean).join(', ')
+                        : 'None selected'
                       }
                     </Content>
                   </>
