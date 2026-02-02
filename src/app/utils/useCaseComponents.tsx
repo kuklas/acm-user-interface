@@ -14,7 +14,7 @@ import { GovernancePage as GovernancePage1 } from '@app/prototypes/fleet-admin-r
 import { CreatePolicy as CreatePolicy1 } from '@app/prototypes/fleet-admin-rbac/Governance/CreatePolicy';
 import { IdentityDetail as IdentityDetail1 } from '@app/prototypes/fleet-admin-rbac/Identities/IdentityDetail';
 import { GroupDetail as GroupDetail1 } from '@app/prototypes/fleet-admin-rbac/Identities/GroupDetail';
-import { CreateGroup as CreateGroup1 } from '@app/prototypes/fleet-admin-rbac/Identities/CreateGroup';
+import CreateGroup1 from '@app/prototypes/fleet-admin-rbac/Identities/CreateGroup';
 import { CreateRole as CreateRole1 } from '@app/prototypes/fleet-admin-rbac/Roles/CreateRole';
 import { RoleDetail as RoleDetail1 } from '@app/prototypes/fleet-admin-rbac/Roles/RoleDetail';
 import { IdentityProviderDetail as IdentityProviderDetail1 } from '@app/prototypes/fleet-admin-rbac/IdentityProvider/IdentityProviderDetail';
@@ -32,7 +32,7 @@ import { GovernancePage as GovernancePage2 } from '@app/prototypes/tenant-admin-
 import { CreatePolicy as CreatePolicy2 } from '@app/prototypes/tenant-admin-access/Governance/CreatePolicy';
 import { IdentityDetail as IdentityDetail2 } from '@app/prototypes/tenant-admin-access/Identities/IdentityDetail';
 import { GroupDetail as GroupDetail2 } from '@app/prototypes/tenant-admin-access/Identities/GroupDetail';
-import { CreateGroup as CreateGroup2 } from '@app/prototypes/tenant-admin-access/Identities/CreateGroup';
+import CreateGroup2 from '@app/prototypes/tenant-admin-access/Identities/CreateGroup';
 import { CreateRole as CreateRole2 } from '@app/prototypes/tenant-admin-access/Roles/CreateRole';
 import { RoleDetail as RoleDetail2 } from '@app/prototypes/tenant-admin-access/Roles/RoleDetail';
 import { IdentityProviderDetail as IdentityProviderDetail2 } from '@app/prototypes/tenant-admin-access/IdentityProvider/IdentityProviderDetail';
