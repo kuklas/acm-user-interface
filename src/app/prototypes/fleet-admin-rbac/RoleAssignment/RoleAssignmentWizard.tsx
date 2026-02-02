@@ -198,6 +198,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
   const [clusterSearchValue, setClusterSearchValue] = React.useState('');
   const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
   const [clusterViewMode, setClusterViewMode] = React.useState<'all' | 'selected'>('all');
+  const [isClusterBulkSelectorOpen, setIsClusterBulkSelectorOpen] = React.useState(false);
+  const [isClusterSetBulkSelectorOpen, setIsClusterSetBulkSelectorOpen] = React.useState(false);
+  const [isProjectBulkSelectorOpen, setIsProjectBulkSelectorOpen] = React.useState(false);
   const [projectScope, setProjectScope] = React.useState<'cluster' | 'project'>('cluster');
   const [selectedProjects, setSelectedProjects] = React.useState<number[]>([]);
   const [selectedCommonProject, setSelectedCommonProject] = React.useState<number | null>(null);
@@ -1219,17 +1222,116 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             Select cluster sets to define scope
           </Content>
 
-          <Flex className="pf-v6-u-mb-md">
-            <FlexItem>
-              <SearchInput
-                aria-label="Search cluster sets"
-                placeholder="Search"
-                value={clusterSetSearchValue}
-                onChange={(_event, value) => setClusterSetSearchValue(value)}
-                onClear={() => setClusterSetSearchValue('')}
-              />
-            </FlexItem>
-          </Flex>
+          <Toolbar>
+            <ToolbarContent>
+              {/* Bulk selector dropdown */}
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={isClusterSetBulkSelectorOpen}
+                  onSelect={() => setIsClusterSetBulkSelectorOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterSetBulkSelectorOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => {
+                        if (selectedClusterSets.length > 0) {
+                          setSelectedClusterSets([]);
+                        } else {
+                          setIsClusterSetBulkSelectorOpen(!isClusterSetBulkSelectorOpen);
+                        }
+                      }}
+                      variant="plain"
+                      style={{
+                        border: '1px solid var(--pf-t--global--border--color--default)',
+                        borderRadius: 'var(--pf-t--global--border--radius--small)',
+                        padding: '6px 8px',
+                        minWidth: 'auto',
+                      }}
+                    >
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <FlexItem>
+                          <Checkbox
+                            isChecked={mockClusterSets.length > 0 && mockClusterSets.every(cs => selectedClusterSets.includes(cs.id))}
+                            onChange={(event, checked) => {
+                              event.stopPropagation();
+                              if (checked) {
+                                setSelectedClusterSets(mockClusterSets.map(cs => cs.id));
+                              } else {
+                                setSelectedClusterSets([]);
+                              }
+                            }}
+                            aria-label="Select all"
+                            id="select-all-cluster-sets-checkbox"
+                          />
+                        </FlexItem>
+                        <FlexItem>
+                          <CaretDownIcon />
+                        </FlexItem>
+                      </Flex>
+                    </MenuToggle>
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusterSets([]);
+                        setIsClusterSetBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select none
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        const filtered = mockClusterSets.filter(cs => 
+                          cs.name.toLowerCase().includes(clusterSetSearchValue.toLowerCase())
+                        );
+                        setSelectedClusterSets(filtered.map(cs => cs.id));
+                        setIsClusterSetBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select page ({mockClusterSets.filter(cs => cs.name.toLowerCase().includes(clusterSetSearchValue.toLowerCase())).length} items)
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusterSets(mockClusterSets.map(cs => cs.id));
+                        setIsClusterSetBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select all ({mockClusterSets.length} items)
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={false}
+                  onSelect={() => {}}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      isExpanded={false}
+                    >
+                      Name
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
+                >
+                  <DropdownList>
+                    <DropdownItem key="Name">Name</DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <SearchInput
+                  aria-label="Search cluster sets"
+                  placeholder="Search cluster sets"
+                  value={clusterSetSearchValue}
+                  onChange={(_event, value) => setClusterSetSearchValue(value)}
+                  onClear={() => setClusterSetSearchValue('')}
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
 
           <Table aria-label="Cluster sets table" variant="compact" className="pf-v6-u-mt-md">
             <Thead>
@@ -1242,19 +1344,29 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <Tbody>
               {mockClusterSets
                 .filter((cs) => cs.name.toLowerCase().includes(clusterSetSearchValue.toLowerCase()))
-                .map((clusterSet) => (
-                <Tr key={clusterSet.id}>
-                  <Td
-                    select={{
-                      rowIndex: clusterSet.id,
-                      onSelect: () => toggleClusterSetSelection(clusterSet.id),
-                      isSelected: selectedClusterSets.includes(clusterSet.id),
-                    }}
-                  />
-                  <Td dataLabel="Name">{clusterSet.name}</Td>
-                  <Td dataLabel="Clusters">{clusterSet.clusters}</Td>
-                </Tr>
-              ))}
+                .map((clusterSet) => {
+                  const isSelected = selectedClusterSets.includes(clusterSet.id);
+                  return (
+                    <Tr
+                      key={clusterSet.id}
+                      isSelectable
+                      isClickable
+                      isRowSelected={isSelected}
+                      onRowClick={() => toggleClusterSetSelection(clusterSet.id)}
+                    >
+                      <Td>
+                        <Checkbox
+                          id={`select-cluster-set-${clusterSet.id}`}
+                          aria-label={`Select ${clusterSet.name}`}
+                          isChecked={isSelected}
+                          onChange={() => toggleClusterSetSelection(clusterSet.id)}
+                        />
+                      </Td>
+                      <Td dataLabel="Name">{clusterSet.name}</Td>
+                      <Td dataLabel="Clusters">{clusterSet.clusters}</Td>
+                    </Tr>
+                  );
+                })}
             </Tbody>
           </Table>
         </>
@@ -1302,53 +1414,131 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             Select clusters from the selected cluster sets
           </Content>
 
-          <Flex className="pf-v6-u-mb-md">
-            <FlexItem>
-              <Dropdown
-                isOpen={isClusterFilterOpen}
-                onSelect={() => setIsClusterFilterOpen(false)}
-                onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle ref={toggleRef} onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} isExpanded={isClusterFilterOpen}>
-                    Filter
-                  </MenuToggle>
-                )}
-                popperProps={{
-                  appendTo: () => document.body,
-                  
-                }}
-              >
-                <DropdownList>
-                  <DropdownItem>All clusters</DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </FlexItem>
-            <FlexItem>
-              <SearchInput
-                aria-label="Search clusters"
-                placeholder="Search"
-                value={clusterSearchValue}
-                onChange={(_event, value) => setClusterSearchValue(value)}
-                onClear={() => setClusterSearchValue('')}
-              />
-            </FlexItem>
-            <FlexItem align={{ default: 'alignRight' }}>
-              <ToggleGroup aria-label="Cluster view toggle">
-                <ToggleGroupItem
-                  text="All"
-                  buttonId="cluster-view-all"
-                  isSelected={clusterViewMode === 'all'}
-                  onChange={() => setClusterViewMode('all')}
+          <Toolbar>
+            <ToolbarContent>
+              {/* Bulk selector dropdown */}
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={isClusterBulkSelectorOpen}
+                  onSelect={() => setIsClusterBulkSelectorOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterBulkSelectorOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => {
+                        if (selectedClusters.length > 0) {
+                          setSelectedClusters([]);
+                        } else {
+                          setIsClusterBulkSelectorOpen(!isClusterBulkSelectorOpen);
+                        }
+                      }}
+                      variant="plain"
+                      style={{
+                        border: '1px solid var(--pf-t--global--border--color--default)',
+                        borderRadius: 'var(--pf-t--global--border--radius--small)',
+                        padding: '6px 8px',
+                        minWidth: 'auto',
+                      }}
+                    >
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <FlexItem>
+                          <Checkbox
+                            isChecked={displayClusters.length > 0 && displayClusters.every(c => selectedClusters.includes(c.id))}
+                            onChange={(event, checked) => {
+                              event.stopPropagation();
+                              if (checked) {
+                                setSelectedClusters(displayClusters.map(c => c.id));
+                              } else {
+                                setSelectedClusters([]);
+                              }
+                            }}
+                            aria-label="Select all"
+                            id="select-all-clusters-checkbox"
+                          />
+                        </FlexItem>
+                        <FlexItem>
+                          <CaretDownIcon />
+                        </FlexItem>
+                      </Flex>
+                    </MenuToggle>
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusters([]);
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select none
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusters(displayClusters.map(c => c.id));
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select page ({displayClusters.length} items)
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusters(mockClusters.map(c => c.id));
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select all ({mockClusters.length} items)
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={isClusterFilterOpen}
+                  onSelect={() => setIsClusterFilterOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle 
+                      ref={toggleRef} 
+                      onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)} 
+                      isExpanded={isClusterFilterOpen}
+                    >
+                      Name
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
+                >
+                  <DropdownList>
+                    <DropdownItem key="Name">Name</DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <SearchInput
+                  aria-label="Search clusters"
+                  placeholder="Search clusters"
+                  value={clusterSearchValue}
+                  onChange={(_event, value) => setClusterSearchValue(value)}
+                  onClear={() => setClusterSearchValue('')}
                 />
-                <ToggleGroupItem
-                  text={`Selected ${selectedClusters.length}`}
-                  buttonId="cluster-view-selected"
-                  isSelected={clusterViewMode === 'selected'}
-                  onChange={() => setClusterViewMode('selected')}
-                />
-              </ToggleGroup>
-            </FlexItem>
-          </Flex>
+              </ToolbarItem>
+              <ToolbarItem align={{ default: 'alignRight' }}>
+                <ToggleGroup aria-label="Cluster view toggle">
+                  <ToggleGroupItem
+                    text="All"
+                    buttonId="cluster-view-all"
+                    isSelected={clusterViewMode === 'all'}
+                    onChange={() => setClusterViewMode('all')}
+                  />
+                  <ToggleGroupItem
+                    text={`Selected ${selectedClusters.length}`}
+                    buttonId="cluster-view-selected"
+                    isSelected={clusterViewMode === 'selected'}
+                    onChange={() => setClusterViewMode('selected')}
+                  />
+                </ToggleGroup>
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
 
           <Table aria-label="Clusters table" variant="compact" className="pf-v6-u-mt-md">
             <Thead>
@@ -1362,22 +1552,32 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
               </Tr>
             </Thead>
             <Tbody>
-              {displayClusters.map((cluster) => (
-                <Tr key={cluster.id}>
-                  <Td
-                    select={{
-                      rowIndex: cluster.id,
-                      onSelect: () => toggleClusterSelection(cluster.id),
-                      isSelected: selectedClusters.includes(cluster.id),
-                    }}
-                  />
-                  <Td dataLabel="Name">{cluster.name}</Td>
-                  <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
-                  <Td dataLabel="Control plane type">{cluster.controlPlane}</Td>
-                  <Td dataLabel="Distribution version">{cluster.distribution}</Td>
-                  <Td dataLabel="Labels">{cluster.labels[0]}</Td>
-                </Tr>
-              ))}
+              {displayClusters.map((cluster) => {
+                const isSelected = selectedClusters.includes(cluster.id);
+                return (
+                  <Tr
+                    key={cluster.id}
+                    isSelectable
+                    isClickable
+                    isRowSelected={isSelected}
+                    onRowClick={() => toggleClusterSelection(cluster.id)}
+                  >
+                    <Td>
+                      <Checkbox
+                        id={`select-cluster-${cluster.id}`}
+                        aria-label={`Select ${cluster.name}`}
+                        isChecked={isSelected}
+                        onChange={() => toggleClusterSelection(cluster.id)}
+                      />
+                    </Td>
+                    <Td dataLabel="Name">{cluster.name}</Td>
+                    <Td dataLabel="Infrastructure">{cluster.infrastructure}</Td>
+                    <Td dataLabel="Control plane type">{cluster.controlPlane}</Td>
+                    <Td dataLabel="Distribution version">{cluster.distribution}</Td>
+                    <Td dataLabel="Labels">{cluster.labels[0]}</Td>
+                  </Tr>
+                );
+              })}
             </Tbody>
           </Table>
         </>
@@ -1630,35 +1830,129 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             Choose one or more clusters from the cluster set
           </Content>
 
-          <SearchInput
-            aria-label="Search clusters"
-            placeholder="Search"
-            value={clusterSearchValue}
-            onChange={(_event, value) => setClusterSearchValue(value)}
-            onClear={() => setClusterSearchValue('')}
-            className="pf-v6-u-mb-md"
-          />
+          <Toolbar>
+            <ToolbarContent>
+              {/* Bulk selector dropdown */}
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={isClusterBulkSelectorOpen}
+                  onSelect={() => setIsClusterBulkSelectorOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterBulkSelectorOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => {
+                        if (selectedClusters.length > 0) {
+                          setSelectedClusters([]);
+                          setSelectedProjects([]);
+                          setClusterScope('everything');
+                        } else {
+                          setIsClusterBulkSelectorOpen(!isClusterBulkSelectorOpen);
+                        }
+                      }}
+                      variant="plain"
+                      style={{
+                        border: '1px solid var(--pf-t--global--border--color--default)',
+                        borderRadius: 'var(--pf-t--global--border--radius--small)',
+                        padding: '6px 8px',
+                        minWidth: 'auto',
+                      }}
+                    >
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <FlexItem>
+                          <Checkbox
+                            isChecked={mockClusters.length > 0 && mockClusters.every(c => selectedClusters.includes(c.id))}
+                            onChange={(event, checked) => {
+                              event.stopPropagation();
+                              if (checked) {
+                                setSelectedClusters(mockClusters.map(c => c.id));
+                              } else {
+                                setSelectedClusters([]);
+                                setSelectedProjects([]);
+                                setClusterScope('everything');
+                              }
+                            }}
+                            aria-label="Select all"
+                            id="select-all-clusters-checkbox"
+                          />
+                        </FlexItem>
+                        <FlexItem>
+                          <CaretDownIcon />
+                        </FlexItem>
+                      </Flex>
+                    </MenuToggle>
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusters([]);
+                        setSelectedProjects([]);
+                        setClusterScope('everything');
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select none
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        const filtered = mockClusters.filter(cluster => 
+                          cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase())
+                        );
+                        setSelectedClusters(filtered.map(c => c.id));
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select page ({mockClusters.filter(cluster => cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase())).length} items)
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        setSelectedClusters(mockClusters.map(c => c.id));
+                        setIsClusterBulkSelectorOpen(false);
+                      }}
+                    >
+                      Select all ({mockClusters.length} items)
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <Dropdown
+                  isOpen={isClusterFilterOpen}
+                  onSelect={() => setIsClusterFilterOpen(false)}
+                  onOpenChange={(isOpen: boolean) => setIsClusterFilterOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => setIsClusterFilterOpen(!isClusterFilterOpen)}
+                      isExpanded={isClusterFilterOpen}
+                    >
+                      Name
+                    </MenuToggle>
+                  )}
+                  shouldFocusToggleOnSelect
+                >
+                  <DropdownList>
+                    <DropdownItem key="Name">Name</DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+              <ToolbarItem>
+                <SearchInput
+                  aria-label="Search clusters"
+                  placeholder="Search clusters"
+                  value={clusterSearchValue}
+                  onChange={(_event, value) => setClusterSearchValue(value)}
+                  onClear={() => setClusterSearchValue('')}
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
 
           <Table aria-label="Clusters table" variant="compact">
             <Thead>
               <Tr>
-                <Th>
-                  <Checkbox
-                    id="select-all-clusters"
-                    aria-label="Select all clusters"
-                    isChecked={mockClusters.length > 0 && mockClusters.every(c => selectedClusters.includes(c.id))}
-                    onChange={(_, isChecked) => {
-                      if (isChecked) {
-                        setSelectedClusters(mockClusters.map(c => c.id));
-                      } else {
-                        setSelectedClusters([]);
-                      }
-                      // Reset downstream
-                      setSelectedProjects([]);
-                      setClusterScope('everything');
-                    }}
-                  />
-                </Th>
+                <Th />
                 <Th>Name</Th>
                 <Th>Namespace</Th>
                 <Th>Status</Th>
@@ -1669,35 +1963,52 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
             <Tbody>
               {mockClusters
                 .filter(cluster => cluster.name.toLowerCase().includes(clusterSearchValue.toLowerCase()))
-                .map((cluster) => (
-                  <Tr key={cluster.id}>
-                    <Td>
-                      <Checkbox
-                        id={`select-cluster-${cluster.id}`}
-                        aria-label={`Select ${cluster.name}`}
-                        isChecked={selectedClusters.includes(cluster.id)}
-                        onChange={() => {
-                          const newSelection = selectedClusters.includes(cluster.id)
-                            ? selectedClusters.filter(id => id !== cluster.id)
-                            : [...selectedClusters, cluster.id];
-                          setSelectedClusters(newSelection);
-                          // Reset downstream
-                          setSelectedProjects([]);
-                          setClusterScope('everything');
-                        }}
-                      />
-                    </Td>
-                    <Td dataLabel="Name">{cluster.name}</Td>
-                    <Td dataLabel="Namespace">{mockClusterSets.find(cs => cs.dbId === cluster.clusterSetId)?.name || 'N/A'}</Td>
-                    <Td dataLabel="Status">
-                      <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
-                        {cluster.status}
-                      </Label>
-                    </Td>
-                    <Td dataLabel="Infrastructure">Amazon Web Services</Td>
-                    <Td dataLabel="Control plane type">Standalone</Td>
-                  </Tr>
-                ))}
+                .map((cluster) => {
+                  const isSelected = selectedClusters.includes(cluster.id);
+                  return (
+                    <Tr
+                      key={cluster.id}
+                      isSelectable
+                      isClickable
+                      isRowSelected={isSelected}
+                      onRowClick={() => {
+                        const newSelection = isSelected
+                          ? selectedClusters.filter(id => id !== cluster.id)
+                          : [...selectedClusters, cluster.id];
+                        setSelectedClusters(newSelection);
+                        // Reset downstream
+                        setSelectedProjects([]);
+                        setClusterScope('everything');
+                      }}
+                    >
+                      <Td>
+                        <Checkbox
+                          id={`select-cluster-${cluster.id}`}
+                          aria-label={`Select ${cluster.name}`}
+                          isChecked={isSelected}
+                          onChange={() => {
+                            const newSelection = isSelected
+                              ? selectedClusters.filter(id => id !== cluster.id)
+                              : [...selectedClusters, cluster.id];
+                            setSelectedClusters(newSelection);
+                            // Reset downstream
+                            setSelectedProjects([]);
+                            setClusterScope('everything');
+                          }}
+                        />
+                      </Td>
+                      <Td dataLabel="Name">{cluster.name}</Td>
+                      <Td dataLabel="Namespace">{mockClusterSets.find(cs => cs.dbId === cluster.clusterSetId)?.name || 'N/A'}</Td>
+                      <Td dataLabel="Status">
+                        <Label color={cluster.status === 'Ready' ? 'green' : 'red'}>
+                          {cluster.status}
+                        </Label>
+                      </Td>
+                      <Td dataLabel="Infrastructure">Amazon Web Services</Td>
+                      <Td dataLabel="Control plane type">Standalone</Td>
+                    </Tr>
+                  );
+                })}
             </Tbody>
           </Table>
         </>

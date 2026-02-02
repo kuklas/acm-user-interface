@@ -152,7 +152,7 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [preauthorizedUserEntry, setPreauthorizedUserEntry] = React.useState<any>(null);
   
   // Step 2: Resources - simplified inline structure
-  const [resourceScope, setResourceScope] = React.useState<'all' | 'clusters'>('all');
+  const [resourceScope, setResourceScope] = React.useState<'all' | 'clusters' | 'commonProjects'>('all');
   const [selectedClusters, setSelectedClusters] = React.useState<number[]>([]);
   const [clusterSearch, setClusterSearch] = React.useState('');
   const [isClusterFilterOpen, setIsClusterFilterOpen] = React.useState(false);
@@ -160,6 +160,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
   const [isResourceScopeOpen, setIsResourceScopeOpen] = React.useState(false);
   const [clustersPage, setClustersPage] = React.useState(1);
   const [clustersPerPage, setClustersPerPage] = React.useState(10);
+  const [projectsPage, setProjectsPage] = React.useState(1);
+  const [projectsPerPage, setProjectsPerPage] = React.useState(10);
   
   // Substep: Access level for selected clusters (only shown when clusters are selected)
   const [showAccessLevel, setShowAccessLevel] = React.useState(false);
@@ -214,6 +216,8 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
     setIsResourceScopeOpen(false);
     setClustersPage(1);
     setClustersPerPage(10);
+    setProjectsPage(1);
+    setProjectsPerPage(10);
     setShowAccessLevel(false);
     setClusterScope('everything');
     setIsClusterScopeOpen(false);
@@ -236,6 +240,11 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       if (resourceScope === 'clusters' && selectedClusters.length > 0 && !showAccessLevel) {
         // Show access level substep
         setShowAccessLevel(true);
+        return;
+      }
+      // For common projects, skip access level substep and go directly to role selection
+      if (resourceScope === 'commonProjects') {
+        setCurrentStep(currentStep + 1);
         return;
       }
       // Otherwise proceed to next step
@@ -335,6 +344,10 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         if (resourceScope === 'clusters' && selectedClusters.length === 0) {
           return true;
         }
+        // If common projects selected, need at least one project
+        if (resourceScope === 'commonProjects' && selectedProjects.length === 0) {
+          return true;
+        }
         return false;
       } else {
         // Access level substep: if projects selected, need at least one project
@@ -397,6 +410,67 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
       clusterName: dbClusters.find(c => c.id === namespace.clusterId)?.name || 'Unknown',
     }));
   }, [clusterSetName]);
+
+  // All common projects across all clusters in the selected cluster set (unfiltered)
+  const allCommonProjectsForClusterSet = React.useMemo(() => {
+    // Find the cluster set by name
+    const clusterSet = dbClusterSets.find(cs => cs.name === clusterSetName);
+    if (!clusterSet) return [];
+
+    // Get all clusters in this cluster set
+    const clustersInSet = dbClusters.filter(cluster => cluster.clusterSetId === clusterSet.id);
+    if (clustersInSet.length === 0) return [];
+
+    // Get namespaces for each cluster
+    const namespacesByCluster = clustersInSet.map(cluster => 
+      dbNamespaces.filter(ns => ns.clusterId === cluster.id)
+    );
+
+    // Find common project names that exist in ALL clusters
+    const allProjectNames = namespacesByCluster.map(namespaces => 
+      new Set(namespaces.map(ns => ns.name))
+    );
+
+    // Find intersection of all project names
+    const commonProjectNames = Array.from(allProjectNames[0] || []).filter(name =>
+      allProjectNames.every(set => set.has(name))
+    );
+
+    // Create project objects for common projects, showing they exist across multiple clusters
+    const commonProjects = commonProjectNames.map((projectName, index) => {
+      const projectInstances = dbNamespaces.filter(ns => 
+        ns.name === projectName && 
+        clustersInSet.some(c => c.id === ns.clusterId)
+      );
+      
+      const clusterCount = new Set(projectInstances.map(ns => ns.clusterId)).size;
+      const firstInstance = projectInstances[0];
+
+      return {
+        id: index + 1,
+        name: projectName,
+        displayName: projectName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        type: firstInstance?.type || 'application',
+        clusterCount,
+        clusters: clustersInSet.filter(c => 
+          projectInstances.some(ns => ns.clusterId === c.id)
+        ).map(c => c.name).join(', '),
+      };
+    });
+
+    return commonProjects;
+  }, [clusterSetName]);
+
+  // Filtered common projects (with search applied)
+  const filteredCommonProjectsForClusterSet = React.useMemo(() => {
+    if (projectSearch) {
+      return allCommonProjectsForClusterSet.filter(project =>
+        project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
+        project.displayName.toLowerCase().includes(projectSearch.toLowerCase())
+      );
+    }
+    return allCommonProjectsForClusterSet;
+  }, [allCommonProjectsForClusterSet, projectSearch]);
 
   const filteredUsers = React.useMemo(() => {
     // If we have a pre-authorized user saved, show only that
@@ -1690,7 +1764,9 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       variant="default"
                       style={{ width: '100%' }}
                     >
-                      {resourceScope === 'all' ? 'Cluster set role assignment' : 'Cluster role assignment'}
+                      {resourceScope === 'all' 
+                        ? 'Cluster set role assignment' 
+                        : 'Common project assignment'}
                     </MenuToggle>
                   )}
                   shouldFocusToggleOnSelect
@@ -1709,16 +1785,16 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       Cluster set role assignment
                     </DropdownItem>
                     <DropdownItem
-                      key="clusters"
+                      key="commonProjects"
                       onClick={() => {
-                        setResourceScope('clusters');
+                        setResourceScope('commonProjects');
                         setSelectedClusters([]);
                         setSelectedProjects([]);
                         setIsResourceScopeOpen(false);
                       }}
-                      description="Grant access to specific clusters on the cluster set. Optionally, narrow this access to projects on the selected clusters."
+                      description="Grant access to common projects that exist across all clusters in the cluster set."
                     >
-                      Cluster role assignment
+                      Common project assignment
                     </DropdownItem>
                   </DropdownList>
                 </Dropdown>
@@ -1812,15 +1888,15 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                                   setIsClusterBulkSelectorOpen(false);
                                 }}
                               >
-                                Select page ({filteredClusters.slice((clustersPage - 1) * clustersPerPage, clustersPage * clustersPerPage).length} items)
+                                Select page ({filteredClusters.length} items)
                               </DropdownItem>
                               <DropdownItem
                                 onClick={() => {
-                                  setSelectedClusters(filteredClusters.map(c => c.id));
+                                  setSelectedClusters(mockClusters.map(c => c.id));
                                   setIsClusterBulkSelectorOpen(false);
                                 }}
                               >
-                                Select all ({filteredClusters.length} items)
+                                Select all ({mockClusters.length} items)
                               </DropdownItem>
                             </DropdownList>
                           </Dropdown>
@@ -1952,6 +2028,209 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                       onPerPageSelect={(_event, newPerPage) => {
                         setClustersPerPage(newPerPage);
                         setClustersPage(1);
+                      }}
+                      variant="bottom"
+                      style={{ paddingTop: '16px' }}
+                    />
+                  </div>
+                )}
+
+                {/* Show common projects table when "Common project assignment" is selected */}
+                {resourceScope === 'commonProjects' && (
+                  <div style={{ marginTop: '24px' }}>
+                    <Content component="p" style={{ marginBottom: '16px', fontSize: '14px', color: '#6a6e73' }}>
+                      Select one or more common projects from the cluster set. These projects exist across all clusters.
+                    </Content>
+                    <Toolbar>
+                      <ToolbarContent>
+                        {/* Bulk selector dropdown */}
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={isProjectBulkSelectorOpen}
+                            onSelect={() => setIsProjectBulkSelectorOpen(false)}
+                            onOpenChange={(isOpen: boolean) => setIsProjectBulkSelectorOpen(isOpen)}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle
+                                ref={toggleRef}
+                                onClick={() => {
+                                  if (selectedProjects.length > 0) {
+                                    setSelectedProjects([]);
+                                  } else {
+                                    setIsProjectBulkSelectorOpen(!isProjectBulkSelectorOpen);
+                                  }
+                                }}
+                                variant="plain"
+                                style={{
+                                  border: '1px solid var(--pf-t--global--border--color--default)',
+                                  borderRadius: 'var(--pf-t--global--border--radius--small)',
+                                  padding: '6px 8px',
+                                  minWidth: 'auto',
+                                }}
+                              >
+                                <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                  <FlexItem>
+                                    <Checkbox
+                                      isChecked={filteredCommonProjectsForClusterSet.length > 0 && filteredCommonProjectsForClusterSet.every(p => selectedProjects.includes(p.id))}
+                                      onChange={(event, checked) => {
+                                        event.stopPropagation();
+                                        if (checked) {
+                                          const allIds = filteredCommonProjectsForClusterSet.map(p => p.id);
+                                          const combined = [...selectedProjects, ...allIds];
+                                          setSelectedProjects(Array.from(new Set(combined)));
+                                        } else {
+                                          const visibleIds = filteredCommonProjectsForClusterSet.map(p => p.id);
+                                          setSelectedProjects(selectedProjects.filter(id => !visibleIds.includes(id)));
+                                        }
+                                      }}
+                                      aria-label="Select all"
+                                      id="select-all-projects-checkbox"
+                                    />
+                                  </FlexItem>
+                                  <FlexItem>
+                                    <CaretDownIcon />
+                                  </FlexItem>
+                                </Flex>
+                              </MenuToggle>
+                            )}
+                          >
+                            <DropdownList>
+                              <DropdownItem
+                                onClick={() => {
+                                  setSelectedProjects([]);
+                                  setIsProjectBulkSelectorOpen(false);
+                                }}
+                              >
+                                Select none
+                              </DropdownItem>
+                              <DropdownItem
+                                onClick={() => {
+                                  const allIds = filteredCommonProjectsForClusterSet.map(p => p.id);
+                                  const combined = [...selectedProjects, ...allIds];
+                                  setSelectedProjects(Array.from(new Set(combined)));
+                                  setIsProjectBulkSelectorOpen(false);
+                                }}
+                              >
+                                Select page ({filteredCommonProjectsForClusterSet.length} items)
+                              </DropdownItem>
+                              <DropdownItem
+                                onClick={() => {
+                                  setSelectedProjects(allCommonProjectsForClusterSet.map(p => p.id));
+                                  setIsProjectBulkSelectorOpen(false);
+                                }}
+                              >
+                                Select all ({allCommonProjectsForClusterSet.length} items)
+                              </DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <Dropdown
+                            isOpen={isProjectFilterOpen}
+                            onSelect={() => setIsProjectFilterOpen(false)}
+                            onOpenChange={(isOpen: boolean) => setIsProjectFilterOpen(isOpen)}
+                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                              <MenuToggle
+                                ref={toggleRef}
+                                onClick={() => setIsProjectFilterOpen(!isProjectFilterOpen)}
+                                isExpanded={isProjectFilterOpen}
+                              >
+                                {projectFilterType}
+                              </MenuToggle>
+                            )}
+                            shouldFocusToggleOnSelect
+                          >
+                            <DropdownList>
+                              <DropdownItem key="Name" onClick={() => { setProjectFilterType('Name'); setIsProjectFilterOpen(false); }}>Name</DropdownItem>
+                            </DropdownList>
+                          </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                          <SearchInput
+                            placeholder="Search projects"
+                            value={projectSearch}
+                            onChange={(_event, value) => setProjectSearch(value)}
+                            onClear={() => setProjectSearch('')}
+                          />
+                        </ToolbarItem>
+                        <ToolbarItem align={{ default: 'alignEnd' }}>
+                          <Pagination
+                            itemCount={filteredCommonProjectsForClusterSet.length}
+                            perPage={projectsPerPage}
+                            page={projectsPage}
+                            onSetPage={(_event, pageNumber) => setProjectsPage(pageNumber)}
+                            onPerPageSelect={(_event, newPerPage) => {
+                              setProjectsPerPage(newPerPage);
+                              setProjectsPage(1);
+                            }}
+                            variant="top"
+                            isCompact
+                          />
+                        </ToolbarItem>
+                      </ToolbarContent>
+                    </Toolbar>
+
+                    <Table aria-label="Common projects table" variant="compact">
+                      <Thead>
+                        <Tr>
+                          <Th />
+                          <Th>Name</Th>
+                          <Th>Display name</Th>
+                          <Th>Type</Th>
+                          <Th>Clusters</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredCommonProjectsForClusterSet.slice((projectsPage - 1) * projectsPerPage, projectsPage * projectsPerPage).map((project, index) => {
+                          const isSelected = selectedProjects.includes(project.id);
+                          return (
+                            <Tr
+                              key={index}
+                              isSelectable
+                              isClickable
+                              isRowSelected={isSelected}
+                              onRowClick={() => {
+                                if (isSelected) {
+                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                } else {
+                                  setSelectedProjects([...selectedProjects, project.id]);
+                                }
+                              }}
+                            >
+                              <Td>
+                                <Checkbox
+                                  id={`project-${project.id}`}
+                                  isChecked={isSelected}
+                                  onChange={() => {
+                                    if (isSelected) {
+                                      setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                    } else {
+                                      setSelectedProjects([...selectedProjects, project.id]);
+                                    }
+                                  }}
+                                />
+                              </Td>
+                              <Td dataLabel="Name">{project.name}</Td>
+                              <Td dataLabel="Display name">{project.displayName}</Td>
+                              <Td dataLabel="Type">
+                                <Label color="blue" isCompact>
+                                  {project.type}
+                                </Label>
+                              </Td>
+                              <Td dataLabel="Clusters">{project.clusterCount} clusters</Td>
+                            </Tr>
+                          );
+                        })}
+                      </Tbody>
+                    </Table>
+
+                    <Pagination
+                      itemCount={filteredCommonProjectsForClusterSet.length}
+                      perPage={projectsPerPage}
+                      page={projectsPage}
+                      onSetPage={(_event, pageNumber) => setProjectsPage(pageNumber)}
+                      onPerPageSelect={(_event, newPerPage) => {
+                        setProjectsPerPage(newPerPage);
+                        setProjectsPage(1);
                       }}
                       variant="bottom"
                       style={{ paddingTop: '16px' }}
@@ -2111,7 +2390,15 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                                   setIsProjectBulkSelectorOpen(false);
                                 }}
                               >
-                                Select all ({filteredProjects.length} items)
+                                Select page ({filteredProjects.length} items)
+                              </DropdownItem>
+                              <DropdownItem
+                                onClick={() => {
+                                  setSelectedProjects(mockProjects.map(p => p.id));
+                                  setIsProjectBulkSelectorOpen(false);
+                                }}
+                              >
+                                Select all ({mockProjects.length} items)
                               </DropdownItem>
                             </DropdownList>
                           </Dropdown>
@@ -2757,8 +3044,32 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
                   Scope
                 </Content>
                 <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                  {resourceScope === 'all' ? 'Cluster set role assignment' : 'Cluster role assignment'}
+                  {resourceScope === 'all' 
+                    ? 'Cluster set role assignment' 
+                    : resourceScope === 'commonProjects'
+                    ? 'Common project assignment'
+                    : 'Cluster role assignment'}
                 </Content>
+                
+                {resourceScope === 'commonProjects' && (
+                  <>
+                    <Content component="p" style={{ 
+                      marginBottom: '4px', 
+                      fontSize: '14px', 
+                      fontWeight: 600,
+                      color: '#151515',
+                      marginTop: '12px'
+                    }}>
+                      Common projects
+                    </Content>
+                    <Content component="p" style={{ fontSize: '14px', color: '#6a6e73' }}>
+                      {selectedProjects.map(id => {
+                        const project = filteredCommonProjectsForClusterSet.find(p => p.id === id);
+                        return project?.name;
+                      }).filter(Boolean).join(', ')}
+                    </Content>
+                  </>
+                )}
                 
                 {resourceScope === 'clusters' && (
                   <>
