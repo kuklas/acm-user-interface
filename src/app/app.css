@@ -941,12 +941,25 @@ input[type="checkbox"] {
   padding-bottom: 16px !important;
 }
 
-/* Prototype launcher cards - ALL cards must have identical styling */
-.prototype-launcher-card {
-  border: 1px solid #d2d2d2 !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-  border-radius: 8px !important;
-  height: 100% !important;
-  cursor: default !important;
+/* Override wizard padding for migration readiness step to allow full-width dividers */
+#migration-readiness-step .pf-v6-c-wizard__main-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Also override for the step wrapper */
+.pf-v6-c-wizard__main div[id="migration-readiness-step"] {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* More specific override for the wizard body when migration readiness is active */
+.pf-v6-c-wizard:has(#migration-readiness-step) .pf-v6-c-wizard__main-body {
+  padding: 0 !important;
+}
+
+/* Target the specific step container */
+div.pf-v6-c-wizard__main div.pf-v6-c-wizard__main-body:has(#migration-readiness-step > *) {
+  padding: 0 !important;
+  margin: 0 !important;
 }

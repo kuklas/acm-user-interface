@@ -12,7 +12,6 @@ import {
   NavItem,
   NavList,
   Page,
-  PageSection,
   PageSidebar,
   PageSidebarBody,
   SkipToContent,
@@ -57,7 +56,6 @@ import { OverviewPage } from '@app/FleetVirtualization/EmptyPages';
 import { Catalog } from '@app/FleetVirtualization/Catalog';
 import { Templates } from '@app/FleetVirtualization/Templates';
 import { InstanceTypes } from '@app/FleetVirtualization/InstanceTypes';
-// import { MigrationPlans } from '@app/use-case-cclm/Migration/MigrationPlans'; // DEPRECATED - migrated to prototypes
 import {
   BarsIcon,
   CaretDownIcon,
@@ -77,12 +75,6 @@ import redHatOpenShiftLogo from '@app/bgimages/redhatopenshift.svg';
 
 interface IAppLayout {
   children: React.ReactNode;
-  customToolbarItems?: React.ReactNode; // Custom items to add to masthead toolbar
-  useCaseTitle?: string; // Optional use case title (for backward compat)
-  useCasePersona?: string; // Optional persona (for backward compat)
-  topBanner?: React.ReactNode; // Banner to show above masthead
-  enabledPerspectives?: string[]; // List of enabled perspectives for this prototype
-  currentPrototypeId?: string; // Current prototype ID for conditional navigation
 }
 
 // Custom Core Platforms icon component
@@ -100,7 +92,7 @@ const CorePlatformsIcon: React.FC<{ size?: string }> = ({ size = '20px' }) => (
   </svg>
 );
 
-const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolbarItems, useCaseTitle, useCasePersona, topBanner, enabledPerspectives, currentPrototypeId }) => {
+const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const [perspectiveOpen, setPerspectiveOpen] = React.useState(false);
   const [activePerspective, setActivePerspective] = React.useState('Fleet management');
@@ -124,9 +116,8 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
   }, [impersonatingUser, navigate]);
 
   // Automatically open the task modal when entering a use case (only once per use case selection)
-  // Skip modal for empty states use cases
   React.useEffect(() => {
-    if (useCase && useCase !== 'use-case-empty-states' && useCase !== 'use-case-aaq-empty-states' && !hasShownModalRef.current) {
+    if (useCase && !hasShownModalRef.current) {
       setIsTaskModalOpen(true);
       hasShownModalRef.current = true;
     } else if (!useCase) {
@@ -135,34 +126,19 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
     }
   }, [useCase]);
 
-  // Set the active perspective based on the use case or prototype
+  // Set the active perspective based on the use case
   React.useEffect(() => {
-    if (useCase === 'use-case-aaq' || useCase === 'use-case-aaq-empty-states' || useCase === 'use-case-operator-lifecycle' || currentPrototypeId === 'operator-lifecycle') {
+    if (useCase === 'use-case-aaq') {
       setActivePerspective('Core platforms');
-    } else if (useCase === 'use-case-cclm' || currentPrototypeId === 'cross-cluster-migration') {
-      setActivePerspective('Fleet virtualization');
-    } else if (useCase === 'use-case-1' || useCase === 'use-case-2' || useCase === 'use-case-empty-states') {
+    } else if (useCase === 'use-case-1' || useCase === 'use-case-2') {
       setActivePerspective('Fleet management');
-    } else if (enabledPerspectives && enabledPerspectives.length > 0) {
-      // Set to first enabled perspective for prototypes
-      const perspectiveMap = {
-        'core-platforms': 'Core platforms',
-        'fleet-management': 'Fleet management',
-        'fleet-virtualization': 'Fleet virtualization',
-      };
-      const firstEnabled = enabledPerspectives[0];
-      if (perspectiveMap[firstEnabled as keyof typeof perspectiveMap]) {
-        setActivePerspective(perspectiveMap[firstEnabled as keyof typeof perspectiveMap]);
-      }
     }
-  }, [useCase, enabledPerspectives]);
+  }, [useCase]);
 
-
-  // All perspectives are always enabled
   const allPerspectives = [
-    { name: 'Core platforms', key: 'core-platforms', disabled: false },
-    { name: 'Fleet management', key: 'fleet-management', disabled: false },
-    { name: 'Fleet virtualization', key: 'fleet-virtualization', disabled: false },
+    { name: 'Core platforms', disabled: false },
+    { name: 'Fleet management', disabled: false },
+    { name: 'Fleet virtualization', disabled: false },
   ];
 
   // Filter perspectives: only show Fleet virtualization when impersonating
@@ -234,7 +210,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
         { element: <></>, label: 'Bootable volumes', path: '/core/virtualization/bootable-volumes', title: 'Bootable volumes' },
         { element: <></>, label: 'MigrationPolicies', path: '/core/virtualization/migration-policies', title: 'MigrationPolicies' },
         { element: <></>, label: 'Checkups', path: '/core/virtualization/checkups', title: 'Checkups' },
-        ...(useCase === 'use-case-aaq' || useCase === 'use-case-aaq-empty-states' || currentPrototypeId === 'aaq-empty-states' || currentPrototypeId === 'virtualization-quotas' ? [{ element: <></>, label: 'Quotas', path: '/quotas', title: 'Quotas' }] : []),
+        ...(useCase === 'use-case-aaq' ? [{ element: <></>, label: 'Quotas', path: '/core/virtualization/quotas', title: 'Quotas' }] : []),
       ],
     },
     {
@@ -365,17 +341,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
         },
       ],
     },
-    ...((useCase === 'use-case-cclm' || currentPrototypeId === 'cross-cluster-migration') ? [{
-      label: 'Migration',
-      routes: [
-        {
-          element: <></>,
-          label: 'Migration plans',
-          path: '/virtualization/migration',
-          title: 'Migration plans',
-        },
-      ],
-    }] : []),
     {
       label: '',
       routes: [
@@ -447,13 +412,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
             <img src={redHatOpenShiftLogo} alt="Red Hat OpenShift" style={{ height: '40px' }} />
             <Label color="orange" isCompact>UXD prototype - work in progress</Label>
             <span style={{ fontSize: '14px', color: 'var(--pf-t--global--text--color--regular)' }}>
-              Contact: {useCaseTitle && useCaseTitle.trim() !== ''
-                ? useCaseTitle
-                : useCase === 'use-case-aaq' || useCase === 'use-case-aaq-empty-states' 
-                ? 'Anna Walker (slack @Anna Walker)' 
-                : useCase === 'use-case-operator-lifecycle'
-                ? 'Kevin Hatchoua (slack @Kevin Hatchoua)'
-                : 'Stefan Kukla (slack @stefan)'}
+              Contact: {useCase === 'use-case-aaq' ? 'Anna Walker (slack @Anna Walker)' : 'Stefan Kukla (slack @stefan)'}
             </span>
           </div>
         </MastheadBrand>
@@ -461,15 +420,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
       <MastheadContent>
         <Toolbar isFullHeight isStatic>
           <ToolbarContent>
-            {/* Custom toolbar items (e.g. Prototype Selector) */}
-            {customToolbarItems && (
-              <ToolbarGroup>
-                <ToolbarItem>
-                  {customToolbarItems}
-                </ToolbarItem>
-              </ToolbarGroup>
-            )}
-            
             <ToolbarGroup align={{ default: 'alignEnd' }}>
               <ToolbarItem>
                 <Button variant="plain" aria-label="Settings">
@@ -495,19 +445,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
               <ToolbarItem>
                 <Button variant="plain" aria-label="User menu">
                   <span style={{ color: '#000000' }}>
-                    {useCasePersona && useCasePersona.trim() !== ''
-                      ? useCasePersona
-                      : useCase === 'use-case-1' 
-                      ? 'Adrian Veidt' 
-                      : useCase === 'use-case-2' 
-                      ? 'Walter Joseph Kovacs' 
-                      : useCase === 'use-case-cclm'
-                      ? 'Nelson Gardner'
-                      : useCase === 'use-case-operator-lifecycle'
-                      ? 'Kevin Hatchoua'
-                      : useCase === 'use-case-empty-states' || useCase === 'use-case-aaq-empty-states'
-                      ? 'Jane Designer'
-                      : 'Dan Dreiberg'}
+                    {useCase === 'use-case-1' ? 'Adrian Veidt' : useCase === 'use-case-2' ? 'Walter Joseph Kovacs' : 'Dan Dreiberg'}
                   </span>
                   <Icon>
                     <CaretDownIcon />
@@ -653,142 +591,11 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
   );
   };
 
-  // Check if RBAC prototype is active
-  const isRBACPrototype = currentPrototypeId === 'fleet-admin-rbac' || 
-                          currentPrototypeId === 'tenant-admin-access' || 
-                          currentPrototypeId === 'acm-empty-states';
-
-  // Helper function to create blank page route
-  const createBlankRoute = (label: string, path: string, title: string): IAppRoute => ({
-    element: <PageSection />,
-    label,
-    path,
-    title,
-  });
-
   // Select routes based on active perspective
-  let activeRoutes: IAppRouteGroup[] = [];
-  
-  if (isRBACPrototype && currentPrototypeId) {
-    // RBAC prototypes: Show all navigation items, but use blank pages for hidden content
-    if (activePerspective === 'Fleet management') {
-      // Fleet management: Show all items, but only Clusters and User management have content
-      const baseRoutes = routes.filter(route => route.label !== 'Core Platforms');
-      activeRoutes = baseRoutes
-        .filter((route): route is IAppRouteGroup => 'routes' in route && Array.isArray(route.routes))
-        .map(group => {
-          if (!group.routes || group.routes.length === 0) {
-            // Skip groups with no routes
-            return group;
-          }
-          
-          if (group.label === 'Infrastructure') {
-            // Only show Clusters, blank pages for others
-            return {
-              ...group,
-              routes: group.routes.map(route => 
-                route.label === 'Clusters' 
-                  ? route 
-                  : createBlankRoute(route.label || '', route.path, route.title)
-              ),
-            };
-          } else if (group.label === 'User management') {
-            // Keep User management as is (will be added below)
-            return group;
-          } else {
-            // All other groups show blank pages
-            return {
-              ...group,
-              routes: group.routes.map(route => 
-                createBlankRoute(route.label || '', route.path, route.title)
-              ),
-            };
-          }
-        });
-      
-      // Ensure User management exists
-      const hasUserManagement = activeRoutes.some(r => r.label === 'User management');
-      if (!hasUserManagement) {
-        const infrastructureIndex = activeRoutes.findIndex(r => r.label === 'Infrastructure');
-        activeRoutes.splice(infrastructureIndex + 1, 0, {
-          label: 'User management',
-          routes: [
-            { element: <div />, label: 'Identities', path: '/user-management/identities', title: 'ACM | Identities' },
-            { element: <div />, label: 'Roles', path: '/user-management/roles', title: 'ACM | Roles' },
-            { element: <IdentityProvider showClustersColumn={true} />, label: 'Identity providers', path: '/user-management/identity-providers', title: 'ACM | Identity Providers' },
-          ],
-        });
-      }
-    } else if (activePerspective === 'Fleet virtualization') {
-      // Fleet virtualization: Show all items, but only Virtual machines and User management have content
-      activeRoutes = fleetVirtualizationRoutes.map(group => {
-        if (!group.routes || group.routes.length === 0) {
-          // Skip groups with no routes
-          return group;
-        }
-        
-        if (group.label === '') {
-          // Show Virtual machines, blank pages for others
-          return {
-            ...group,
-            routes: group.routes.map(route => 
-              route.label === 'Virtual machines'
-                ? route
-                : createBlankRoute(route.label || '', route.path, route.title)
-            ),
-          };
-        } else if (group.label === 'User management') {
-          // Keep User management as is
-          return group;
-        } else {
-          // All other groups show blank pages
-          return {
-            ...group,
-            routes: group.routes.map(route => 
-              createBlankRoute(route.label || '', route.path, route.title)
-            ),
-          };
-        }
-      });
-    } else if (activePerspective === 'Core platforms') {
-      // Core platforms: Show all items, but only Projects, Virtualization, and User management have content
-      activeRoutes = corePlatformsRoutes.map(group => {
-        if (!group.routes || group.routes.length === 0) {
-          // Skip groups with no routes
-          return group;
-        }
-        
-        if (group.label === 'Home') {
-          // Only show Projects, blank pages for others
-          return {
-            ...group,
-            routes: group.routes.map(route => 
-              route.label === 'Projects'
-                ? route
-                : createBlankRoute(route.label || '', route.path, route.title)
-            ),
-          };
-        } else if (group.label === 'Virtualization' || group.label === 'User Management') {
-          // Keep Virtualization and User Management as is
-          return group;
-        } else {
-          // All other groups show blank pages
-          return {
-            ...group,
-            routes: group.routes.map(route => 
-              createBlankRoute(route.label || '', route.path, route.title)
-            ),
-          };
-        }
-      });
-    }
-  } else {
-    // Normal routing for non-RBAC prototypes
-    activeRoutes = 
-      activePerspective === 'Core platforms' ? corePlatformsRoutes :
-      activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : 
-      routes.filter(route => route.label !== 'Core Platforms') as IAppRouteGroup[];
-  }
+  let activeRoutes = 
+    activePerspective === 'Core platforms' ? corePlatformsRoutes :
+    activePerspective === 'Fleet virtualization' ? fleetVirtualizationRoutes : 
+    routes.filter(route => route.label !== 'Core Platforms');
 
   // Filter out "User management" from Fleet virtualization when impersonating
   if (impersonatingUser && activePerspective === 'Fleet virtualization') {
@@ -846,7 +653,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
 
   return (
     <>
-    {topBanner && topBanner}
     <UseCaseBanner />
     <div style={{ paddingTop: useCase ? '48px' : '0' }}>
     <Page
@@ -1019,102 +825,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children, customToolba
                     margin: 0
                   }}>
                     Create a quota, based on your needs.
-                  </Content>
-                </CardBody>
-              </Card>
-            </>
-          )}
-
-          {useCase === 'use-case-cclm' && (
-            <>
-              <Content component="p" style={{ 
-                marginBottom: 'var(--pf-t--global--spacer--md)',
-                fontSize: '15px',
-                lineHeight: '1.6'
-              }}>
-                Get in the role of Nelson Gardner, Platform administrator managing OpenShift Virtualization at Petemobile, a telco company.
-              </Content>
-
-              <Card style={{ backgroundColor: '#f0f8ff', border: '1px solid #cce5ff' }}>
-                <CardBody>
-                  <Content component="p" style={{ 
-                    marginBottom: 'var(--pf-t--global--spacer--sm)',
-                    fontSize: '15px',
-                    fontWeight: 600
-                  }}>
-                    Your task is to:
-                  </Content>
-
-                  <Content component="p" style={{ 
-                    fontSize: '15px',
-                    lineHeight: '1.8',
-                    margin: 0
-                  }}>
-                    Move <strong>80 running VMs</strong> from <strong>core-billing</strong> project in the <strong>us-east-prod-02</strong> cluster to <strong>us-west-prod-01</strong> cluster. Because you are planning to delete the Cluster.
-                  </Content>
-                </CardBody>
-              </Card>
-            </>
-          )}
-
-          {useCase === 'use-case-operator-lifecycle' && (
-            <>
-              <Content component="p" style={{ 
-                marginBottom: 'var(--pf-t--global--spacer--md)',
-                fontSize: '15px',
-                lineHeight: '1.6'
-              }}>
-                Get in the role of Kevin Hatchoua, OpenShift Administrator managing operator lifecycle at Petemobile, a telco company.
-              </Content>
-
-              <Card style={{ backgroundColor: '#f0f8ff', border: '1px solid #cce5ff' }}>
-                <CardBody>
-                  <Content component="p" style={{ 
-                    marginBottom: 'var(--pf-t--global--spacer--sm)',
-                    fontSize: '15px',
-                    fontWeight: 600
-                  }}>
-                    Your task is to:
-                  </Content>
-
-                  <Content component="p" style={{ 
-                    fontSize: '15px',
-                    lineHeight: '1.8',
-                    margin: 0
-                  }}>
-                    Explore the unified software catalog to discover and browse operators available from multiple sources (Marketplace, Community, Red Hat).
-                  </Content>
-                </CardBody>
-              </Card>
-            </>
-          )}
-
-          {useCase === 'use-case-empty-states' && (
-            <>
-              <Content component="p" style={{ 
-                marginBottom: 'var(--pf-t--global--spacer--md)',
-                fontSize: '15px',
-                lineHeight: '1.6'
-              }}>
-                Get in the role of Jane Designer, UX Designer exploring ACM RBAC empty state patterns.
-              </Content>
-
-              <Card style={{ backgroundColor: '#f0f8ff', border: '1px solid #cce5ff' }}>
-                <CardBody>
-                  <Content component="p" style={{ 
-                    marginBottom: 'var(--pf-t--global--spacer--sm)',
-                    fontSize: '15px',
-                    fontWeight: 600
-                  }}>
-                    Your task is to:
-                  </Content>
-
-                  <Content component="p" style={{ 
-                    fontSize: '15px',
-                    lineHeight: '1.8',
-                    margin: 0
-                  }}>
-                    Explore and evaluate ACM RBAC empty state designs across clusters, users, groups, roles, and projects pages.
                   </Content>
                 </CardBody>
               </Card>

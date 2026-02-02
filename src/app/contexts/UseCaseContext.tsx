@@ -2,19 +2,11 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { mockDatabase } from '@app/data/mockDatabase';
 import { globalMockDatabase } from '@app/data/globalMockDatabase';
 
-/**
- * @deprecated This context is deprecated. Use PrototypeContext from @app/core instead.
- * 
- * This is kept for backward compatibility during migration.
- * Old use-case-* prototypes have been migrated to src/app/prototypes/
- */
-
-// Use case types for the application (DEPRECATED - migrated to prototypes/)
-export type UseCaseType = null;
+export type UseCaseType = 'use-case-1' | 'use-case-2' | 'use-case-aaq' | null;
 
 interface UseCaseContextType {
   useCase: UseCaseType;
-  setUseCase: (useCase: any) => void; // Changed to any for backward compatibility
+  setUseCase: (useCase: UseCaseType) => void;
   database: typeof mockDatabase | typeof globalMockDatabase;
   useCaseTitle: string;
   useCasePersona: string;
@@ -25,11 +17,23 @@ const UseCaseContext = createContext<UseCaseContextType | undefined>(undefined);
 export const UseCaseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [useCase, setUseCase] = useState<UseCaseType>(null);
 
-  // DEPRECATED: Old use-cases migrated to src/app/prototypes/
-  // This context is kept for backward compatibility only
-  const database = mockDatabase;
-  const useCaseTitle = '';
-  const useCasePersona = '';
+  const database = useCase === 'use-case-1' ? globalMockDatabase : mockDatabase;
+  
+  const useCaseTitle = useCase === 'use-case-1' 
+    ? 'ACMsRBACUseCase1: Fleet Admin - Tenant Delegation'
+    : useCase === 'use-case-2'
+    ? 'ACMsRBACUseCase2: Tenant Admin - Project Access (Walter Joseph Kovacs)'
+    : useCase === 'use-case-aaq'
+    ? 'AAQ: Virtualization Quota Management'
+    : '';
+
+  const useCasePersona = useCase === 'use-case-1'
+    ? 'Adrian Veidt (Fleet Admin)'
+    : useCase === 'use-case-2'
+    ? 'Walter Joseph Kovacs (Tenant Admin)'
+    : useCase === 'use-case-aaq'
+    ? 'Virtualization Administrator'
+    : '';
 
   return (
     <UseCaseContext.Provider 
