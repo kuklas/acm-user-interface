@@ -294,18 +294,32 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         return project?.name || 'Unknown Project';
       });
       
-      // Handle 'all' scope - populate with all available names
+      // Handle different resource scopes - populate names based on selections
       if (resourceScope === 'all') {
+        // All resources in cluster set
         clusterNames = mockClusters.map(c => c.name);
         projectNames = mockProjects.map(p => p.name);
-      } else if (resourceScope === 'clusters' && clusterScope === 'everything') {
-        // Selected specific clusters but all projects on those clusters
-        projectNames = mockProjects
-          .filter(p => selectedClusters.some(clusterId => {
-            const cluster = mockClusters.find(c => c.id === clusterId);
-            return cluster && p.clusterName === cluster.name;
-          }))
-          .map(p => p.name);
+      } else if (resourceScope === 'clusters') {
+        // Specific clusters selected
+        if (clusterScope === 'everything') {
+          // All projects on selected clusters
+          projectNames = mockProjects
+            .filter(p => selectedClusters.some(clusterId => {
+              const cluster = mockClusters.find(c => c.id === clusterId);
+              return cluster && p.clusterName === cluster.name;
+            }))
+            .map(p => p.name);
+        }
+        // If clusterScope is 'projects', projectNames are already populated from selectedProjects
+      } else if (resourceScope === 'commonProjects') {
+        // Common projects across multiple clusters
+        // Get all clusters that have the selected projects
+        const selectedProjectNames = projectNames; // Already populated from selectedProjects
+        clusterNames = mockClusters
+          .filter(c => mockProjects.some(p => 
+            selectedProjectNames.includes(p.name) && p.clusterName === c.name
+          ))
+          .map(c => c.name);
       }
       
       console.log('ClusterSetRoleAssignmentWizard - preauthorize mode, returning:', {
@@ -356,18 +370,32 @@ export const ClusterSetRoleAssignmentWizard: React.FC<ClusterSetRoleAssignmentWi
         return project?.name || 'Unknown Project';
       });
 
-      // Handle 'all' scope - populate with all available names
+      // Handle different resource scopes - populate names based on selections
       if (resourceScope === 'all') {
+        // All resources in cluster set
         clusterNames = mockClusters.map(c => c.name);
         projectNames = mockProjects.map(p => p.name);
-      } else if (resourceScope === 'clusters' && clusterScope === 'everything') {
-        // Selected specific clusters but all projects on those clusters
-        projectNames = mockProjects
-          .filter(p => selectedClusters.some(clusterId => {
-            const cluster = mockClusters.find(c => c.id === clusterId);
-            return cluster && p.clusterName === cluster.name;
-          }))
-          .map(p => p.name);
+      } else if (resourceScope === 'clusters') {
+        // Specific clusters selected
+        if (clusterScope === 'everything') {
+          // All projects on selected clusters
+          projectNames = mockProjects
+            .filter(p => selectedClusters.some(clusterId => {
+              const cluster = mockClusters.find(c => c.id === clusterId);
+              return cluster && p.clusterName === cluster.name;
+            }))
+            .map(p => p.name);
+        }
+        // If clusterScope is 'projects', projectNames are already populated from selectedProjects
+      } else if (resourceScope === 'commonProjects') {
+        // Common projects across multiple clusters
+        // Get all clusters that have the selected projects
+        const selectedProjectNames = projectNames; // Already populated from selectedProjects
+        clusterNames = mockClusters
+          .filter(c => mockProjects.some(p => 
+            selectedProjectNames.includes(p.name) && p.clusterName === c.name
+          ))
+          .map(c => c.name);
       }
 
       console.log('ClusterSetRoleAssignmentWizard - existing mode, returning:', {
