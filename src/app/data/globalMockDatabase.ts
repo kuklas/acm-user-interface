@@ -176,6 +176,9 @@ export const clusters: Cluster[] = [
       'ns-hub-qa-team',
       'ns-hub-demo-apps',
       'ns-hub-backup-restore',
+      'ns-monitoring-na-hub',
+      'ns-security-na-hub',
+      'ns-backup-na-hub',
     ],
   },
   // North America Production
@@ -188,7 +191,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US West',
     nodes: 45,
-    namespaceIds: ['ns-core-ntwk-usw01', 'ns-5g-api-prod-usw01', 'ns-data-analytics-usw01'],
+    namespaceIds: ['ns-core-ntwk-usw01', 'ns-5g-api-prod-usw01', 'ns-data-analytics-usw01', 'ns-monitoring-na-usw01', 'ns-security-na-usw01', 'ns-backup-na-usw01'],
   },
   {
     id: 'cluster-us-east-prod-02',
@@ -199,7 +202,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East',
     nodes: 52,
-    namespaceIds: ['ns-core-billing-use02', 'ns-security-ops-use02', 'ns-log-viewer-use02'],
+    namespaceIds: ['ns-core-billing-use02', 'ns-security-ops-use02', 'ns-log-viewer-use02', 'ns-monitoring-na-use02', 'ns-security-na-use02', 'ns-backup-na-use02'],
   },
   {
     id: 'cluster-na-edge-ny-01',
@@ -210,7 +213,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'New York Edge',
     nodes: 18,
-    namespaceIds: ['ns-edge-core-app-ny01', 'ns-location-services-ny01'],
+    namespaceIds: ['ns-edge-core-app-ny01', 'ns-location-services-ny01', 'ns-monitoring-na-ny01', 'ns-security-na-ny01', 'ns-backup-na-ny01'],
   },
 
   // Europe Production
@@ -223,7 +226,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'EU West',
     nodes: 48,
-    namespaceIds: ['ns-core-ntwk-euw01', 'ns-eu-5g-api-euw01', 'ns-data-analytics-euw01'],
+    namespaceIds: ['ns-core-ntwk-euw01', 'ns-eu-5g-api-euw01', 'ns-data-analytics-euw01', 'ns-monitoring-eu-euw01', 'ns-security-eu-euw01', 'ns-backup-eu-euw01'],
   },
   {
     id: 'cluster-eu-east-prod-02',
@@ -234,7 +237,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'EU East',
     nodes: 44,
-    namespaceIds: ['ns-core-billing-eue02', 'ns-security-ops-eue02', 'ns-log-viewer-eue02'],
+    namespaceIds: ['ns-core-billing-eue02', 'ns-security-ops-eue02', 'ns-log-viewer-eue02', 'ns-monitoring-eu-eue02', 'ns-security-eu-eue02', 'ns-backup-eu-eue02'],
   },
   {
     id: 'cluster-eu-edge-berlin-01',
@@ -245,7 +248,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'Berlin Edge',
     nodes: 20,
-    namespaceIds: ['ns-edge-core-app-ber01', 'ns-location-services-ber01'],
+    namespaceIds: ['ns-edge-core-app-ber01', 'ns-location-services-ber01', 'ns-monitoring-eu-ber01', 'ns-security-eu-ber01', 'ns-backup-eu-ber01'],
   },
 
   // South America Production
@@ -258,7 +261,7 @@ export const clusters: Cluster[] = [
     region: 'South America',
     location: 'Brazil',
     nodes: 38,
-    namespaceIds: ['ns-core-network-sa-br01', 'ns-billing-api-br01', 'ns-customer-data-br01', 'ns-monitor-tools-br01', 'ns-db-service-br01'],
+    namespaceIds: ['ns-core-network-sa-br01', 'ns-billing-api-br01', 'ns-customer-data-br01', 'ns-monitor-tools-br01', 'ns-db-service-br01', 'ns-monitoring-sa-br01', 'ns-security-sa-br01', 'ns-backup-sa-br01'],
   },
   {
     id: 'cluster-sa-prod-argentina-02',
@@ -269,7 +272,7 @@ export const clusters: Cluster[] = [
     region: 'South America',
     location: 'Argentina',
     nodes: 35,
-    namespaceIds: ['ns-core-network-sa-ar02', 'ns-billing-api-ar02', 'ns-customer-data-ar02', 'ns-monitor-tools-ar02', 'ns-db-service-ar02'],
+    namespaceIds: ['ns-core-network-sa-ar02', 'ns-billing-api-ar02', 'ns-customer-data-ar02', 'ns-monitor-tools-ar02', 'ns-db-service-ar02', 'ns-monitoring-sa-ar02', 'ns-security-sa-ar02', 'ns-backup-sa-ar02'],
   },
   {
     id: 'cluster-sa-prod-chile-03',
@@ -280,7 +283,7 @@ export const clusters: Cluster[] = [
     region: 'South America',
     location: 'Chile',
     nodes: 32,
-    namespaceIds: ['ns-core-network-sa-cl03', 'ns-billing-api-cl03', 'ns-customer-data-cl03', 'ns-monitor-tools-cl03', 'ns-db-service-cl03'],
+    namespaceIds: ['ns-core-network-sa-cl03', 'ns-billing-api-cl03', 'ns-customer-data-cl03', 'ns-monitor-tools-cl03', 'ns-db-service-cl03', 'ns-monitoring-sa-cl03', 'ns-security-sa-cl03', 'ns-backup-sa-cl03'],
   },
   {
     id: 'cluster-sa-prod-colombia-04',
@@ -291,7 +294,7 @@ export const clusters: Cluster[] = [
     region: 'South America',
     location: 'Colombia',
     nodes: 30,
-    namespaceIds: ['ns-core-network-sa-co04', 'ns-billing-api-co04', 'ns-customer-data-co04', 'ns-monitor-tools-co04', 'ns-db-service-co04'],
+    namespaceIds: ['ns-core-network-sa-co04', 'ns-billing-api-co04', 'ns-customer-data-co04', 'ns-monitor-tools-co04', 'ns-db-service-co04', 'ns-monitoring-sa-co04', 'ns-security-sa-co04', 'ns-backup-sa-co04'],
   },
   {
     id: 'cluster-sa-prod-peru-05',
@@ -302,7 +305,7 @@ export const clusters: Cluster[] = [
     region: 'South America',
     location: 'Peru',
     nodes: 28,
-    namespaceIds: ['ns-core-network-sa-pe05', 'ns-billing-api-pe05', 'ns-customer-data-pe05', 'ns-monitor-tools-pe05', 'ns-db-service-pe05'],
+    namespaceIds: ['ns-core-network-sa-pe05', 'ns-billing-api-pe05', 'ns-customer-data-pe05', 'ns-monitor-tools-pe05', 'ns-db-service-pe05', 'ns-monitoring-sa-pe05', 'ns-security-sa-pe05', 'ns-backup-sa-pe05'],
   },
 
   // Asia-Pacific Production
@@ -315,7 +318,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Japan',
     nodes: 50,
-    namespaceIds: ['ns-core-network-apac-jp01', 'ns-billing-api-apac-jp01', 'ns-customer-data-jp01', 'ns-monitor-tools-jp01', 'ns-db-service-jp01'],
+    namespaceIds: ['ns-core-network-apac-jp01', 'ns-billing-api-apac-jp01', 'ns-customer-data-jp01', 'ns-monitor-tools-jp01', 'ns-db-service-jp01', 'ns-monitoring-apac-jp01', 'ns-security-apac-jp01', 'ns-backup-apac-jp01'],
   },
   {
     id: 'cluster-apac-prod-korea-02',
@@ -326,7 +329,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Korea',
     nodes: 46,
-    namespaceIds: ['ns-core-network-apac-kr02', 'ns-billing-api-apac-kr02', 'ns-customer-data-kr02', 'ns-monitor-tools-kr02', 'ns-db-service-kr02'],
+    namespaceIds: ['ns-core-network-apac-kr02', 'ns-billing-api-apac-kr02', 'ns-customer-data-kr02', 'ns-monitor-tools-kr02', 'ns-db-service-kr02', 'ns-monitoring-apac-kr02', 'ns-security-apac-kr02', 'ns-backup-apac-kr02'],
   },
   {
     id: 'cluster-apac-prod-australia-03',
@@ -337,7 +340,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Australia',
     nodes: 42,
-    namespaceIds: ['ns-core-network-apac-au03', 'ns-billing-api-apac-au03', 'ns-customer-data-au03', 'ns-monitor-tools-au03', 'ns-db-service-au03'],
+    namespaceIds: ['ns-core-network-apac-au03', 'ns-billing-api-apac-au03', 'ns-customer-data-au03', 'ns-monitor-tools-au03', 'ns-db-service-au03', 'ns-monitoring-apac-au03', 'ns-security-apac-au03', 'ns-backup-apac-au03'],
   },
   {
     id: 'cluster-apac-prod-singapore-04',
@@ -348,7 +351,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Singapore',
     nodes: 48,
-    namespaceIds: ['ns-core-network-apac-sg04', 'ns-billing-api-apac-sg04', 'ns-customer-data-sg04', 'ns-monitor-tools-sg04', 'ns-db-service-sg04'],
+    namespaceIds: ['ns-core-network-apac-sg04', 'ns-billing-api-apac-sg04', 'ns-customer-data-sg04', 'ns-monitor-tools-sg04', 'ns-db-service-sg04', 'ns-monitoring-apac-sg04', 'ns-security-apac-sg04', 'ns-backup-apac-sg04'],
   },
   {
     id: 'cluster-apac-prod-india-05',
@@ -359,7 +362,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'India',
     nodes: 44,
-    namespaceIds: ['ns-core-network-apac-in05', 'ns-billing-api-apac-in05', 'ns-customer-data-in05', 'ns-monitor-tools-in05', 'ns-db-service-in05'],
+    namespaceIds: ['ns-core-network-apac-in05', 'ns-billing-api-apac-in05', 'ns-customer-data-in05', 'ns-monitor-tools-in05', 'ns-db-service-in05', 'ns-monitoring-apac-in05', 'ns-security-apac-in05', 'ns-backup-apac-in05'],
   },
 
   // Development Clusters
@@ -372,7 +375,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East Dev',
     nodes: 12,
-    namespaceIds: ['ns-project-starlight-dev', 'ns-project-starfleet-dev', 'ns-project-pegasus-dev'],
+    namespaceIds: ['ns-project-starlight-dev', 'ns-project-starfleet-dev', 'ns-project-pegasus-dev', 'ns-monitoring-dev-a', 'ns-security-dev-a', 'ns-test-data-a'],
   },
   {
     id: 'cluster-dev-team-b',
@@ -383,7 +386,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East Dev',
     nodes: 12,
-    namespaceIds: ['ns-project-starlight-dev-b', 'ns-project-quasar-dev', 'ns-project-falcon-dev'],
+    namespaceIds: ['ns-project-starlight-dev-b', 'ns-project-quasar-dev', 'ns-project-falcon-dev', 'ns-monitoring-dev-b', 'ns-security-dev-b', 'ns-test-data-b'],
   },
   {
     id: 'cluster-qa-env',
@@ -394,7 +397,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East QA',
     nodes: 15,
-    namespaceIds: ['ns-qa-testing', 'ns-qa-performance'],
+    namespaceIds: ['ns-qa-testing', 'ns-qa-performance', 'ns-monitoring-dev-qa', 'ns-security-dev-qa', 'ns-test-data-qa'],
   },
 
   // 5G Edge Computing Clusters
@@ -407,7 +410,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'Los Angeles Edge',
     nodes: 24,
-    namespaceIds: ['ns-5g-slice-gaming-la', 'ns-5g-slice-ar-vr-la', 'ns-5g-core-la'],
+    namespaceIds: ['ns-5g-slice-gaming-la', 'ns-5g-slice-ar-vr-la', 'ns-5g-core-la', 'ns-monitoring-5g-la', 'ns-security-5g-la', 'ns-edge-analytics-la'],
   },
   {
     id: 'cluster-5g-edge-chicago-02',
@@ -418,7 +421,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'Chicago Edge',
     nodes: 22,
-    namespaceIds: ['ns-5g-slice-iot-chi', 'ns-5g-slice-industrial-chi', 'ns-5g-core-chi'],
+    namespaceIds: ['ns-5g-slice-iot-chi', 'ns-5g-slice-industrial-chi', 'ns-5g-core-chi', 'ns-monitoring-5g-chi', 'ns-security-5g-chi', 'ns-edge-analytics-chi'],
   },
   {
     id: 'cluster-5g-edge-london-03',
@@ -429,7 +432,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'London Edge',
     nodes: 26,
-    namespaceIds: ['ns-5g-slice-streaming-lon', 'ns-5g-slice-healthcare-lon', 'ns-5g-core-lon'],
+    namespaceIds: ['ns-5g-slice-streaming-lon', 'ns-5g-slice-healthcare-lon', 'ns-5g-core-lon', 'ns-monitoring-5g-lon', 'ns-security-5g-lon', 'ns-edge-analytics-lon'],
   },
   {
     id: 'cluster-5g-edge-tokyo-04',
@@ -440,7 +443,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Tokyo Edge',
     nodes: 28,
-    namespaceIds: ['ns-5g-slice-autonomous-tok', 'ns-5g-slice-smart-factory-tok', 'ns-5g-core-tok'],
+    namespaceIds: ['ns-5g-slice-autonomous-tok', 'ns-5g-slice-smart-factory-tok', 'ns-5g-core-tok', 'ns-monitoring-5g-tok', 'ns-security-5g-tok', 'ns-edge-analytics-tok'],
   },
 
   // Disaster Recovery Clusters
@@ -453,7 +456,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US West DR Site',
     nodes: 40,
-    namespaceIds: ['ns-dr-billing-backup', 'ns-dr-customer-data-backup', 'ns-dr-core-services'],
+    namespaceIds: ['ns-dr-billing-backup', 'ns-dr-customer-data-backup', 'ns-dr-core-services', 'ns-monitoring-dr-west', 'ns-security-dr-west', 'ns-backup-dr-west'],
   },
   {
     id: 'cluster-dr-central-backup-02',
@@ -464,7 +467,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US Central DR Site',
     nodes: 38,
-    namespaceIds: ['ns-dr-network-backup', 'ns-dr-oss-bss-backup', 'ns-dr-monitoring'],
+    namespaceIds: ['ns-dr-network-backup', 'ns-dr-oss-bss-backup', 'ns-dr-monitoring', 'ns-monitoring-dr-central', 'ns-security-dr-central', 'ns-backup-dr-central'],
   },
   {
     id: 'cluster-dr-asia-backup-03',
@@ -475,7 +478,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Singapore DR Site',
     nodes: 36,
-    namespaceIds: ['ns-dr-apac-services', 'ns-dr-apac-data', 'ns-dr-apac-network'],
+    namespaceIds: ['ns-dr-apac-services', 'ns-dr-apac-data', 'ns-dr-apac-network', 'ns-monitoring-dr-asia', 'ns-security-dr-asia', 'ns-backup-dr-asia'],
   },
 
   // Customer Experience Clusters
@@ -488,7 +491,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US Central',
     nodes: 32,
-    namespaceIds: ['ns-cx-billing-engine', 'ns-cx-payment-gateway', 'ns-cx-invoicing', 'ns-cx-charging'],
+    namespaceIds: ['ns-cx-billing-engine', 'ns-cx-payment-gateway', 'ns-cx-invoicing', 'ns-cx-charging', 'ns-monitoring-cx-na', 'ns-security-cx-na', 'ns-audit-logs-na'],
   },
   {
     id: 'cluster-cx-billing-eu-02',
@@ -499,7 +502,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'Frankfurt',
     nodes: 30,
-    namespaceIds: ['ns-cx-billing-eu', 'ns-cx-payment-eu', 'ns-cx-fraud-detection'],
+    namespaceIds: ['ns-cx-billing-eu', 'ns-cx-payment-eu', 'ns-cx-fraud-detection', 'ns-monitoring-cx-eu', 'ns-security-cx-eu', 'ns-audit-logs-eu'],
   },
   {
     id: 'cluster-cx-portal-global-01',
@@ -510,7 +513,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East',
     nodes: 28,
-    namespaceIds: ['ns-cx-web-portal', 'ns-cx-mobile-app-backend', 'ns-cx-self-service', 'ns-cx-chatbot'],
+    namespaceIds: ['ns-cx-web-portal', 'ns-cx-mobile-app-backend', 'ns-cx-self-service', 'ns-cx-chatbot', 'ns-monitoring-cx-portal', 'ns-security-cx-portal', 'ns-audit-logs-portal'],
   },
   {
     id: 'cluster-cx-crm-analytics-01',
@@ -521,7 +524,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US West',
     nodes: 34,
-    namespaceIds: ['ns-cx-crm-platform', 'ns-cx-customer-analytics', 'ns-cx-churn-prediction', 'ns-cx-loyalty'],
+    namespaceIds: ['ns-cx-crm-platform', 'ns-cx-customer-analytics', 'ns-cx-churn-prediction', 'ns-cx-loyalty', 'ns-monitoring-cx-crm', 'ns-security-cx-crm', 'ns-audit-logs-crm'],
   },
 
   // Network Function Virtualization (NFV) Clusters
@@ -534,7 +537,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US Central Core',
     nodes: 50,
-    namespaceIds: ['ns-nfv-epc-core', 'ns-nfv-hss', 'ns-nfv-pcrf', 'ns-nfv-pgw', 'ns-nfv-sgw'],
+    namespaceIds: ['ns-nfv-epc-core', 'ns-nfv-hss', 'ns-nfv-pcrf', 'ns-nfv-pgw', 'ns-nfv-sgw', 'ns-monitoring-nfv-na', 'ns-security-nfv-na', 'ns-network-logs-na'],
   },
   {
     id: 'cluster-nfv-core-eu-01',
@@ -545,7 +548,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'Frankfurt Core',
     nodes: 48,
-    namespaceIds: ['ns-nfv-epc-eu', 'ns-nfv-mme-eu', 'ns-nfv-ims-core', 'ns-nfv-volte'],
+    namespaceIds: ['ns-nfv-epc-eu', 'ns-nfv-mme-eu', 'ns-nfv-ims-core', 'ns-nfv-volte', 'ns-monitoring-nfv-eu', 'ns-security-nfv-eu', 'ns-network-logs-eu'],
   },
   {
     id: 'cluster-nfv-core-apac-01',
@@ -556,7 +559,7 @@ export const clusters: Cluster[] = [
     region: 'Asia-Pacific',
     location: 'Singapore Core',
     nodes: 46,
-    namespaceIds: ['ns-nfv-epc-apac', 'ns-nfv-policy-engine', 'ns-nfv-subscriber-db'],
+    namespaceIds: ['ns-nfv-epc-apac', 'ns-nfv-policy-engine', 'ns-nfv-subscriber-db', 'ns-monitoring-nfv-apac', 'ns-security-nfv-apac', 'ns-network-logs-apac'],
   },
   {
     id: 'cluster-nfv-ran-na-01',
@@ -567,7 +570,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US West RAN',
     nodes: 42,
-    namespaceIds: ['ns-nfv-vran-cu', 'ns-nfv-vran-du', 'ns-nfv-ran-intelligent-controller'],
+    namespaceIds: ['ns-nfv-vran-cu', 'ns-nfv-vran-du', 'ns-nfv-ran-intelligent-controller', 'ns-monitoring-nfv-ran-na', 'ns-security-nfv-ran-na', 'ns-network-logs-ran-na'],
   },
   {
     id: 'cluster-nfv-ran-eu-01',
@@ -578,7 +581,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'London RAN',
     nodes: 40,
-    namespaceIds: ['ns-nfv-vran-eu-cu', 'ns-nfv-vran-eu-du', 'ns-nfv-open-ran'],
+    namespaceIds: ['ns-nfv-vran-eu-cu', 'ns-nfv-vran-eu-du', 'ns-nfv-open-ran', 'ns-monitoring-nfv-ran-eu', 'ns-security-nfv-ran-eu', 'ns-network-logs-ran-eu'],
   },
 
   // IoT & Smart Cities Clusters
@@ -591,7 +594,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US Central',
     nodes: 30,
-    namespaceIds: ['ns-iot-device-mgmt', 'ns-iot-connectivity-mgmt', 'ns-iot-data-ingestion', 'ns-iot-analytics'],
+    namespaceIds: ['ns-iot-device-mgmt', 'ns-iot-connectivity-mgmt', 'ns-iot-data-ingestion', 'ns-iot-analytics', 'ns-monitoring-iot-na', 'ns-security-iot-na', 'ns-device-telemetry-na'],
   },
   {
     id: 'cluster-iot-platform-eu-01',
@@ -602,7 +605,7 @@ export const clusters: Cluster[] = [
     region: 'Europe',
     location: 'Amsterdam',
     nodes: 28,
-    namespaceIds: ['ns-iot-device-mgmt-eu', 'ns-iot-nb-iot-platform', 'ns-iot-lte-m-platform'],
+    namespaceIds: ['ns-iot-device-mgmt-eu', 'ns-iot-nb-iot-platform', 'ns-iot-lte-m-platform', 'ns-monitoring-iot-eu', 'ns-security-iot-eu', 'ns-device-telemetry-eu'],
   },
   {
     id: 'cluster-smartcity-sensors-01',
@@ -613,7 +616,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'Smart City Pilot - Austin',
     nodes: 26,
-    namespaceIds: ['ns-smart-traffic-mgmt', 'ns-smart-parking', 'ns-smart-lighting', 'ns-environmental-sensors'],
+    namespaceIds: ['ns-smart-traffic-mgmt', 'ns-smart-parking', 'ns-smart-lighting', 'ns-environmental-sensors', 'ns-monitoring-iot-sensors', 'ns-security-iot-sensors', 'ns-device-telemetry-sensors'],
   },
   {
     id: 'cluster-smartcity-analytics-01',
@@ -624,7 +627,7 @@ export const clusters: Cluster[] = [
     region: 'North America',
     location: 'US East',
     nodes: 32,
-    namespaceIds: ['ns-smart-city-analytics', 'ns-smart-energy-grid', 'ns-smart-waste-mgmt', 'ns-public-safety'],
+    namespaceIds: ['ns-smart-city-analytics', 'ns-smart-energy-grid', 'ns-smart-waste-mgmt', 'ns-public-safety', 'ns-monitoring-iot-analytics', 'ns-security-iot-analytics', 'ns-device-telemetry-analytics'],
   },
 ];
 
@@ -648,34 +651,55 @@ export const namespaces: Namespace[] = [
   { id: 'ns-hub-qa-team', name: 'qa-team-workspace', clusterId: 'cluster-hub', type: 'qa', labels: { env: 'qa', team: 'qa-engineers' } },
   { id: 'ns-hub-demo-apps', name: 'demo-applications', clusterId: 'cluster-hub', type: 'application', labels: { env: 'demo', app: 'demos' } },
   { id: 'ns-hub-backup-restore', name: 'backup-restore', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'backup' } },
+  { id: 'ns-monitoring-na-hub', name: 'monitoring-na', clusterId: 'cluster-hub', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'na' } },
+  { id: 'ns-security-na-hub', name: 'security-na', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'na' } },
+  { id: 'ns-backup-na-hub', name: 'backup-na', clusterId: 'cluster-hub', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'na' } },
   
   // US West Prod 01 namespaces
   { id: 'ns-core-ntwk-usw01', name: 'core-ntwk', clusterId: 'cluster-us-west-prod-01', type: 'infrastructure', labels: { env: 'prod', region: 'us-west' } },
   { id: 'ns-5g-api-prod-usw01', name: '5g-api-prod', clusterId: 'cluster-us-west-prod-01', type: 'application', labels: { env: 'prod', app: '5g' } },
   { id: 'ns-data-analytics-usw01', name: 'data-analytics', clusterId: 'cluster-us-west-prod-01', type: 'application', labels: { env: 'prod', app: 'analytics' } },
+  { id: 'ns-monitoring-na-usw01', name: 'monitoring-na', clusterId: 'cluster-us-west-prod-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'na' } },
+  { id: 'ns-security-na-usw01', name: 'security-na', clusterId: 'cluster-us-west-prod-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'na' } },
+  { id: 'ns-backup-na-usw01', name: 'backup-na', clusterId: 'cluster-us-west-prod-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'na' } },
   
   // US East Prod 02 namespaces
   { id: 'ns-core-billing-use02', name: 'core-billing', clusterId: 'cluster-us-east-prod-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
   { id: 'ns-security-ops-use02', name: 'security-ops', clusterId: 'cluster-us-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security' } },
   { id: 'ns-log-viewer-use02', name: 'log-viewer', clusterId: 'cluster-us-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'logging' } },
+  { id: 'ns-monitoring-na-use02', name: 'monitoring-na', clusterId: 'cluster-us-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'na' } },
+  { id: 'ns-security-na-use02', name: 'security-na', clusterId: 'cluster-us-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'na' } },
+  { id: 'ns-backup-na-use02', name: 'backup-na', clusterId: 'cluster-us-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'na' } },
   
   // NA Edge NY 01 namespaces
   { id: 'ns-edge-core-app-ny01', name: 'edge-core-app', clusterId: 'cluster-na-edge-ny-01', type: 'application', labels: { env: 'prod', type: 'edge' } },
   { id: 'ns-location-services-ny01', name: 'location-services', clusterId: 'cluster-na-edge-ny-01', type: 'application', labels: { env: 'prod', app: 'location' } },
+  { id: 'ns-monitoring-na-ny01', name: 'monitoring-na', clusterId: 'cluster-na-edge-ny-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'na' } },
+  { id: 'ns-security-na-ny01', name: 'security-na', clusterId: 'cluster-na-edge-ny-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'na' } },
+  { id: 'ns-backup-na-ny01', name: 'backup-na', clusterId: 'cluster-na-edge-ny-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'na' } },
   
   // EU West Prod 01 namespaces
   { id: 'ns-core-ntwk-euw01', name: 'core-ntwk', clusterId: 'cluster-eu-west-prod-01', type: 'infrastructure', labels: { env: 'prod', region: 'eu-west' } },
   { id: 'ns-eu-5g-api-euw01', name: 'eu-5g-api', clusterId: 'cluster-eu-west-prod-01', type: 'application', labels: { env: 'prod', app: '5g' } },
   { id: 'ns-data-analytics-euw01', name: 'data-analytics', clusterId: 'cluster-eu-west-prod-01', type: 'application', labels: { env: 'prod', app: 'analytics' } },
+  { id: 'ns-monitoring-eu-euw01', name: 'monitoring-eu', clusterId: 'cluster-eu-west-prod-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'eu' } },
+  { id: 'ns-security-eu-euw01', name: 'security-eu', clusterId: 'cluster-eu-west-prod-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'eu' } },
+  { id: 'ns-backup-eu-euw01', name: 'backup-eu', clusterId: 'cluster-eu-west-prod-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'eu' } },
   
   // EU East Prod 02 namespaces
   { id: 'ns-core-billing-eue02', name: 'core-billing', clusterId: 'cluster-eu-east-prod-02', type: 'application', labels: { env: 'prod', app: 'billing' } },
   { id: 'ns-security-ops-eue02', name: 'security-ops', clusterId: 'cluster-eu-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security' } },
   { id: 'ns-log-viewer-eue02', name: 'log-viewer', clusterId: 'cluster-eu-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'logging' } },
+  { id: 'ns-monitoring-eu-eue02', name: 'monitoring-eu', clusterId: 'cluster-eu-east-prod-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'eu' } },
+  { id: 'ns-security-eu-eue02', name: 'security-eu', clusterId: 'cluster-eu-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'eu' } },
+  { id: 'ns-backup-eu-eue02', name: 'backup-eu', clusterId: 'cluster-eu-east-prod-02', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'eu' } },
   
   // EU Edge Berlin 01 namespaces
   { id: 'ns-edge-core-app-ber01', name: 'edge-core-app', clusterId: 'cluster-eu-edge-berlin-01', type: 'application', labels: { env: 'prod', type: 'edge' } },
   { id: 'ns-location-services-ber01', name: 'location-services', clusterId: 'cluster-eu-edge-berlin-01', type: 'application', labels: { env: 'prod', app: 'location' } },
+  { id: 'ns-monitoring-eu-ber01', name: 'monitoring-eu', clusterId: 'cluster-eu-edge-berlin-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'eu' } },
+  { id: 'ns-security-eu-ber01', name: 'security-eu', clusterId: 'cluster-eu-edge-berlin-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'eu' } },
+  { id: 'ns-backup-eu-ber01', name: 'backup-eu', clusterId: 'cluster-eu-edge-berlin-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'eu' } },
   
   // SA Brazil 01 namespaces
   { id: 'ns-core-network-sa-br01', name: 'core-network-sa', clusterId: 'cluster-sa-prod-brazil-01', type: 'infrastructure', labels: { env: 'prod', region: 'sa' } },
@@ -861,6 +885,137 @@ export const namespaces: Namespace[] = [
   { id: 'ns-smart-energy-grid', name: 'smart-energy-grid', clusterId: 'cluster-smartcity-analytics-01', type: 'application', labels: { env: 'prod', app: 'smart-city' } },
   { id: 'ns-smart-waste-mgmt', name: 'smart-waste-management', clusterId: 'cluster-smartcity-analytics-01', type: 'application', labels: { env: 'prod', app: 'smart-city' } },
   { id: 'ns-public-safety', name: 'public-safety-systems', clusterId: 'cluster-smartcity-analytics-01', type: 'application', labels: { env: 'prod', app: 'smart-city' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - South America
+  // ============================================================================
+  { id: 'ns-monitoring-sa-br01', name: 'monitoring-sa', clusterId: 'cluster-sa-prod-brazil-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'sa' } },
+  { id: 'ns-security-sa-br01', name: 'security-sa', clusterId: 'cluster-sa-prod-brazil-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'sa' } },
+  { id: 'ns-backup-sa-br01', name: 'backup-sa', clusterId: 'cluster-sa-prod-brazil-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'sa' } },
+  { id: 'ns-monitoring-sa-ar02', name: 'monitoring-sa', clusterId: 'cluster-sa-prod-argentina-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'sa' } },
+  { id: 'ns-security-sa-ar02', name: 'security-sa', clusterId: 'cluster-sa-prod-argentina-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'sa' } },
+  { id: 'ns-backup-sa-ar02', name: 'backup-sa', clusterId: 'cluster-sa-prod-argentina-02', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'sa' } },
+  { id: 'ns-monitoring-sa-cl03', name: 'monitoring-sa', clusterId: 'cluster-sa-prod-chile-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'sa' } },
+  { id: 'ns-security-sa-cl03', name: 'security-sa', clusterId: 'cluster-sa-prod-chile-03', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'sa' } },
+  { id: 'ns-backup-sa-cl03', name: 'backup-sa', clusterId: 'cluster-sa-prod-chile-03', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'sa' } },
+  { id: 'ns-monitoring-sa-co04', name: 'monitoring-sa', clusterId: 'cluster-sa-prod-colombia-04', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'sa' } },
+  { id: 'ns-security-sa-co04', name: 'security-sa', clusterId: 'cluster-sa-prod-colombia-04', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'sa' } },
+  { id: 'ns-backup-sa-co04', name: 'backup-sa', clusterId: 'cluster-sa-prod-colombia-04', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'sa' } },
+  { id: 'ns-monitoring-sa-pe05', name: 'monitoring-sa', clusterId: 'cluster-sa-prod-peru-05', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'sa' } },
+  { id: 'ns-security-sa-pe05', name: 'security-sa', clusterId: 'cluster-sa-prod-peru-05', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'sa' } },
+  { id: 'ns-backup-sa-pe05', name: 'backup-sa', clusterId: 'cluster-sa-prod-peru-05', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'sa' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - Asia-Pacific
+  // ============================================================================
+  { id: 'ns-monitoring-apac-jp01', name: 'monitoring-apac', clusterId: 'cluster-apac-prod-japan-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'apac' } },
+  { id: 'ns-security-apac-jp01', name: 'security-apac', clusterId: 'cluster-apac-prod-japan-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'apac' } },
+  { id: 'ns-backup-apac-jp01', name: 'backup-apac', clusterId: 'cluster-apac-prod-japan-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'apac' } },
+  { id: 'ns-monitoring-apac-kr02', name: 'monitoring-apac', clusterId: 'cluster-apac-prod-korea-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'apac' } },
+  { id: 'ns-security-apac-kr02', name: 'security-apac', clusterId: 'cluster-apac-prod-korea-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'apac' } },
+  { id: 'ns-backup-apac-kr02', name: 'backup-apac', clusterId: 'cluster-apac-prod-korea-02', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'apac' } },
+  { id: 'ns-monitoring-apac-au03', name: 'monitoring-apac', clusterId: 'cluster-apac-prod-australia-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'apac' } },
+  { id: 'ns-security-apac-au03', name: 'security-apac', clusterId: 'cluster-apac-prod-australia-03', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'apac' } },
+  { id: 'ns-backup-apac-au03', name: 'backup-apac', clusterId: 'cluster-apac-prod-australia-03', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'apac' } },
+  { id: 'ns-monitoring-apac-sg04', name: 'monitoring-apac', clusterId: 'cluster-apac-prod-singapore-04', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'apac' } },
+  { id: 'ns-security-apac-sg04', name: 'security-apac', clusterId: 'cluster-apac-prod-singapore-04', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'apac' } },
+  { id: 'ns-backup-apac-sg04', name: 'backup-apac', clusterId: 'cluster-apac-prod-singapore-04', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'apac' } },
+  { id: 'ns-monitoring-apac-in05', name: 'monitoring-apac', clusterId: 'cluster-apac-prod-india-05', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', region: 'apac' } },
+  { id: 'ns-security-apac-in05', name: 'security-apac', clusterId: 'cluster-apac-prod-india-05', type: 'infrastructure', labels: { env: 'prod', app: 'security', region: 'apac' } },
+  { id: 'ns-backup-apac-in05', name: 'backup-apac', clusterId: 'cluster-apac-prod-india-05', type: 'infrastructure', labels: { env: 'prod', app: 'backup', region: 'apac' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - Development
+  // ============================================================================
+  { id: 'ns-monitoring-dev-a', name: 'monitoring-dev', clusterId: 'cluster-dev-team-a', type: 'monitoring', labels: { env: 'dev', app: 'monitoring' } },
+  { id: 'ns-security-dev-a', name: 'security-dev', clusterId: 'cluster-dev-team-a', type: 'infrastructure', labels: { env: 'dev', app: 'security' } },
+  { id: 'ns-test-data-a', name: 'test-data', clusterId: 'cluster-dev-team-a', type: 'database', labels: { env: 'dev', app: 'testing' } },
+  { id: 'ns-monitoring-dev-b', name: 'monitoring-dev', clusterId: 'cluster-dev-team-b', type: 'monitoring', labels: { env: 'dev', app: 'monitoring' } },
+  { id: 'ns-security-dev-b', name: 'security-dev', clusterId: 'cluster-dev-team-b', type: 'infrastructure', labels: { env: 'dev', app: 'security' } },
+  { id: 'ns-test-data-b', name: 'test-data', clusterId: 'cluster-dev-team-b', type: 'database', labels: { env: 'dev', app: 'testing' } },
+  { id: 'ns-monitoring-dev-qa', name: 'monitoring-dev', clusterId: 'cluster-qa-env', type: 'monitoring', labels: { env: 'dev', app: 'monitoring' } },
+  { id: 'ns-security-dev-qa', name: 'security-dev', clusterId: 'cluster-qa-env', type: 'infrastructure', labels: { env: 'dev', app: 'security' } },
+  { id: 'ns-test-data-qa', name: 'test-data', clusterId: 'cluster-qa-env', type: 'database', labels: { env: 'dev', app: 'testing' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - 5G Edge
+  // ============================================================================
+  { id: 'ns-monitoring-5g-la', name: 'monitoring-5g', clusterId: 'cluster-5g-edge-la-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: '5g' } },
+  { id: 'ns-security-5g-la', name: 'security-5g', clusterId: 'cluster-5g-edge-la-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: '5g' } },
+  { id: 'ns-edge-analytics-la', name: 'edge-analytics', clusterId: 'cluster-5g-edge-la-01', type: 'application', labels: { env: 'prod', app: 'analytics', category: '5g' } },
+  { id: 'ns-monitoring-5g-chi', name: 'monitoring-5g', clusterId: 'cluster-5g-edge-chicago-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: '5g' } },
+  { id: 'ns-security-5g-chi', name: 'security-5g', clusterId: 'cluster-5g-edge-chicago-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: '5g' } },
+  { id: 'ns-edge-analytics-chi', name: 'edge-analytics', clusterId: 'cluster-5g-edge-chicago-02', type: 'application', labels: { env: 'prod', app: 'analytics', category: '5g' } },
+  { id: 'ns-monitoring-5g-lon', name: 'monitoring-5g', clusterId: 'cluster-5g-edge-london-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: '5g' } },
+  { id: 'ns-security-5g-lon', name: 'security-5g', clusterId: 'cluster-5g-edge-london-03', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: '5g' } },
+  { id: 'ns-edge-analytics-lon', name: 'edge-analytics', clusterId: 'cluster-5g-edge-london-03', type: 'application', labels: { env: 'prod', app: 'analytics', category: '5g' } },
+  { id: 'ns-monitoring-5g-tok', name: 'monitoring-5g', clusterId: 'cluster-5g-edge-tokyo-04', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: '5g' } },
+  { id: 'ns-security-5g-tok', name: 'security-5g', clusterId: 'cluster-5g-edge-tokyo-04', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: '5g' } },
+  { id: 'ns-edge-analytics-tok', name: 'edge-analytics', clusterId: 'cluster-5g-edge-tokyo-04', type: 'application', labels: { env: 'prod', app: 'analytics', category: '5g' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - Disaster Recovery
+  // ============================================================================
+  { id: 'ns-monitoring-dr-west', name: 'monitoring-dr', clusterId: 'cluster-dr-west-backup-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'dr' } },
+  { id: 'ns-security-dr-west', name: 'security-dr', clusterId: 'cluster-dr-west-backup-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'dr' } },
+  { id: 'ns-backup-dr-west', name: 'backup-dr', clusterId: 'cluster-dr-west-backup-01', type: 'infrastructure', labels: { env: 'prod', app: 'backup', category: 'dr' } },
+  { id: 'ns-monitoring-dr-central', name: 'monitoring-dr', clusterId: 'cluster-dr-central-backup-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'dr' } },
+  { id: 'ns-security-dr-central', name: 'security-dr', clusterId: 'cluster-dr-central-backup-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'dr' } },
+  { id: 'ns-backup-dr-central', name: 'backup-dr', clusterId: 'cluster-dr-central-backup-02', type: 'infrastructure', labels: { env: 'prod', app: 'backup', category: 'dr' } },
+  { id: 'ns-monitoring-dr-asia', name: 'monitoring-dr', clusterId: 'cluster-dr-asia-backup-03', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'dr' } },
+  { id: 'ns-security-dr-asia', name: 'security-dr', clusterId: 'cluster-dr-asia-backup-03', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'dr' } },
+  { id: 'ns-backup-dr-asia', name: 'backup-dr', clusterId: 'cluster-dr-asia-backup-03', type: 'infrastructure', labels: { env: 'prod', app: 'backup', category: 'dr' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - Customer Experience
+  // ============================================================================
+  { id: 'ns-monitoring-cx-na', name: 'monitoring-cx', clusterId: 'cluster-cx-billing-na-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'cx' } },
+  { id: 'ns-security-cx-na', name: 'security-cx', clusterId: 'cluster-cx-billing-na-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'cx' } },
+  { id: 'ns-audit-logs-na', name: 'audit-logs', clusterId: 'cluster-cx-billing-na-01', type: 'monitoring', labels: { env: 'prod', app: 'audit', category: 'cx' } },
+  { id: 'ns-monitoring-cx-eu', name: 'monitoring-cx', clusterId: 'cluster-cx-billing-eu-02', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'cx' } },
+  { id: 'ns-security-cx-eu', name: 'security-cx', clusterId: 'cluster-cx-billing-eu-02', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'cx' } },
+  { id: 'ns-audit-logs-eu', name: 'audit-logs', clusterId: 'cluster-cx-billing-eu-02', type: 'monitoring', labels: { env: 'prod', app: 'audit', category: 'cx' } },
+  { id: 'ns-monitoring-cx-portal', name: 'monitoring-cx', clusterId: 'cluster-cx-portal-global-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'cx' } },
+  { id: 'ns-security-cx-portal', name: 'security-cx', clusterId: 'cluster-cx-portal-global-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'cx' } },
+  { id: 'ns-audit-logs-portal', name: 'audit-logs', clusterId: 'cluster-cx-portal-global-01', type: 'monitoring', labels: { env: 'prod', app: 'audit', category: 'cx' } },
+  { id: 'ns-monitoring-cx-crm', name: 'monitoring-cx', clusterId: 'cluster-cx-crm-analytics-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'cx' } },
+  { id: 'ns-security-cx-crm', name: 'security-cx', clusterId: 'cluster-cx-crm-analytics-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'cx' } },
+  { id: 'ns-audit-logs-crm', name: 'audit-logs', clusterId: 'cluster-cx-crm-analytics-01', type: 'monitoring', labels: { env: 'prod', app: 'audit', category: 'cx' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - NFV
+  // ============================================================================
+  { id: 'ns-monitoring-nfv-na', name: 'monitoring-nfv', clusterId: 'cluster-nfv-core-na-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'nfv' } },
+  { id: 'ns-security-nfv-na', name: 'security-nfv', clusterId: 'cluster-nfv-core-na-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'nfv' } },
+  { id: 'ns-network-logs-na', name: 'network-logs', clusterId: 'cluster-nfv-core-na-01', type: 'monitoring', labels: { env: 'prod', app: 'logs', category: 'nfv' } },
+  { id: 'ns-monitoring-nfv-eu', name: 'monitoring-nfv', clusterId: 'cluster-nfv-core-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'nfv' } },
+  { id: 'ns-security-nfv-eu', name: 'security-nfv', clusterId: 'cluster-nfv-core-eu-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'nfv' } },
+  { id: 'ns-network-logs-eu', name: 'network-logs', clusterId: 'cluster-nfv-core-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'logs', category: 'nfv' } },
+  { id: 'ns-monitoring-nfv-apac', name: 'monitoring-nfv', clusterId: 'cluster-nfv-core-apac-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'nfv' } },
+  { id: 'ns-security-nfv-apac', name: 'security-nfv', clusterId: 'cluster-nfv-core-apac-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'nfv' } },
+  { id: 'ns-network-logs-apac', name: 'network-logs', clusterId: 'cluster-nfv-core-apac-01', type: 'monitoring', labels: { env: 'prod', app: 'logs', category: 'nfv' } },
+  { id: 'ns-monitoring-nfv-ran-na', name: 'monitoring-nfv', clusterId: 'cluster-nfv-ran-na-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'nfv' } },
+  { id: 'ns-security-nfv-ran-na', name: 'security-nfv', clusterId: 'cluster-nfv-ran-na-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'nfv' } },
+  { id: 'ns-network-logs-ran-na', name: 'network-logs', clusterId: 'cluster-nfv-ran-na-01', type: 'monitoring', labels: { env: 'prod', app: 'logs', category: 'nfv' } },
+  { id: 'ns-monitoring-nfv-ran-eu', name: 'monitoring-nfv', clusterId: 'cluster-nfv-ran-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'nfv' } },
+  { id: 'ns-security-nfv-ran-eu', name: 'security-nfv', clusterId: 'cluster-nfv-ran-eu-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'nfv' } },
+  { id: 'ns-network-logs-ran-eu', name: 'network-logs', clusterId: 'cluster-nfv-ran-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'logs', category: 'nfv' } },
+  
+  // ============================================================================
+  // COMMON PROJECTS - IoT & Smart Cities
+  // ============================================================================
+  { id: 'ns-monitoring-iot-na', name: 'monitoring-iot', clusterId: 'cluster-iot-platform-na-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'iot' } },
+  { id: 'ns-security-iot-na', name: 'security-iot', clusterId: 'cluster-iot-platform-na-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'iot' } },
+  { id: 'ns-device-telemetry-na', name: 'device-telemetry', clusterId: 'cluster-iot-platform-na-01', type: 'monitoring', labels: { env: 'prod', app: 'telemetry', category: 'iot' } },
+  { id: 'ns-monitoring-iot-eu', name: 'monitoring-iot', clusterId: 'cluster-iot-platform-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'iot' } },
+  { id: 'ns-security-iot-eu', name: 'security-iot', clusterId: 'cluster-iot-platform-eu-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'iot' } },
+  { id: 'ns-device-telemetry-eu', name: 'device-telemetry', clusterId: 'cluster-iot-platform-eu-01', type: 'monitoring', labels: { env: 'prod', app: 'telemetry', category: 'iot' } },
+  { id: 'ns-monitoring-iot-sensors', name: 'monitoring-iot', clusterId: 'cluster-smartcity-sensors-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'iot' } },
+  { id: 'ns-security-iot-sensors', name: 'security-iot', clusterId: 'cluster-smartcity-sensors-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'iot' } },
+  { id: 'ns-device-telemetry-sensors', name: 'device-telemetry', clusterId: 'cluster-smartcity-sensors-01', type: 'monitoring', labels: { env: 'prod', app: 'telemetry', category: 'iot' } },
+  { id: 'ns-monitoring-iot-analytics', name: 'monitoring-iot', clusterId: 'cluster-smartcity-analytics-01', type: 'monitoring', labels: { env: 'prod', app: 'monitoring', category: 'iot' } },
+  { id: 'ns-security-iot-analytics', name: 'security-iot', clusterId: 'cluster-smartcity-analytics-01', type: 'infrastructure', labels: { env: 'prod', app: 'security', category: 'iot' } },
+  { id: 'ns-device-telemetry-analytics', name: 'device-telemetry', clusterId: 'cluster-smartcity-analytics-01', type: 'monitoring', labels: { env: 'prod', app: 'telemetry', category: 'iot' } },
 ];
 
 // Sample Virtual Machines (representative set - in production, you'd generate 15,000)

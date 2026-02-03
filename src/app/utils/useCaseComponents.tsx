@@ -1,136 +1,72 @@
-import * as React from 'react';
-import { useUseCaseContext } from '@app/contexts/UseCaseContext';
+/**
+ * Dynamically exports components based on the selected use case
+ * Maps use-case-1 to fleet-admin-rbac and use-case-2 to tenant-admin-access prototypes
+ */
 
-// Use Case 2 (Tenant Admin - Walter) - Original implementation
-import { ClustersPage as ClustersPageUC2, ClusterDetailPage as ClusterDetailPageUC2, IdentitiesPage as IdentitiesPageUC2, RolesPage as RolesPageUC2, IdentityProvidersPage as IdentityProvidersPageUC2 } from '@app/use-case-2/navigation';
-import { ProjectsPage as ProjectsPageUC2 } from '@app/use-case-2/navigation/core-platforms';
-import { GovernancePage as GovernancePageUC2 } from '@app/use-case-2/navigation/governance/GovernancePage';
-import { CreatePolicy as CreatePolicyUC2 } from '@app/use-case-2/Governance/CreatePolicy';
-import { IdentityDetail as IdentityDetailUC2 } from '@app/use-case-2/Identities/IdentityDetail';
-import { GroupDetail as GroupDetailUC2 } from '@app/use-case-2/Identities/GroupDetail';
-import CreateGroupUC2 from '@app/use-case-2/Identities/CreateGroup';
-import { CreateRole as CreateRoleUC2 } from '@app/use-case-2/Roles/CreateRole';
-import { RoleDetail as RoleDetailUC2 } from '@app/use-case-2/Roles/RoleDetail';
-import { IdentityProviderDetail as IdentityProviderDetailUC2 } from '@app/use-case-2/IdentityProvider/IdentityProviderDetail';
-import { AddLDAPProvider as AddLDAPProviderUC2 } from '@app/use-case-2/IdentityProvider/AddLDAPProvider';
-import { ProjectDetail as ProjectDetailUC2 } from '@app/use-case-2/Projects/ProjectDetail';
+// Use Case 1 (Fleet Admin) - from fleet-admin-rbac prototype
+import { Clusters as Clusters1 } from '@app/prototypes/fleet-admin-rbac/Clusters/Clusters';
+import { ClusterDetail as ClusterDetail1 } from '@app/prototypes/fleet-admin-rbac/Clusters/ClusterDetail';
+import { IdentitiesPage as IdentitiesPage1 } from '@app/prototypes/fleet-admin-rbac/navigation/user-management/IdentitiesPage';
+import { RolesPage as RolesPage1 } from '@app/prototypes/fleet-admin-rbac/navigation/user-management/RolesPage';
+import { IdentityProvidersPage as IdentityProvidersPage1 } from '@app/prototypes/fleet-admin-rbac/navigation/user-management/IdentityProvidersPage';
+import { ProjectsPage as ProjectsPage1 } from '@app/prototypes/fleet-admin-rbac/navigation/core-platforms/ProjectsPage';
+import { GovernancePage as GovernancePage1 } from '@app/prototypes/fleet-admin-rbac/navigation/governance/GovernancePage';
+import { CreatePolicy as CreatePolicy1 } from '@app/prototypes/fleet-admin-rbac/Governance/CreatePolicy';
+import { IdentityDetail as IdentityDetail1 } from '@app/prototypes/fleet-admin-rbac/Identities/IdentityDetail';
+import { GroupDetail as GroupDetail1 } from '@app/prototypes/fleet-admin-rbac/Identities/GroupDetail';
+import CreateGroup1 from '@app/prototypes/fleet-admin-rbac/Identities/CreateGroup';
+import { CreateRole as CreateRole1 } from '@app/prototypes/fleet-admin-rbac/Roles/CreateRole';
+import { RoleDetail as RoleDetail1 } from '@app/prototypes/fleet-admin-rbac/Roles/RoleDetail';
+import { IdentityProviderDetail as IdentityProviderDetail1 } from '@app/prototypes/fleet-admin-rbac/IdentityProvider/IdentityProviderDetail';
+import { AddLDAPProvider as AddLDAPProvider1 } from '@app/prototypes/fleet-admin-rbac/IdentityProvider/AddLDAPProvider';
+import { ProjectDetail as ProjectDetail1 } from '@app/prototypes/fleet-admin-rbac/Projects/ProjectDetail';
 
-// Use Case 1 (Fleet Admin) - Separate implementation
-import { ClustersPage as ClustersPageUC1, ClusterDetailPage as ClusterDetailPageUC1, IdentitiesPage as IdentitiesPageUC1, RolesPage as RolesPageUC1, IdentityProvidersPage as IdentityProvidersPageUC1 } from '@app/use-case-1/navigation';
-import { ProjectsPage as ProjectsPageUC1 } from '@app/use-case-1/navigation/core-platforms';
-import { GovernancePage as GovernancePageUC1 } from '@app/use-case-1/navigation/governance/GovernancePage';
-import { CreatePolicy as CreatePolicyUC1 } from '@app/use-case-1/Governance/CreatePolicy';
-import { IdentityDetail as IdentityDetailUC1 } from '@app/use-case-1/Identities/IdentityDetail';
-import { GroupDetail as GroupDetailUC1 } from '@app/use-case-1/Identities/GroupDetail';
-import CreateGroupUC1 from '@app/use-case-1/Identities/CreateGroup';
-import { CreateRole as CreateRoleUC1 } from '@app/use-case-1/Roles/CreateRole';
-import { RoleDetail as RoleDetailUC1 } from '@app/use-case-1/Roles/RoleDetail';
-import { IdentityProviderDetail as IdentityProviderDetailUC1 } from '@app/use-case-1/IdentityProvider/IdentityProviderDetail';
-import { AddLDAPProvider as AddLDAPProviderUC1 } from '@app/use-case-1/IdentityProvider/AddLDAPProvider';
-import { ProjectDetail as ProjectDetailUC1 } from '@app/use-case-1/Projects/ProjectDetail';
+// Use Case 2 (Tenant Admin) - from tenant-admin-access prototype
+import { Clusters as Clusters2 } from '@app/prototypes/tenant-admin-access/Clusters/Clusters';
+import { ClusterDetail as ClusterDetail2 } from '@app/prototypes/tenant-admin-access/Clusters/ClusterDetail';
+import { IdentitiesPage as IdentitiesPage2 } from '@app/prototypes/tenant-admin-access/navigation/user-management/IdentitiesPage';
+import { RolesPage as RolesPage2 } from '@app/prototypes/tenant-admin-access/navigation/user-management/RolesPage';
+import { IdentityProvidersPage as IdentityProvidersPage2 } from '@app/prototypes/tenant-admin-access/navigation/user-management/IdentityProvidersPage';
+import { ProjectsPage as ProjectsPage2 } from '@app/prototypes/tenant-admin-access/navigation/core-platforms/ProjectsPage';
+import { GovernancePage as GovernancePage2 } from '@app/prototypes/tenant-admin-access/navigation/governance/GovernancePage';
+import { CreatePolicy as CreatePolicy2 } from '@app/prototypes/tenant-admin-access/Governance/CreatePolicy';
+import { IdentityDetail as IdentityDetail2 } from '@app/prototypes/tenant-admin-access/Identities/IdentityDetail';
+import { GroupDetail as GroupDetail2 } from '@app/prototypes/tenant-admin-access/Identities/GroupDetail';
+import CreateGroup2 from '@app/prototypes/tenant-admin-access/Identities/CreateGroup';
+import { CreateRole as CreateRole2 } from '@app/prototypes/tenant-admin-access/Roles/CreateRole';
+import { RoleDetail as RoleDetail2 } from '@app/prototypes/tenant-admin-access/Roles/RoleDetail';
+import { IdentityProviderDetail as IdentityProviderDetail2 } from '@app/prototypes/tenant-admin-access/IdentityProvider/IdentityProviderDetail';
+import { AddLDAPProvider as AddLDAPProvider2 } from '@app/prototypes/tenant-admin-access/IdentityProvider/AddLDAPProvider';
+import { ProjectDetail as ProjectDetail2 } from '@app/prototypes/tenant-admin-access/Projects/ProjectDetail';
 
-// Use Case AAQ (Virtualization Admin) - AAQ-specific implementation
-import { QuotasPage as QuotasPageAAQ, VirtualizationWrapper as VirtualizationWrapperAAQ } from '@app/use-case-aaq/navigation';
-import { QuotaDetail as QuotaDetailAAQ } from '@app/use-case-aaq/Quotas/QuotaDetail';
-import { CreateQuota as CreateQuotaAAQ } from '@app/use-case-aaq/Quotas/CreateQuota';
+// Shared components - use empty placeholders for now
+import { OverviewPage as VirtualizationOverview } from '@app/FleetVirtualization/EmptyPages';
 
-// Export wrapped components
-export const ClustersPage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <ClustersPageUC1 /> : <ClustersPageUC2 />;
+// Placeholder exports for Quotas (not in main branch structure)
+const QuotasPage = () => null;
+const QuotaDetail = () => null;
+const CreateQuota = () => null;
+
+// Export Use Case 1 (Fleet Admin) as default for build compatibility
+export {
+  Clusters1 as ClustersPage,
+  ClusterDetail1 as ClusterDetailPage,
+  IdentitiesPage1 as IdentitiesPage,
+  RolesPage1 as RolesPage,
+  IdentityProvidersPage1 as IdentityProvidersPage,
+  ProjectsPage1 as ProjectsPage,
+  GovernancePage1 as GovernancePage,
+  CreatePolicy1 as CreatePolicy,
+  IdentityDetail1 as IdentityDetail,
+  GroupDetail1 as GroupDetail,
+  CreateGroup1 as CreateGroup,
+  CreateRole1 as CreateRole,
+  RoleDetail1 as RoleDetail,
+  IdentityProviderDetail1 as IdentityProviderDetail,
+  AddLDAPProvider1 as AddLDAPProvider,
+  ProjectDetail1 as ProjectDetail,
+  QuotasPage,
+  QuotaDetail,
+  CreateQuota,
+  VirtualizationOverview,
 };
-
-export const ClusterDetailPage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <ClusterDetailPageUC1 /> : <ClusterDetailPageUC2 />;
-};
-
-export const IdentitiesPage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <IdentitiesPageUC1 /> : <IdentitiesPageUC2 />;
-};
-
-export const RolesPage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <RolesPageUC1 /> : <RolesPageUC2 />;
-};
-
-export const IdentityProvidersPage: React.FC<{ showClustersColumn: boolean }> = ({ showClustersColumn }) => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' 
-    ? <IdentityProvidersPageUC1 showClustersColumn={showClustersColumn} /> 
-    : <IdentityProvidersPageUC2 showClustersColumn={showClustersColumn} />;
-};
-
-export const ProjectsPage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <ProjectsPageUC1 /> : <ProjectsPageUC2 />;
-};
-
-export const GovernancePage: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <GovernancePageUC1 /> : <GovernancePageUC2 />;
-};
-
-export const CreatePolicy: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <CreatePolicyUC1 /> : <CreatePolicyUC2 />;
-};
-
-export const IdentityDetail: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <IdentityDetailUC1 /> : <IdentityDetailUC2 />;
-};
-
-export const GroupDetail: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <GroupDetailUC1 /> : <GroupDetailUC2 />;
-};
-
-export const CreateGroup: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <CreateGroupUC1 /> : <CreateGroupUC2 />;
-};
-
-export const CreateRole: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <CreateRoleUC1 /> : <CreateRoleUC2 />;
-};
-
-export const RoleDetail: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <RoleDetailUC1 /> : <RoleDetailUC2 />;
-};
-
-export const IdentityProviderDetail: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <IdentityProviderDetailUC1 /> : <IdentityProviderDetailUC2 />;
-};
-
-export const AddLDAPProvider: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <AddLDAPProviderUC1 /> : <AddLDAPProviderUC2 />;
-};
-
-export const ProjectDetail: React.FC = () => {
-  const { useCase } = useUseCaseContext();
-  return useCase === 'use-case-1' ? <ProjectDetailUC1 /> : <ProjectDetailUC2 />;
-};
-
-// AAQ-specific exports
-export const QuotasPage: React.FC = () => {
-  return <QuotasPageAAQ />;
-};
-
-export const QuotaDetail: React.FC = () => {
-  return <QuotaDetailAAQ />;
-};
-
-export const CreateQuota: React.FC = () => {
-  return <CreateQuotaAAQ />;
-};
-
-export const VirtualizationOverview: React.FC = () => {
-  return <VirtualizationWrapperAAQ />;
-};
-

@@ -135,44 +135,7 @@ export const UseCaseSelector: React.FC = () => {
             </Grid>
           </GridItem>
 
-          <GridItem span={6}>
-            <Title headingLevel="h2" size="xl" style={{ color: '#000000', marginBottom: '24px' }}>
-              Application Aware Quota
-            </Title>
-            <Grid hasGutter>
-              <GridItem span={12}>
-                <Card
-                  isCompact
-                  style={{
-                    maxWidth: '600px',
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                  }}
-                >
-                  <CardBody>
-                    <Flex alignItems={{ default: 'alignItemsCenter' }}>
-                      <FlexItem flex={{ default: 'flex_1' }}>
-                        <Title headingLevel="h3" size="xl" style={{ marginBottom: '8px' }}>
-                          AAQ
-                        </Title>
-                        <Content component="p" style={{ color: '#6a6e73', fontSize: '16px', margin: 0 }}>
-                          AAQ operator quota management experience
-                        </Content>
-                      </FlexItem>
-                  <FlexItem style={{ marginLeft: '16px' }}>
-                    <Button
-                      variant="primary"
-                      onClick={() => handleUseCaseSelect('use-case-aaq')}
-                    >
-                      Explore
-                    </Button>
-                  </FlexItem>
-                    </Flex>
-                  </CardBody>
-                </Card>
-              </GridItem>
-            </Grid>
-          </GridItem>
+          {/* Application Aware Quota section hidden per user request */}
         </Grid>
       </div>
     </div>

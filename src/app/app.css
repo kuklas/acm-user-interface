@@ -263,6 +263,60 @@ body,
   max-width: 100% !important;
 }
 
+/* Migration plans page container */
+.migration-plans-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.migration-plans-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.migration-plans-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Migration plan detail page container */
+.migration-plan-detail-page-container {
+  background-color: #f5f5f5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.migration-plan-detail-page-container .page-header-section {
+  background-color: #ffffff !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.migration-plan-detail-page-container .page-content-section {
+  background-color: #f5f5f5 !important;
+  padding: 24px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* Governance page container */
 .governance-page-container {
   background-color: #f5f5f5 !important;
@@ -885,4 +939,27 @@ input[type="checkbox"] {
   padding-left: 24px !important;
   padding-right: 24px !important;
   padding-bottom: 16px !important;
+}
+
+/* Override wizard padding for migration readiness step to allow full-width dividers */
+#migration-readiness-step .pf-v6-c-wizard__main-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Also override for the step wrapper */
+.pf-v6-c-wizard__main div[id="migration-readiness-step"] {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* More specific override for the wizard body when migration readiness is active */
+.pf-v6-c-wizard:has(#migration-readiness-step) .pf-v6-c-wizard__main-body {
+  padding: 0 !important;
+}
+
+/* Target the specific step container */
+div.pf-v6-c-wizard__main div.pf-v6-c-wizard__main-body:has(#migration-readiness-step > *) {
+  padding: 0 !important;
+  margin: 0 !important;
 }

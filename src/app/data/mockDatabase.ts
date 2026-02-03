@@ -9,6 +9,7 @@ import {
   VirtualMachine,
   InstanceType,
   Template,
+  MigrationPlan,
 } from './schemas/virtualization';
 import {
   User,
@@ -330,6 +331,18 @@ export const clusters: Cluster[] = [
     location: 'US East QA',
     nodes: 15,
     namespaceIds: ['ns-qa-testing', 'ns-qa-performance'],
+  },
+  // Standalone cluster - not part of any cluster set
+  {
+    id: 'testcluster',
+    name: 'testcluster',
+    clusterSetId: '',
+    status: 'Ready',
+    kubernetesVersion: '1.29.0',
+    region: 'North America',
+    location: 'US Central Test',
+    nodes: 3,
+    namespaceIds: [],
   },
 ];
 
@@ -912,6 +925,12 @@ export const templates: Template[] = [
 ];
 
 // ============================================================================
+// MIGRATION PLANS
+// ============================================================================
+
+export const migrationPlans: MigrationPlan[] = [];
+
+// ============================================================================
 // GENERATE ADDITIONAL DATA
 // ============================================================================
 
@@ -1118,6 +1137,7 @@ export const mockDatabase = {
   roleBindings,
   instanceTypes,
   templates,
+  migrationPlans,
 };
 
 export default mockDatabase;

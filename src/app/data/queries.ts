@@ -13,6 +13,7 @@ import {
   roleBindings,
   instanceTypes,
   templates,
+  migrationPlans,
 } from './mockDatabase';
 
 // ============================================================================
@@ -62,6 +63,16 @@ export const getNamespacesByCluster = (clusterId: string) =>
 
 export const getNamespacesByType = (type: string) =>
   namespaces.filter(ns => ns.type === type);
+
+export const createNamespace = (namespace: Omit<import('./schemas/infrastructure').Namespace, 'id'>) => {
+  const id = `namespace-${Date.now()}`;
+  const newNamespace: import('./schemas/infrastructure').Namespace = {
+    id,
+    ...namespace,
+  };
+  namespaces.push(newNamespace);
+  return newNamespace;
+};
 
 // ============================================================================
 // VIRTUAL MACHINE QUERIES
@@ -291,5 +302,36 @@ export const getStatistics = () => {
       asiaPacific: clusters.filter(c => c.region === 'Asia-Pacific').length,
     },
   };
+};
+
+// ============================================================================
+// MIGRATION PLAN QUERIES
+// ============================================================================
+
+export const getAllMigrationPlans = () => migrationPlans;
+
+export const getMigrationPlanById = (id: string) =>
+  migrationPlans.find(mp => mp.id === id);
+
+export const getMigrationPlansByStatus = (status: string) =>
+  migrationPlans.filter(mp => mp.status === status);
+
+export const createMigrationPlan = (plan: Omit<import('./schemas/virtualization').MigrationPlan, 'id'>) => {
+  const id = `migration-plan-${Date.now()}`;
+  const newPlan: import('./schemas/virtualization').MigrationPlan = {
+    id,
+    ...plan,
+  };
+  migrationPlans.push(newPlan);
+  return newPlan;
+};
+
+export const updateMigrationPlan = (id: string, updates: Partial<import('./schemas/virtualization').MigrationPlan>) => {
+  const index = migrationPlans.findIndex(mp => mp.id === id);
+  if (index !== -1) {
+    migrationPlans[index] = { ...migrationPlans[index], ...updates };
+    return migrationPlans[index];
+  }
+  return null;
 };
 

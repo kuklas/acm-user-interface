@@ -107,7 +107,10 @@ export default (env) => {
         silent: true,
       }),
       new CopyPlugin({
-        patterns: [{ from: './src/favicon.png', to: 'images' }],
+        patterns: [
+          { from: './src/favicon.png', to: 'images' },
+          { from: './src/404.html', to: '404.html' }
+        ],
       }),
     ],
     resolve: {
@@ -119,6 +122,12 @@ export default (env) => {
       ],
       symlinks: false,
       cacheWithContext: false,
+    },
+    performance: {
+      // Increase performance budget for PatternFly applications
+      maxEntrypointSize: 1500000, // 1.5 MB
+      maxAssetSize: 1000000, // 1 MB
+      hints: process.env.NODE_ENV === 'production' ? 'warning' : false,
     },
   };
 };
