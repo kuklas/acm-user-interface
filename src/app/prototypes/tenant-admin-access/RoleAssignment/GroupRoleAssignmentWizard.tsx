@@ -378,6 +378,78 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
   const handleFinish = () => {
     const roleName = mockRoles.find(r => r.id === selectedRole)?.name || 'Unknown Role';
 
+    // Get selected cluster names (look up by ID in mockClusters)
+    let clusterNames = selectedClusters.map(clusterId => {
+      const cluster = mockClusters.find(c => c.id === clusterId);
+      return cluster?.name || 'Unknown Cluster';
+    });
+    
+    // Get selected project names (look up by ID in mockProjects)
+    let projectNames = selectedProjects.map(projectId => {
+      const project = mockProjects.find(p => p.id === projectId);
+      return project?.name || 'Unknown Project';
+    });
+
+    // Handle different resource scopes
+    if (resourceScope === 'everything') {
+      // Everything scope - get all available clusters and projects
+      clusterNames = mockClusters.map(c => c.name);
+      projectNames = mockProjects.map(p => p.name);
+    } else if (resourceScope === 'cluster-sets') {
+      // Cluster sets selected
+      if (clusterSetScope === 'everything' && selectedClusterSets.length > 0) {
+        // All resources in cluster set - get all clusters/projects for selected cluster sets
+        // selectedClusterSets contains index-based IDs (1, 2, 3...)
+        // Convert to database IDs for filtering
+        const selectedDbClusterSetIds = selectedClusterSets.map(csId => {
+          const cs = mockClusterSets.find(mcs => mcs.id === csId);
+          return cs?.dbId;
+        }).filter(Boolean);
+        
+        clusterNames = mockClusters
+          .filter(c => selectedDbClusterSetIds.includes(c.clusterSetId))
+          .map(c => c.name);
+        
+        projectNames = mockProjects
+          .filter(p => clusterNames.includes(p.clusterName))
+          .map(p => p.name);
+      } else if (clusterSetScope === 'partial' && selectedClusters.length > 0) {
+        // Specific clusters selected within cluster set
+        if (clusterScope === 'everything') {
+          // All projects on selected clusters
+          projectNames = mockProjects
+            .filter(p => selectedClusters.some(clusterId => {
+              const cluster = mockClusters.find(c => c.id === clusterId);
+              return cluster && p.clusterName === cluster.name;
+            }))
+            .map(p => p.name);
+        }
+        // else: specific projects selected, projectNames already populated from initial mapping
+      }
+    } else if (resourceScope === 'clusters') {
+      // Individual clusters selected
+      if (clusterScope === 'everything' && selectedClusters.length > 0) {
+        // All projects on selected clusters
+        projectNames = mockProjects
+          .filter(p => selectedClusters.some(clusterId => {
+            const cluster = mockClusters.find(c => c.id === clusterId);
+            return cluster && p.clusterName === cluster.name;
+          }))
+          .map(p => p.name);
+      }
+    }
+
+    console.log('GroupRoleAssignmentWizard.handleFinish - sending data:', {
+      resourceScope,
+      clusterScope,
+      clusterSetScope,
+      selectedClusterSets,
+      selectedClusters,
+      selectedProjects,
+      clusterNames,
+      projectNames
+    });
+
     onComplete({
       id: initialData?.id, // Include id if editing
       identityType: 'group',
@@ -388,6 +460,8 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
       selectedClusters,
       selectedProjects,
       roleName,
+      clusterNames,
+      projectNames
     });
     
     resetWizard();
@@ -463,6 +537,7 @@ export const GroupRoleAssignmentWizard: React.FC<GroupRoleAssignmentWizardProps>
       name: cluster.name,
       status: cluster.status,
       clusterSet: dbClusterSets.find(cs => cs.id === cluster.clusterSetId)?.name || 'Unknown',
+      clusterSetId: cluster.clusterSetId, // Keep the actual cluster set ID for filtering
       infrastructure: index % 3 === 0 ? 'Amazon Web Services' : index % 3 === 1 ? 'Microsoft Azure' : 'Google Cloud Platform',
       controlPlaneType: 'Standalone',
       kubernetesVersion: cluster.kubernetesVersion,

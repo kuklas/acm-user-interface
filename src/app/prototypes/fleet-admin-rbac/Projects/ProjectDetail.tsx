@@ -81,9 +81,14 @@ export const ProjectDetail: React.FC = () => {
   };
 
   const handleWizardComplete = (wizardData: any) => {
-    // For projects context, clusters and namespaces are scoped to the current project
-    const clustersList = ['hub-cluster']; // Projects are typically on the hub cluster
-    const namespacesList = [projectName || 'Unknown project'];
+    // Use actual wizard selections for clusters and projects/namespaces
+    const clustersList = wizardData.clusterNames && wizardData.clusterNames.length > 0 
+      ? wizardData.clusterNames 
+      : ['hub-cluster']; // Default fallback
+    
+    const namespacesList = wizardData.projectNames && wizardData.projectNames.length > 0 
+      ? wizardData.projectNames 
+      : [projectName || 'Unknown project']; // Default fallback
     
     // Create a new role assignment from the wizard selections
     const newAssignment: RoleAssignment = {
@@ -874,6 +879,7 @@ spec:
         onClose={() => setIsWizardOpen(false)}
         onComplete={handleWizardComplete}
         context="projects"
+        clusterName={projectName}
       />
 
       {/* Success Alert */}

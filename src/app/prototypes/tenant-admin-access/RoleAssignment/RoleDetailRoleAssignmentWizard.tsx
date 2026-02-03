@@ -302,6 +302,80 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
     let identityName = '';
     let identityTypeValue = '';
     
+    // Get selected cluster names (look up by ID in mockClusters)
+    let clusterNames = selectedClusters.map(clusterId => {
+      const cluster = mockClusters.find(c => c.id === clusterId);
+      return cluster?.name || 'Unknown Cluster';
+    });
+    
+    // Get selected project names (look up by ID in mockProjects)
+    let projectNames = selectedProjects.map(projectId => {
+      const project = mockProjects.find(p => p.id === projectId);
+      return project?.name || 'Unknown Project';
+    });
+
+    // Handle different resource scopes - populate names based on selections
+    if (resourceScope === 'everything') {
+      // Everything scope - get all available clusters and projects
+      clusterNames = mockClusters.map(c => c.name);
+      projectNames = mockProjects.map(p => p.name);
+    } else if (resourceScope === 'cluster-sets') {
+      // Cluster set(s) selected
+      if (clusterSetScope === 'everything' && selectedClusterSets.length > 0) {
+        // All resources in cluster set - get clusters for these cluster sets
+        const mockClusterSets = dbClusterSets.map((cs, index) => ({
+          id: index + 1,
+          dbId: cs.id,
+          name: cs.name
+        }));
+        
+        const selectedDbClusterSetIds = selectedClusterSets.map(csId => {
+          const cs = mockClusterSets.find(mcs => mcs.id === csId);
+          return cs?.dbId;
+        }).filter(Boolean);
+        
+        clusterNames = mockClusters
+          .filter(c => {
+            const cluster = dbClusters.find(dbc => dbc.id === c.dbId);
+            return cluster && selectedDbClusterSetIds.includes(cluster.clusterSetId);
+          })
+          .map(c => c.name);
+        
+        projectNames = mockProjects
+          .filter(p => clusterNames.includes(p.clusterName))
+          .map(p => p.name);
+      } else if (clusterSetScope === 'partial' && selectedClusters.length > 0) {
+        // Specific clusters selected within cluster set
+        if (clusterScope === 'everything') {
+          // All projects on selected clusters
+          const selectedClusterNames = clusterNames; // Already populated from initial mapping
+          projectNames = mockProjects
+            .filter(p => selectedClusterNames.includes(p.clusterName))
+            .map(p => p.name);
+        }
+      }
+    } else if (resourceScope === 'clusters') {
+      // Individual clusters selected
+      if (clusterScope === 'everything' && selectedClusters.length > 0) {
+        // All projects on selected clusters
+        const selectedClusterNames = clusterNames; // Already populated from initial mapping
+        projectNames = mockProjects
+          .filter(p => selectedClusterNames.includes(p.clusterName))
+          .map(p => p.name);
+      }
+    }
+
+    console.log('RoleDetailRoleAssignmentWizard - sending data:', {
+      resourceScope,
+      clusterScope,
+      clusterSetScope,
+      selectedClusterSets,
+      selectedClusters,
+      selectedProjects,
+      clusterNames,
+      projectNames
+    });
+
     if (isPreauthorizing) {
       // Pre-authorization mode (users only)
       const idpName = preauthorizeIdpId 
@@ -322,7 +396,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
         selectedProjects,
         clusterScope,
         clusterSetScope,
-        status: 'Pending'
+        status: 'Pending',
+        clusterNames,
+        projectNames
       });
     } else {
       // Existing user/group mode
@@ -348,7 +424,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
         selectedProjects,
         clusterScope,
         clusterSetScope,
-        status: 'Active'
+        status: 'Active',
+        clusterNames,
+        projectNames
       });
     }
     

@@ -231,6 +231,24 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
       
       const roleName = mockRoles.find(r => r.id === selectedRole)?.name || 'Unknown';
       
+      // Get selected project names (look up by ID in mockProjects)
+      let projectNames = selectedProjects.map(projectId => {
+        const project = mockProjects.find(p => p.id === projectId);
+        return project?.name || 'Unknown Project';
+      });
+      
+      // Handle 'full' scope - populate with all available projects
+      if (resourceScope === 'full') {
+        projectNames = mockProjects.map(p => p.name);
+      }
+      
+      console.log('ClusterRoleAssignmentWizard - preauthorize mode, returning:', {
+        clusterNames: [clusterName],
+        projectNames,
+        resourceScope,
+        selectedProjects
+      });
+      
       onComplete({
         assignmentMode: 'preauthorize',
         identityType: 'user',
@@ -242,7 +260,9 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
         roleName,
         resourceScope,
         selectedProjects,
-        status: 'Pending'
+        status: 'Pending',
+        projectNames,
+        clusterNames: [clusterName]
       });
     } else {
       // Existing user/group mode
@@ -254,6 +274,24 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
       
       const roleName = mockRoles.find(r => r.id === selectedRole)?.name || 'Unknown';
 
+      // Get selected project names (look up by ID in mockProjects)
+      let projectNames = selectedProjects.map(projectId => {
+        const project = mockProjects.find(p => p.id === projectId);
+        return project?.name || 'Unknown Project';
+      });
+
+      // Handle 'full' scope - populate with all available projects
+      if (resourceScope === 'full') {
+        projectNames = mockProjects.map(p => p.name);
+      }
+
+      console.log('ClusterRoleAssignmentWizard - existing mode, returning:', {
+        clusterNames: [clusterName],
+        projectNames,
+        resourceScope,
+        selectedProjects
+      });
+
       onComplete({
         assignmentMode: 'existing',
         identityType,
@@ -263,7 +301,9 @@ export const ClusterRoleAssignmentWizard: React.FC<ClusterRoleAssignmentWizardPr
         roleName,
         resourceScope,
         selectedProjects,
-        status: 'Active'
+        status: 'Active',
+        projectNames,
+        clusterNames: [clusterName]
       });
     }
     

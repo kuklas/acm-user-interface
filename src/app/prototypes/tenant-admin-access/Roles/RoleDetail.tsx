@@ -134,65 +134,91 @@ rules:
   };
 
   const handleWizardComplete = (wizardData: any) => {
-    // Get data from database
+    console.log('=== RoleDetail.handleWizardComplete START ===');
+    console.log('wizardData:', JSON.stringify(wizardData, null, 2));
+    
+    // Get data from database (for fallback lookups if needed)
     const allClusters = getAllClusters();
     const allClusterSets = getAllClusterSets();
     const allNamespaces = getAllNamespaces();
     
     // Extract cluster set names, cluster names, and project names from wizard data
-    const clusterSetNames: string[] = [];
-    const clusterNames: string[] = [];
-    const projectNames: string[] = [];
+    let clusterSetNames: string[] = [];
+    let clusterNames: string[] = [];
+    let projectNames: string[] = [];
     
     if (wizardData.resourceScope === 'everything') {
-      clusterSetNames.push('All cluster sets');
-      clusterNames.push('All clusters');
-      projectNames.push('All projects');
+      clusterSetNames = ['All cluster sets'];
+      clusterNames = ['All clusters'];
+      projectNames = ['All projects'];
     } else if (wizardData.resourceScope === 'cluster-sets') {
       // Handle cluster sets
       if (wizardData.selectedClusterSets && wizardData.selectedClusterSets.length > 0) {
         const selectedClusterSetNames = wizardData.selectedClusterSets
           .map((id: string) => allClusterSets.find(cs => cs.id === id)?.name)
           .filter(Boolean);
-        clusterSetNames.push(...selectedClusterSetNames);
+        clusterSetNames = selectedClusterSetNames;
         
-        if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+        // Use cluster names from wizard if available
+        if (wizardData.clusterNames && wizardData.clusterNames.length > 0) {
+          clusterNames = wizardData.clusterNames;
+        } else if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
           const selectedClusterNames = wizardData.selectedClusters
             .map((id: string) => allClusters.find(c => c.id === id)?.name)
             .filter(Boolean);
-          clusterNames.push(...selectedClusterNames);
-          
-          if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
-            const selectedProjectNames = wizardData.selectedProjects
-              .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
-              .filter(Boolean);
-            projectNames.push(...selectedProjectNames);
-          } else {
-            projectNames.push('All projects');
-          }
+          clusterNames = selectedClusterNames;
         } else {
-          clusterNames.push('All clusters');
-          projectNames.push('All projects');
+          clusterNames = ['All clusters'];
         }
-      }
-    } else if (wizardData.resourceScope === 'clusters') {
-      // Handle individual clusters
-      if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
-        const selectedClusterNames = wizardData.selectedClusters
-          .map((id: string) => allClusters.find(c => c.id === id)?.name)
-          .filter(Boolean);
-        clusterNames.push(...selectedClusterNames);
         
-        if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+        // Use project names from wizard if available
+        if (wizardData.projectNames && wizardData.projectNames.length > 0) {
+          projectNames = wizardData.projectNames;
+        } else if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
           const selectedProjectNames = wizardData.selectedProjects
             .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
             .filter(Boolean);
-          projectNames.push(...selectedProjectNames);
+          projectNames = selectedProjectNames;
         } else {
-          projectNames.push('All projects');
+          projectNames = ['All projects'];
         }
       }
+    } else if (wizardData.resourceScope === 'clusters') {
+      // Handle individual clusters - use names from wizard if available
+      if (wizardData.clusterNames && wizardData.clusterNames.length > 0) {
+        clusterNames = wizardData.clusterNames;
+      } else if (wizardData.selectedClusters && wizardData.selectedClusters.length > 0) {
+        const selectedClusterNames = wizardData.selectedClusters
+          .map((id: string) => allClusters.find(c => c.id === id)?.name)
+          .filter(Boolean);
+        clusterNames = selectedClusterNames;
+      }
+      
+      // Use project names from wizard if available
+      if (wizardData.projectNames && wizardData.projectNames.length > 0) {
+        projectNames = wizardData.projectNames;
+      } else if (wizardData.selectedProjects && wizardData.selectedProjects.length > 0) {
+        const selectedProjectNames = wizardData.selectedProjects
+          .map((id: string) => allNamespaces.find(n => n.id === id)?.name)
+          .filter(Boolean);
+        projectNames = selectedProjectNames;
+      } else {
+        projectNames = ['All projects'];
+      }
     }
+    
+    console.log('Processed values:');
+    console.log('  clusterSetNames:', clusterSetNames);
+    console.log('  clusterNames:', clusterNames);
+    console.log('  projectNames:', projectNames);
+    
+    const finalClusters = clusterNames.length > 0 ? clusterNames : ['All clusters'];
+    const finalProjects = projectNames.length > 0 ? projectNames : ['All projects'];
+    
+    console.log('FINAL table values:');
+    console.log('  clusters:', finalClusters);
+    console.log('  projects:', finalProjects);
+    console.log('=== RoleDetail.handleWizardComplete END ===');
     
     // Create new role assignment
     // Note: For role detail, we use the groupName from wizard as subject name since it could be user or group
@@ -201,8 +227,8 @@ rules:
       name: wizardData.identityName || 'Unknown',
       type: wizardData.identityType === 'group' ? 'Group' : 'User',
       clusterSets: clusterSetNames,
-      clusters: clusterNames.length > 0 ? clusterNames : ['All clusters'],
-      projects: projectNames.length > 0 ? projectNames : ['All projects'],
+      clusters: finalClusters,
+      projects: finalProjects,
       roles: [roleName || 'Unknown Role'],
       status: wizardData.status || 'Active',
       assignedDate: new Date().toLocaleString('en-US', {

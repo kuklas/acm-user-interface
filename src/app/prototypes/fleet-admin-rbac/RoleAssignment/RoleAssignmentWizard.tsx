@@ -802,6 +802,24 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         roleName = role?.name || 'Unknown Role';
       }
       
+      // Get selected cluster names (look up by ID in mockClusters)
+      let clusterNames = selectedClusters.map(clusterId => {
+        const cluster = mockClusters.find(c => c.id === clusterId);
+        return cluster?.name || 'Unknown Cluster';
+      });
+      
+      // Get selected project names (look up by ID in mockProjects)
+      let projectNames = selectedProjects.map(projectId => {
+        const project = mockProjects.find(p => p.id === projectId);
+        return project?.name || 'Unknown Project';
+      });
+      
+      // For projects context, use the clusterName prop as the project name
+      if (context === 'projects' && clusterName) {
+        projectNames = [clusterName];
+        clusterNames = ['hub-cluster']; // Projects are typically on hub cluster
+      }
+      
       // Build resource summary
       let resourceSummary = 'All resources';
       if (context === 'projects') {
@@ -829,7 +847,9 @@ const RoleAssignmentWizard: React.FunctionComponent<RoleAssignmentWizardProps> =
         resourceSummary,
         selectedClusters,
         selectedProjects,
-        selectedClusterSets
+        selectedClusterSets,
+        clusterNames,
+        projectNames
       });
     } else {
       handleClose();
