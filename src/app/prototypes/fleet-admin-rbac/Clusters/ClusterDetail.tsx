@@ -96,24 +96,32 @@ const ClusterDetail: React.FunctionComponent = () => {
   };
 
   const handleWizardComplete = (wizardData: any) => {
-    // Determine clusters
+    console.log('=== ClusterDetail (fleet-admin).handleWizardComplete START ===');
+    console.log('Full wizardData object:', JSON.stringify(wizardData, null, 2));
+    console.log('wizardData.clusterNames:', wizardData.clusterNames);
+    console.log('wizardData.projectNames:', wizardData.projectNames);
+    console.log('wizardData.resourceScope:', wizardData.resourceScope);
+    console.log('wizardData.selectedClusters:', wizardData.selectedClusters);
+    console.log('wizardData.selectedProjects:', wizardData.selectedProjects);
+    console.log('isClusterSet:', isClusterSet, 'clusterName:', clusterName);
+    
+    // Use actual wizard selections for clusters and projects
     let clustersList: string[] = [];
     let projectsList: string[] = [];
     
-    if (isClusterSet) {
-      // For cluster sets, show the resource scope
-      if (wizardData.resourceScope === 'all') {
-        clustersList = ['All clusters in cluster set'];
-        projectsList = ['All projects'];
-      } else {
-        clustersList = [`${wizardData.selectedClusters?.length || 0} selected cluster(s)`];
-        projectsList = ['All projects'];
-      }
-    } else {
-      // For individual clusters
-      clustersList = [clusterName || ''];
-      projectsList = ['All projects'];
-    }
+    // Use actual wizard selections for clusters and projects
+    // The wizards now populate these arrays properly for all scenarios
+    clustersList = wizardData.clusterNames && wizardData.clusterNames.length > 0
+      ? wizardData.clusterNames
+      : (isClusterSet ? ['All clusters in cluster set'] : [clusterName || '']);
+    
+    projectsList = wizardData.projectNames && wizardData.projectNames.length > 0
+      ? wizardData.projectNames
+      : ['All projects'];
+    
+    console.log('FINAL clustersList:', clustersList);
+    console.log('FINAL projectsList:', projectsList);
+    console.log('=== ClusterDetail (fleet-admin).handleWizardComplete END ===');
     
     // Get full role information
     const allRoles = getAllRoles();
