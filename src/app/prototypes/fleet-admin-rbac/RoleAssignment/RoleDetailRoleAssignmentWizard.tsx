@@ -580,9 +580,9 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
     
     if (clustersInSets.length === 0) return [];
     
-    // Get all projects from these clusters
+    // Get all projects from these clusters (including created ones)
     const clusterIds = clustersInSets.map(c => c.id);
-    let projects = mockProjects.filter(p => clusterIds.includes(p.clusterId));
+    let projects = [...mockProjects.filter(p => clusterIds.includes(p.clusterId)), ...createdCommonProjects];
     
     // Find common projects (same name across ALL clusters in the cluster sets)
     const projectsByName = new Map<string, typeof mockProjects>();
@@ -607,7 +607,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
     }
     
     return projects;
-  }, [selectedClusterSets, projectSearch, mockProjects, mockClusterSets]);
+  }, [selectedClusterSets, projectSearch, mockProjects, mockClusterSets, createdCommonProjects]);
 
   // Render step indicator to match the original wizard
   const renderStepIndicator = (stepNum: number, label: string, isSubStep: boolean = false) => {
@@ -4542,6 +4542,16 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                         onClear={() => setProjectSearch('')}
                       />
                     </ToolbarItem>
+                    {(filteredCommonProjectsForClusterSets.length > 0 || createdCommonProjects.length > 0) && (
+                      <ToolbarItem>
+                        <Button 
+                          variant="primary"
+                          onClick={() => setIsCreatingCommonProject(true)}
+                        >
+                          Create common project
+                        </Button>
+                      </ToolbarItem>
+                    )}
                     <ToolbarItem align={{ default: 'alignEnd' }}>
                       <Pagination
                         itemCount={filteredCommonProjectsForClusterSets.length}
@@ -4559,7 +4569,99 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                   </ToolbarContent>
                 </Toolbar>
                 
-                {filteredCommonProjectsForClusterSets.length === 0 ? (
+                {/* Form for creating common projects - replaces table when active */}
+                {isCreatingCommonProject ? (
+                  <div style={{ padding: '16px', backgroundColor: '#f5f5f5', marginBottom: '16px', borderRadius: '4px' }}>
+                    <Title headingLevel="h3" size="lg" style={{ marginBottom: '16px' }}>
+                      Create common project
+                    </Title>
+                    <Form style={{ maxWidth: '600px' }}>
+                      <FormGroup label="Name" isRequired>
+                        <TextInput
+                          type="text"
+                          value={commonProjectName}
+                          onChange={(_event, value) => setCommonProjectName(value)}
+                          placeholder="Enter project name"
+                        />
+                      </FormGroup>
+                      
+                      <FormGroup label="Display name">
+                        <TextInput
+                          type="text"
+                          value={commonProjectDisplayName}
+                          onChange={(_event, value) => setCommonProjectDisplayName(value)}
+                          placeholder="Enter display name (optional)"
+                        />
+                      </FormGroup>
+                      
+                      <FormGroup label="Description">
+                        <TextInput
+                          type="text"
+                          value={commonProjectDescription}
+                          onChange={(_event, value) => setCommonProjectDescription(value)}
+                          placeholder="Enter description (optional)"
+                        />
+                      </FormGroup>
+
+                      <div style={{ marginTop: 'var(--pf-t--global--spacer--md)', display: 'flex', gap: 'var(--pf-t--global--spacer--sm)' }}>
+                        <Button 
+                          variant="primary"
+                          onClick={() => {
+                            // Get all clusters from selected cluster sets
+                            const selectedClusterSetDbIds = selectedClusterSets
+                              .map(id => mockClusterSets.find(cs => cs.id === id)?.dbId)
+                              .filter(Boolean);
+                            
+                            const clustersInSets = dbClusters.filter(cluster => 
+                              selectedClusterSetDbIds.includes(cluster.clusterSetId)
+                            );
+                            
+                            // Create temporary project entries for each cluster in the cluster sets
+                            const newProjects = clustersInSets.map((cluster) => {
+                              const tempId = -(Date.now() + Math.random()); // Negative ID to distinguish from real projects
+                              
+                              return {
+                                id: tempId,
+                                dbId: `temp-${Date.now()}-${cluster?.id}`,
+                                name: commonProjectName,
+                                displayName: commonProjectDisplayName,
+                                description: commonProjectDescription,
+                                clusterId: cluster?.id || '',
+                                clusterName: cluster?.name || 'Unknown',
+                                type: 'application', // Default type
+                                labels: {},
+                                isPending: true,
+                              };
+                            });
+                            
+                            setCreatedCommonProjects([...createdCommonProjects, ...newProjects]);
+                            // Auto-select the newly created projects
+                            setSelectedProjects(newProjects.map(p => p.id));
+                            // Close form and clear fields
+                            setIsCreatingCommonProject(false);
+                            setCommonProjectName('');
+                            setCommonProjectDisplayName('');
+                            setCommonProjectDescription('');
+                          }}
+                          isDisabled={!commonProjectName.trim()}
+                        >
+                          Save
+                        </Button>
+                        <Button 
+                          variant="link"
+                          onClick={() => {
+                            setIsCreatingCommonProject(false);
+                            setCommonProjectName('');
+                            setCommonProjectDisplayName('');
+                            setCommonProjectDescription('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </Form>
+                  </div>
+                ) : filteredCommonProjectsForClusterSets.length === 0 ? (
                   <EmptyState>
                     <ResourcesEmptyIcon />
                     <Title headingLevel="h2" size="lg">
@@ -4577,7 +4679,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           <Th />
                           <Th>Project name</Th>
                           <Th>Display name</Th>
-                          <Th>Type</Th>
+                          {createdCommonProjects.length > 0 && <Th>Actions</Th>}
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -4597,6 +4699,7 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                               const projectIds = projects.map(p => p.id);
                               const isSelected = projectIds.every(id => selectedProjects.includes(id));
                               const firstProject = projects[0];
+                              const isCreatedProject = firstProject.isPending || firstProject.id < 0;
                               
                               return (
                                 <Tr
@@ -4631,7 +4734,25 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                                     </div>
                                   </Td>
                                   <Td dataLabel="Display name">{firstProject.displayName}</Td>
-                                  <Td dataLabel="Type">{firstProject.type}</Td>
+                                  {createdCommonProjects.length > 0 && (
+                                    <Td>
+                                      {isCreatedProject && (
+                                        <Button
+                                          variant="link"
+                                          isDanger
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Remove all instances of this project from created projects
+                                            setCreatedCommonProjects(createdCommonProjects.filter(p => p.name !== name));
+                                            // Deselect if selected
+                                            setSelectedProjects(selectedProjects.filter(id => !projectIds.includes(id)));
+                                          }}
+                                        >
+                                          Delete
+                                        </Button>
+                                      )}
+                                    </Td>
+                                  )}
                                 </Tr>
                               );
                             });
@@ -5014,7 +5135,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                     <Tr>
                       <Th />
                           <Th>Name</Th>
-                          {createdCommonProjects.length === 0 && <Th>Type</Th>}
                         <Th>Clusters</Th>
                         {createdCommonProjects.length > 0 && <Th>Actions</Th>}
                     </Tr>
@@ -5082,11 +5202,6 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                                   {project.displayName || project.name}
                                 </div>
                               </Td>
-                              {createdCommonProjects.length === 0 && (
-                                <Td dataLabel="Type">
-                                  <Label color="blue">{project.type}</Label>
-                                </Td>
-                              )}
                               <Td dataLabel="Clusters">
                                 <Label color="grey">{project.clusterName}</Label>
                           </Td>
@@ -6109,8 +6224,38 @@ export const RoleDetailRoleAssignmentWizard: React.FC<RoleDetailRoleAssignmentWi
                           Access level
                         </Content>
                         <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
-                          Cluster set role assignment
+                          {clusterSetScope === 'everything' 
+                            ? 'Cluster set role assignment'
+                            : 'Common project assignment'}
                         </Content>
+                        
+                        {clusterSetScope === 'partial' && selectedProjects.length > 0 && (
+                          <>
+                            <Content component="p" style={{ 
+                              marginBottom: '4px', 
+                              fontSize: '14px', 
+                              fontWeight: 600,
+                              color: '#151515',
+                              marginTop: '12px'
+                            }}>
+                              Common projects
+                            </Content>
+                            <Content component="p" style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+                              {(() => {
+                                // Get unique project names from selected projects
+                                const projectNames = selectedProjects
+                                  .map(id => {
+                                    const project = mockProjects.find(p => p.id === id);
+                                    const createdProject = createdCommonProjects.find(p => p.id === id);
+                                    return project?.name || createdProject?.name;
+                                  })
+                                  .filter(Boolean);
+                                // Remove duplicates (since common projects span multiple clusters)
+                                return Array.from(new Set(projectNames)).join(', ');
+                              })()}
+                            </Content>
+                          </>
+                        )}
                       </>
                     )}
                   </>

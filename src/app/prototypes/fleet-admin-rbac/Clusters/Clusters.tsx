@@ -1108,7 +1108,7 @@ const Clusters: React.FunctionComponent = () => {
   );
 
   return (
-    <>
+    <div className="clusters-page-container">
       <div className="page-header-section">
         <Title headingLevel="h1" size="lg">
           Clusters
@@ -1127,7 +1127,7 @@ const Clusters: React.FunctionComponent = () => {
         {activeTabKey === 2 && <ClusterPoolsTab />}
         {activeTabKey === 3 && <DiscoveredClustersTab />}
       </div>
-    </>
+    </div>
   );
 };
 
